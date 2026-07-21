@@ -1,4 +1,4 @@
-# cankun-skills
+# cankun-skills [![skills.sh](https://skills.sh/b/wang-cankun/cankun-skills)](https://skills.sh/wang-cankun/cankun-skills)
 
 Agent skills by [Cankun Wang](https://github.com/Wang-Cankun). Flagship skills live in their own repos; the rest are hosted directly in this repo under [`skills/`](./skills). This page is the index.
 
