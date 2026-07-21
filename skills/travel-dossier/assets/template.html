@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Travel Dossier 模板</title><style>
+/* ============================================================
+   Travel Dossier 版式系统 · 瑞士极简 · 148×210mm 手机优先
+   经过实战验证的 CSS——直接复用，按内容填 .page；勿重写体系。
+   分页哲学：每页一个定高 .page（overflow:hidden 显式分页），
+   溢出肉眼可见，用 strip check 抓，宁删内容不缩字号。
+   ============================================================ */
+@page{size:148mm 210mm;margin:0}
+:root{--red:#e10600;--ink:#111;--gray:#6d6d6d;--hair:#c9c9c9;--paper:#fff;--warm:#f4f1ec}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}/* 背景色必须能打印 */
+html,body{margin:0;padding:0}body{font-family:"PingFang SC","Noto Sans CJK SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#e7e4df;font-size:10.2pt;line-height:1.58;font-feature-settings:"tnum"}
+.page{width:148mm;height:210mm;padding:11.5mm 12mm 11mm;background:var(--paper);position:relative;overflow:hidden;break-after:page;margin:0 auto 24px}.page:last-child{break-after:auto}
+main{padding-top:4.5mm}
+/* 页眉：顶粗线 + 栏目名 + 区域导航（当前区域 .on 红色） */
+.head{border-top:2.5pt solid var(--ink)}.headrow{display:flex;justify-content:space-between;align-items:baseline;padding:1.7mm 0 1.4mm;border-bottom:.5pt solid var(--ink);font-size:7.6pt;font-weight:700;letter-spacing:.1em}.regions span{margin-left:3mm;color:#9a9a9a;font-weight:500}.regions .on{color:var(--red);font-weight:800}
+.foot{position:absolute;left:12mm;right:12mm;bottom:6.3mm;border-top:.5pt solid var(--ink);padding-top:1.2mm;display:flex;justify-content:space-between;font-size:7.3pt;color:var(--gray);letter-spacing:.08em}
+/* 文字层级 */
+h1,h2,h3,p{margin-top:0}h1{font-size:39pt;line-height:1.02;letter-spacing:-.04em;margin:4mm 0 1mm}h2{font-size:20.5pt;line-height:1.12;letter-spacing:-.03em;margin:0 0 3.5mm}h3{font-size:11.4pt;line-height:1.35;margin:0 0 .7mm}p{margin-bottom:2.4mm}
+.kicker{font-size:7.6pt;font-weight:800;letter-spacing:.17em;margin-bottom:1.6mm}.kicker.accent{color:var(--red)}.lead{font-size:11.1pt;line-height:1.62}.muted,.caption{color:var(--gray)}.caption{font-size:8.3pt;line-height:1.45;margin-top:1.5mm}.subtitle{font-size:8.7pt;color:var(--gray);font-weight:700}.accent{color:var(--red)}
+/* 封面 */
+.cover-mark{width:5.5mm;height:5.5mm;background:var(--red);margin-top:10mm}.cover-en{font-weight:800;letter-spacing:.21em;font-size:9.8pt}.cover-sub{color:var(--gray);margin-top:3mm}.cover-route{margin-top:19mm;border-top:1pt solid var(--ink);border-bottom:1pt solid var(--ink);padding:3.2mm 0;display:flex;flex-wrap:wrap;gap:2mm 3mm;font-size:7.7pt;font-weight:800;letter-spacing:.06em}.cover-route b{color:var(--red)}.cover-meta{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-top:14mm}.cover-meta small{display:block;font-size:7pt;color:var(--gray);letter-spacing:.13em;margin-bottom:1.2mm}.cover-meta strong{font-size:9pt;line-height:1.55}
+/* 总览表 */
+.overview-grid{display:grid;grid-template-columns:13mm 9mm 1fr 28mm;gap:1.1mm 2.5mm;font-size:8.55pt;line-height:1.35}.overview-grid>b{border-bottom:1pt solid var(--ink);padding-bottom:1mm}.overview-grid span,.overview-grid em{padding-top:.45mm}.overview-grid em{color:var(--gray);font-style:normal}
+.pull{border-top:1.5pt solid var(--red);padding-top:2mm;font-size:11.1pt;font-weight:700;margin-top:4mm}.pull.small{font-size:9.6pt;line-height:1.5}
+/* 航班/酒店速查 */
+.flight-list article{display:grid;grid-template-columns:16mm 1fr;gap:4mm;padding:2mm 0;border-bottom:.5pt solid var(--hair)}.flight-list time{font-size:12.5pt;font-weight:900}.flight-list b{display:inline-block;width:20mm;color:var(--red)}.flight-list strong{font-size:10.5pt}.flight-list p{font-size:8.7pt;color:var(--gray);margin:1mm 0 0}
+.mini-grid{display:grid;gap:4mm;margin-top:4mm}.mini-grid.three{grid-template-columns:repeat(3,1fr)}.mini-grid div{border-top:1pt solid var(--ink);padding-top:1.5mm}.mini-grid small{display:block;color:var(--gray);font-size:7.5pt}.mini-grid b{font-size:9.2pt}
+.hotel-list article{display:grid;grid-template-columns:19mm 1fr;gap:4mm;padding:2.25mm 0;border-bottom:.5pt solid var(--hair)}.hotel-list .date{font-size:12pt;font-weight:900;line-height:1.05}.hotel-list h3{font-size:10.8pt}.hotel-list p{font-size:8.7pt;margin:0 0 .5mm}
+.address-card{margin-top:4mm;border:1.2pt solid var(--ink);padding:3mm}.address-card small,.address-card span{display:block;color:var(--gray);font-size:8pt}.address-card b{display:block;font-size:12pt;margin:.5mm 0}
+/* 日程页 */
+.dayhead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:3mm}.dayhead>div{margin-right:auto;margin-left:3mm}.dayhead .daynum{font-size:25pt;line-height:.85;font-weight:900;letter-spacing:-.05em}.dayhead .daynum.small{font-size:20pt}.dayhead b{display:block;font-size:8pt;letter-spacing:.08em}.dayhead small{display:block;color:var(--gray);font-size:8pt}.dayhead em{font-size:7.8pt;color:var(--gray);font-style:normal;text-align:right}
+.hero{width:100%;display:block;object-fit:cover}.hero.medium{height:43mm;margin-bottom:3mm}.hero.short{height:30mm;margin:2mm 0}.portrait{width:42mm;height:91mm;object-fit:cover}
+.ph{background:#ededed;display:flex;align-items:center;justify-content:center;color:#7a7a7a;font:8.5pt/1.5 ui-monospace,Menlo,monospace;text-align:center}/* 占位灰盒：待配图 */
+.route-steps article{display:grid;grid-template-columns:25mm 1fr;gap:4mm;padding:1.6mm 0;border-bottom:.5pt solid var(--hair)}.route-steps b{font-size:10pt}.route-steps span{font-size:8.7pt}.route-steps.compact article{padding:1.3mm 0}
+.schedule-strip,.stay-strip{display:flex;justify-content:space-between;gap:3mm;align-items:baseline;border-top:1pt solid var(--ink);border-bottom:1pt solid var(--ink);padding:2.2mm 0;margin-top:4mm;font-size:8.6pt}.stay-strip em{color:var(--red);font-style:normal;font-weight:800}.schedule-strip{font-size:7.8pt}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm 5mm}.choice-grid article{border-top:1pt solid var(--ink);padding-top:1.6mm}.choice-grid article>b{font-size:7.5pt;color:var(--red);letter-spacing:.08em}.choice-grid h3{font-size:10.3pt;margin-top:.5mm}.choice-grid p{font-size:8.6pt;line-height:1.48;margin-bottom:0}
+/* reader 页（目的地解读） */
+.site-block{display:grid;grid-template-columns:18mm 1fr;gap:4mm;padding:3mm 0;border-top:1pt solid var(--ink)}.site-no{font-size:21pt;font-weight:900;color:var(--red)}.site-block p{font-size:9.2pt}.look{font-size:8.2pt;color:var(--gray)}.look b{color:var(--ink)}
+.context-note{border-top:1.5pt solid var(--red);padding-top:2mm;margin-top:4mm}.context-note p{font-size:9pt}
+.look-for{display:flex;flex-wrap:wrap;gap:1.4mm 4mm;margin-top:4mm;border-top:1.5pt solid var(--red);padding-top:2mm;font-size:8.4pt}.look-for b{width:100%;color:var(--red);letter-spacing:.08em}.look-for span:before{content:'—';margin-right:1.5mm}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:4mm 6mm}.two-col.text h3{border-top:1pt solid var(--ink);padding-top:1.5mm}.two-col.text p{font-size:8.7pt;line-height:1.5}
+.feature-card{display:grid;grid-template-columns:35mm 1fr;gap:5mm;border-top:2pt solid var(--red);border-bottom:.5pt solid var(--hair);padding:3mm 0;margin:4mm 0}.huge{font-size:28pt;font-weight:900;line-height:.9}.huge small{display:block;font-size:8pt;color:var(--gray);letter-spacing:.05em}.feature-card p{font-size:9pt;margin:0}.feature-card.dark{background:#111;color:#fff;padding:4mm;margin-top:2mm}.feature-card.dark .huge small{color:#bbb}
+.rule-card{display:grid;grid-template-columns:35mm 1fr;gap:5mm;background:var(--warm);padding:4mm;margin-bottom:4mm}.rule-card p{font-size:9pt;margin:0}
+.health-band{background:#111;color:#fff;padding:3mm 4mm;margin-top:3mm}.health-band b{font-size:8pt;color:#ff6c66;letter-spacing:.1em}.health-band p{font-size:8.6pt;margin:.7mm 0 0}
+.fact-row{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:3mm 0}.fact-row div{border-top:1pt solid var(--ink);padding-top:1.5mm}.fact-row b,.fact-row span{display:block}.fact-row b{font-size:14pt}.fact-row span{font-size:7.8pt;color:var(--gray)}
+.option-list{display:grid;grid-template-columns:1fr 1fr;gap:3mm 5mm}.option-list article{border-top:1pt solid var(--ink);padding-top:1.6mm}.option-list b{font-size:9.4pt}.option-list p{font-size:8.5pt;line-height:1.48;margin:1mm 0 0}
+/* 外语速查 + 来源页 */
+.show-card{border:1.5pt solid var(--ink);padding:3mm 4mm}.show-card small{color:var(--gray)}.show-card>b{display:block;font-size:12pt;margin-bottom:1mm}.show-card p{font-size:8.4pt;margin:.8mm 0}
+.phrase-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm 5mm;margin-top:4mm}.phrase-grid span{border-bottom:.5pt solid var(--hair);padding:1.3mm 0}.phrase-grid b,.phrase-grid em{display:block}.phrase-grid b{font-size:8.8pt}.phrase-grid em{font-size:7.8pt;color:var(--gray);font-style:normal}
+.emergency-row{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:4mm}.emergency-row div{border-top:2pt solid var(--red);padding-top:1mm}.emergency-row b,.emergency-row span{display:block}.emergency-row b{font-size:16pt}.emergency-row span{font-size:7.6pt;color:var(--gray)}
+.sources{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm 5mm}.sources a{display:grid;grid-template-columns:9mm 1fr;gap:2mm;padding:1.4mm 0;border-bottom:.5pt solid var(--hair);color:var(--ink);text-decoration:none;font-size:7.8pt}.sources a b{color:var(--red)}
+.credits{margin-top:4mm;border-top:1.5pt solid var(--red);padding-top:2mm}.credits p{font-size:7.8pt;color:var(--gray);line-height:1.45}
+@media print{body{background:#fff}.page{margin:0}}
+</style></head><body>
+
+<!-- ========= 骨架页示例：复制所需页型，填入内容 ========= -->
+
+<!-- 封面 -->
+<section class="page">
+<header class="head"><div class="headrow"><span>个人旅行手册 · TRAVEL DOSSIER</span><span class="regions"><span>区域A</span><span>区域B</span><span>区域C</span></span></div></header>
+<main>
+  <div class="cover-mark"></div>
+  <h1>目的地N日</h1>
+  <div class="cover-en">COUNTRY · YYYY.MM.DD — MM.DD</div>
+  <p class="cover-sub">城市 · 城市 · 城市</p>
+  <div class="cover-route"><span>CITY</span><b>→</b><span>CITY</span><b>→</b><span>CITY</span></div>
+  <div class="cover-meta"><div><small>DEPARTURE</small><strong>M/D 出发地</strong></div><div><small>TRAVEL MODE</small><strong>Private tour · 私导与专车</strong></div></div>
+</main>
+<footer class="foot"><span>手册名 · YYYY</span><span>01 / NN</span></footer>
+</section>
+
+<!-- 日程页（daynum + 双行站点标签 = 先名后释） -->
+<section class="page">
+<header class="head"><div class="headrow"><span>每日行程 · DAY 0X</span><span class="regions"><span class="on">区域A</span><span>区域B</span></span></div></header>
+<main>
+<div class="dayhead"><span class="daynum">M.DD</span><div><b>DAY 0X · 周几</b><small>地点 · 海拔</small></div><em>方案时刻</em></div>
+<h2>当日主题</h2>
+<div class="ph hero medium">images/xxx.jpg 占位 · 配图后换 &lt;img class="hero medium"&gt;</div>
+<div class="route-steps">
+  <article><b>中文名<br>原文名</b><span>身份句（这是什么）：然后才是解读。</span></article>
+</div>
+<div class="schedule-strip"><span><b>时刻</b> 事项（仅来源时刻）</span></div>
+<p class="caption">方案已含：……（逐字对应 Included）。</p>
+</main>
+<footer class="foot"><span>每日行程 · D0X</span><span>0X / NN</span></footer>
+</section>
+
+<!-- reader 页（目的地解读：编号块 + 现场可观察） -->
+<section class="page">
+<header class="head"><div class="headrow"><span>目的地 · PLACE</span><span class="regions"><span class="on">区域A</span></span></div></header>
+<main>
+<div class="kicker">READER</div><h2>中文名 原文名：一句定位</h2>
+<div class="site-block"><div class="site-no">01</div><div><h3>小节题</h3><p>解读正文。</p><div class="look"><b>看什么</b> 观察点 · 观察点</div></div></div>
+<div class="context-note"><b>共同线索</b><p>收束段。</p></div>
+<div class="look-for"><b>现场可观察</b><span>条目</span><span>条目</span></div>
+</main>
+<footer class="foot"><span>目的地 · PLACE</span><span>0X / NN</span></footer>
+</section>
+
+<!-- 来源页（全书末页） -->
+<section class="page">
+<header class="head"><div class="headrow"><span>资料 · SOURCES</span><span class="regions"><span>区域A</span></span></div></header>
+<main>
+<div class="kicker">RESEARCH SOURCES</div><h2>资料来源</h2>
+<p class="lead">票务、规则与数字优先采用官方资料。检索日期：YYYY.MM.DD。</p>
+<div class="sources"><a href="#"><b>01</b><span>来源名 · 用途</span></a></div>
+<div class="credits"><b>图像</b><p>全部照片来自 Wikimedia Commons（CC 授权），清单见 credits.json。私人旅行用途。</p></div>
+</main>
+<footer class="foot"><span>资料 · SOURCES</span><span>NN / NN</span></footer>
+</section>
+
+</body></html>
