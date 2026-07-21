@@ -14,7 +14,6 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
-| [polanyi](./skills/polanyi) | Michael Polanyi as a thinking OS: a persona skill distilled from his books and papers — tacit knowledge, skill acquisition, and philosophy of science, answered in his voice. (中文) | `npx skills@latest add Wang-Cankun/cankun-skills --skill polanyi` |
 | [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
 
 ## License
