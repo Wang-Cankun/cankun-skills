@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cankun Blog Preview"
+  short_description: "Generate one consistent preview per blog post"
+  default_prompt: "Use $cankun-blog-preview to generate and integrate one preview image for this blog post."
