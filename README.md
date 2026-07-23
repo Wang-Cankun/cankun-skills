@@ -15,6 +15,7 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
 | [cankun-blog-preview](./skills/cankun-blog-preview) | Generates and integrates exactly one Franklin Booth-inspired, white-background preview image for a Cankun blog article, then validates its optimized WebP and full-resolution link. | `bunx skills@latest add Wang-Cankun/cankun-skills --skill cankun-blog-preview` |
+| [confer](./skills/confer) | Cross-model consultation with resumable threads: from Claude Code ask Codex (or vice versa), keep multi-round peer-review dialogues alive across sessions, fan one question out to every provider. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
 | [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
 
 ## License
