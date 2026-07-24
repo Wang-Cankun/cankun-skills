@@ -1,0 +1,7 @@
+interface:
+  display_name: "Skill Release"
+  short_description: "Converge the cankun-skills index and publish surfaces from each skill's own metadata"
+  default_prompt: "Use $skill-release to sync the skills index, run publish-hygiene checks, and ship the update."
+
+policy:
+  allow_implicit_invocation: false
