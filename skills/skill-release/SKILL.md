@@ -16,7 +16,8 @@ Surfaces: the collection index (repo `README.md`), per-skill interface metadata
 and — rarely — a flagship repo.
 
 **Write boundary**: this skill edits metadata surfaces only — frontmatter keys
-(`summary:`), `agents/*.yaml`, the index README, and `cankun-blog/app/data.ts`.
+(`metadata.summary`, `compatibility:`), `agents/*.yaml`, the index README, and
+`cankun-blog/app/data.ts`.
 The SKILL.md body belongs to the author: a content finding (weak description,
 missing triggers) is a flag routed back, never an edit. The route starts at a
 committed skill — moving a directory into `skills/` is the author's (or skl's)
@@ -30,8 +31,9 @@ The human-facing summary of a skill resolves through one chain, highest first:
 
 Index prose is always derived through this chain, and convergence flows toward
 the **better text in either direction**: when a row reads badly, fix the
-skill's `summary:` and reconverge; when existing row prose beats the derived
-value, promote that prose into `summary:` rather than degrading the row.
+skill's `metadata.summary` and reconverge; when existing row prose beats the
+derived value, promote that prose into `metadata.summary` rather than
+degrading the row.
 
 ## 1. Inventory
 
@@ -39,8 +41,9 @@ Enumerate `skills/*/SKILL.md` frontmatter (committed skills only — an untracke
 skill is the author's work in progress, not a release candidate) and every row
 of the README **Collection** table. Classify each skill and each row:
 
-- **matched** — row text equals the derived summary;
-- **stale** — row exists but differs from the derived summary;
+- **matched** — row text equals the derived summary (plus, when the skill
+  sets `compatibility:`, that value appended verbatim);
+- **stale** — row exists but differs from that derived cell text;
 - **missing** — committed skill with no row;
 - **orphan** — row whose skill directory is gone.
 
