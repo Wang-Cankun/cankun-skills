@@ -1,8 +1,6 @@
 # Provider adapters
 
-`scripts/confer.mjs` (single-file bun, zero deps) owns all provider mechanics. `scripts/confer.sh`
-is a compat shim (`exec confer.mjs "$@"`) kept one round post-cutover for agents holding the old
-SKILL.md and for existing permission allowlists; new references should use `confer.mjs`.
+`scripts/confer.mjs` (single-file bun, zero deps) owns all provider mechanics.
 
 **Harness-blind invariant**: the script contains no harness detection, no harness-specific env or
 paths, plain-text IO only, and state independent of CWD. It serves Claude Code, Codex, pi, and any
