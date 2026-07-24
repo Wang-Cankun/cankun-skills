@@ -8,7 +8,7 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
-| [known-unknowns](https://github.com/Wang-Cankun/known-unknowns) | Guided discussions on the Rumsfeld Matrix: lends you words for preferences you can't articulate, tours options you don't know exist, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/known-unknowns` |
+| [known-unknowns](https://github.com/Wang-Cankun/known-unknowns) | Guided discussions on the Rumsfeld matrix: helps articulate tacit judgments, surfaces unrecognized patterns, tours unseen options, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/known-unknowns` |
 
 ## Collection (hosted in this repo)
 
