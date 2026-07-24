@@ -1,0 +1,7 @@
+interface:
+  display_name: "Confer"
+  short_description: "Consult a peer AI model in resumable cross-model threads"
+  default_prompt: "Use $confer to get a second opinion on this from a peer model and keep the thread resumable."
+
+policy:
+  allow_implicit_invocation: true

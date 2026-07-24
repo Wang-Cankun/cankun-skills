@@ -1,5 +1,9 @@
 ---
 name: travel-dossier
+summary: >-
+  Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel
+  dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every
+  number in the booklet traces to a source. (中文)
 description: 从旅行社行程 PDF + 机票酒店票据生成 A5 手机优先的自足旅行手册（瑞士极简 HTML→PDF）。手动调用：/travel-dossier <行程资料目录>
 disable-model-invocation: true
 ---

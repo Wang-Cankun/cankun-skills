@@ -1,0 +1,7 @@
+interface:
+  display_name: "Travel Dossier"
+  short_description: "Build a phone-first A5 travel dossier from itinerary PDFs and tickets"
+  default_prompt: "Use $travel-dossier to build a self-contained A5 travel dossier from this itinerary folder."
+
+policy:
+  allow_implicit_invocation: false

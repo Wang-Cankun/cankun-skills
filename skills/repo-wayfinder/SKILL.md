@@ -1,5 +1,10 @@
 ---
 name: repo-wayfinder
+summary: >-
+  Audits repository documentation by walking real tasks to the code that owns
+  each claim, then returns a decision surface: a wayfinder table, per-document
+  dispositions (keep, point, co-locate, mark historical, delete), and the
+  minimal change set.
 description: Wayfind repository documentation by tracing real tasks to code-owned authority. Use when the user wants to audit scattered, stale, duplicated, or mixed-role docs; decide whether README, AGENTS.md, architecture, runbook, or protocol documents should exist and where they belong; or apply an accepted documentation-topology repair.
 ---
 
