@@ -1,7 +1,7 @@
 ---
 name: skill-release
-summary: "Publishes and syncs this collection: derives the index README from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
-description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README, run publish-hygiene checks, or promote a skill to its own flagship repo.
+summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
+description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo.
 ---
 
 # Skill Release — converge the publish surfaces
@@ -9,7 +9,15 @@ description: Release and sync skills in the cankun-skills collection. Use when t
 A release is **convergence**, not a pipeline: every publish surface derives from
 the skill's own files, so running this at any time is safe and idempotent.
 Surfaces: the collection index (repo `README.md`), per-skill interface metadata
-(`agents/openai.yaml`), a blog handoff, and — rarely — a flagship repo.
+(`agents/openai.yaml`), the [cankun.me/skills](https://cankun.me/skills) page,
+and — rarely — a flagship repo.
+
+**Write boundary**: this skill edits metadata surfaces only — frontmatter keys
+(`summary:`), `agents/*.yaml`, the index README, and `cankun-blog/app/data.ts`.
+The SKILL.md body belongs to the author: a content finding (weak description,
+missing triggers) is a flag routed back, never an edit. The route starts at a
+committed skill — moving a directory into `skills/` is the author's (or skl's)
+move, not this skill's.
 
 The human-facing summary of a skill resolves through one chain, highest first:
 
@@ -61,7 +69,9 @@ Per skill being released:
 - every file the SKILL.md points to exists;
 - examples are free of secrets and machine-local paths;
 - a model-invoked `description` carries trigger branches (or the skill sets
-  `disable-model-invocation: true` and keeps a one-line human description).
+  `disable-model-invocation: true` and keeps a one-line human description);
+- the skill has been dogfooded: `skl where <name>` shows at least one
+  deployment — zero deployments flags "unused", non-blocking like every flag.
 
 **Complete when:** each item is a pass or a named flag in the report — flags
 block nothing, but every one is surfaced.
@@ -70,13 +80,25 @@ block nothing, but every one is surfaced.
 
 Invoking this skill is the request to publish: show the diff summary, then
 commit and push the index and metadata changes (edits to a skill's body stay
-the author's own commits). Hand off — never write — a blog stub: title,
-resolved summary, install command, repo link.
+the author's own commits).
 
-**Complete when:** the push has landed and the stub is delivered or the user
-declined it.
+**Complete when:** the push has landed.
 
-## 5. Promote to flagship
+## 5. Sync cankun.me
+
+The `/skills` page of `~/Documents/GitHub/cankun-blog` is data-driven — the
+only file to edit is `app/data.ts`. Derive `desc` from the resolved summary
+(one plain human sentence), write `descZh` for mainland readers (natural
+copy, not word-for-word), pick `group` and the tier-correct `href`. Entry
+shape, site writing rules, link verification, build, deploy, smoke test, and
+commit style: follow [`references/cankun-blog.md`](references/cankun-blog.md).
+skills.sh can lag a fresh push — a 404 on the new skill's page defers this
+step with a note rather than shipping a dead link.
+
+**Complete when:** production serves the entry (smoke test passes) and
+cankun-blog is committed and pushed — or the step is explicitly deferred.
+
+## 6. Promote to flagship
 
 Only when the user asks to move a skill into its own repo, follow
 [`references/promotion.md`](references/promotion.md) — repo layout modeled on

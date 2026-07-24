@@ -27,7 +27,8 @@ own repo when it has earned independent distribution. Template: the
       LINKED entry to the new dev repo.
 - [ ] `skl where <name>` — confirm every deployment still resolves.
 
-## Announce
+## cankun.me
 
-- [ ] Blog stub handoff (same fields as a normal release, plus "graduated from
-      the collection").
+- [ ] Update the entry's `href` in `cankun-blog/app/data.ts` to the flagship
+      pattern `https://skills.sh/wang-cankun/<name>`, then build, deploy, and
+      smoke-test per [`cankun-blog.md`](cankun-blog.md).
