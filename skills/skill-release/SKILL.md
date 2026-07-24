@@ -100,8 +100,8 @@ only file to edit is `app/data.ts`. Derive `desc` from the resolved summary
 copy, not word-for-word), pick `group` and the tier-correct `href`. Entry
 shape, site writing rules, link verification, build, deploy, smoke test, and
 commit style: follow [`references/cankun-blog.md`](references/cankun-blog.md).
-skills.sh can lag a fresh push — a 404 on the new skill's page defers this
-step with a note rather than shipping a dead link.
+`href` targets the skill's GitHub source (live as soon as step 4's push
+lands) — still curl-verify every link before shipping.
 
 **Complete when:** production serves the entry (smoke test passes) and
 cankun-blog is committed and pushed — or the step is explicitly deferred.

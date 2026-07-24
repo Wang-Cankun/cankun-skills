@@ -41,11 +41,11 @@ Rules:
   cankun-skills' README is a good base.
 - Never use an em dash (— or ——) in either language; restructure with
   commas, colons, or parentheses (site-wide writing rule).
-- `href` patterns — verify each returns HTTP 200 with curl BEFORE shipping
-  (skills.sh may lag a fresh push; on 404 defer the entry, never ship a dead
-  link):
-  - hosted in cankun-skills: `https://skills.sh/wang-cankun/cankun-skills/<slug>`
-  - has its own repo: `https://skills.sh/wang-cankun/<slug>`
+- `href` points at the skill's GitHub source — readers land on the original
+  content, not a registry page. Verify each returns HTTP 200 with curl BEFORE
+  shipping:
+  - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/tree/main/skills/<slug>`
+  - has its own repo: `https://github.com/Wang-Cankun/<slug>`
 - `group`: `"general"` = useful to anyone; `"internal"` = tooling for
   Cankun's own workflow (e.g. cankun-blog-preview).
 
