@@ -1,5 +1,6 @@
 ---
 name: travel-dossier
+group: general
 summary: >-
   Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel
   dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every

@@ -12,13 +12,22 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 ## Collection (hosted in this repo)
 
+Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then internal workflow.
+
+### General use
+
+| Skill | What it does | Install |
+| ----- | ------------ | ------- |
+| [confer](./skills/confer) | Cross-model consultation with resumable threads: ask Codex from Claude Code (or vice versa), keep multi-round peer-review dialogues alive across sessions, fan one question out to every provider concurrently. Single-file bun CLI; records per-round model/cost provenance; safe under concurrent use from multiple agent hosts. Requires `bun` + the `claude`/`codex` CLIs. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
+| [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) Requires headless Chrome + Python (`pypdf`). | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
+
+### Internal workflow
+
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
 | [cankun-blog-preview](./skills/cankun-blog-preview) | Generates and integrates exactly one Franklin Booth-inspired, white-background preview image for a Cankun blog article, then validates its optimized WebP and full-resolution link. | `npx skills@latest add Wang-Cankun/cankun-skills --skill cankun-blog-preview` |
-| [confer](./skills/confer) | Cross-model consultation with resumable threads: ask Codex from Claude Code (or vice versa), keep multi-round peer-review dialogues alive across sessions, fan one question out to every provider concurrently. Single-file bun CLI; records per-round model/cost provenance; safe under concurrent use from multiple agent hosts. Requires `bun` + the `claude`/`codex` CLIs. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
 | [repo-wayfinder](./skills/repo-wayfinder) | Audits repository documentation by walking real tasks to the code that owns each claim, then returns a decision surface: a wayfinder table, per-document dispositions (keep, point, co-locate, mark historical, delete), and the minimal change set. | `npx skills@latest add Wang-Cankun/cankun-skills --skill repo-wayfinder` |
 | [skill-release](./skills/skill-release) | Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion. | `npx skills@latest add Wang-Cankun/cankun-skills --skill skill-release` |
-| [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) Requires headless Chrome + Python (`pypdf`). | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
 
 ## License
 

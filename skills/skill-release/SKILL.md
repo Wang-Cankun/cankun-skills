@@ -1,5 +1,6 @@
 ---
 name: skill-release
+group: internal
 summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
 description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo.
 ---
@@ -25,8 +26,10 @@ The human-facing summary of a skill resolves through one chain, highest first:
 2. `agents/openai.yaml` → `interface.short_description`
 3. first sentence of the frontmatter `description`
 
-Index prose is always derived through this chain. When a row reads badly, fix
-the skill's `summary:` and reconverge.
+Index prose is always derived through this chain, and convergence flows toward
+the **better text in either direction**: when a row reads badly, fix the
+skill's `summary:` and reconverge; when existing row prose beats the derived
+value, promote that prose into `summary:` rather than degrading the row.
 
 ## 1. Inventory
 
@@ -44,7 +47,11 @@ classification, shown to the user as a one-line-each table.
 
 ## 2. Converge the index
 
-Regenerate Collection rows from the chain, alphabetical by skill name:
+Collection rows are grouped by the frontmatter `group:` key (`general` |
+`internal`, default `general`) into two subsections — **General use**, then
+**Internal workflow** — the same categories as cankun.me; the cankun-blog
+`group` field derives from this same key. Within a group, regenerate rows
+alphabetically by skill name:
 
 | cell | derivation |
 |------|------------|
@@ -64,7 +71,8 @@ alone, and relative links resolve.
 Per skill being released:
 
 - `agents/openai.yaml` present with `display_name`, `short_description`,
-  `default_prompt`;
+  `default_prompt` — a missing file is created, not merely flagged (it is a
+  publish surface inside the write boundary);
 - scripts carry the executable bit **in git** (`git ls-files -s` shows `100755`);
 - every file the SKILL.md points to exists;
 - examples are free of secrets and machine-local paths;

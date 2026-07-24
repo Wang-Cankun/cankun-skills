@@ -1,5 +1,6 @@
 ---
 name: confer
+group: general
 summary: >-
   Cross-model consultation with resumable threads: ask Codex from Claude Code
   (or vice versa), keep multi-round peer-review dialogues alive across sessions,

@@ -1,5 +1,6 @@
 ---
 name: repo-wayfinder
+group: internal
 summary: >-
   Audits repository documentation by walking real tasks to the code that owns
   each claim, then returns a decision surface: a wayfinder table, per-document

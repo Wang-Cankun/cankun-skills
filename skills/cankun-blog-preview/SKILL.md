@@ -1,5 +1,6 @@
 ---
 name: cankun-blog-preview
+group: internal
 summary: >-
   Generates and integrates exactly one Franklin Booth-inspired, white-background
   preview image for a Cankun blog article, then validates its optimized WebP and
