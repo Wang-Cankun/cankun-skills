@@ -28,7 +28,7 @@ what changed.
   desc: "...",                 // ONE plain sentence, what it does
   descZh: "...",               // 简体中文, written for mainland readers,
                                // not a word-for-word translation
-  href: "<skills.sh page>",
+  href: "<the skill's SKILL.md on GitHub>",
   group: "general" | "internal",
 }
 ```
@@ -41,11 +41,11 @@ Rules:
   cankun-skills' README is a good base.
 - Never use an em dash (— or ——) in either language; restructure with
   commas, colons, or parentheses (site-wide writing rule).
-- `href` points at the skill's GitHub source — readers land on the original
-  content, not a registry page. Verify each returns HTTP 200 with curl BEFORE
-  shipping:
-  - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/tree/main/skills/<slug>`
-  - has its own repo: `https://github.com/Wang-Cankun/<slug>`
+- `href` points at the skill's SKILL.md file on GitHub — readers land on the
+  playbook itself, not a directory listing or registry page. Verify each
+  returns HTTP 200 with curl BEFORE shipping:
+  - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/blob/main/skills/<slug>/SKILL.md`
+  - has its own repo: `https://github.com/Wang-Cankun/<slug>/blob/main/skills/<slug>/SKILL.md`
 - `group`: `"general"` = useful to anyone; `"internal"` = tooling for
   Cankun's own workflow (e.g. cankun-blog-preview).
 
