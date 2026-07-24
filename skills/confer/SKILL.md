@@ -17,6 +17,8 @@ scripts/confer.mjs doctor [--live]                        # health check (run --
 
 Pass `-` as the prompt and pipe stdin for anything long or containing quotes.
 
+A round can take minutes. When you expect a long consultation and have other work, run the call in the background and pick the reply up when notified — never relay a peer through a subagent: the peer's own words must reach the user undiluted. Each `←` transcript header records which model answered (and cost/tokens where the CLI reports them).
+
 ## Steps
 
 1. **Resolve the target.** Which provider, and new thread or continuation? Prefer a peer that is **not your own model family** — a same-model consult is not an independent second opinion. When the user says 继续/上次/"what does it say now", run `list` and match — never open a fresh thread for what is semantically round N of an old one. Name threads you expect to revisit (`-t zhang-pe-review`); let one-shots auto-name. Done when: provider + thread decided.

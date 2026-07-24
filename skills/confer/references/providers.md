@@ -47,6 +47,14 @@ Caveats (each verified against the real CLI, not assumed):
   and commits the registry (rounds counts **completed** rounds; a retry reuses the number). Failure
   appends `✗` with the error. A `→` with neither `←` nor `✗` means the process died mid-call: the peer
   context may be one round ahead of the registry — a documented ambiguity, not silently repaired.
+- **Provenance** (best-effort, audit-oriented): each `←` header carries ` · <model> · <cost/tokens> ·
+  <duration>` where available, e.g. `(2026-07-24 09:00 · claude-fable-5 · $0.36 · 12s)` or
+  `(… · gpt-5.6-sol/xhigh · 23.7k→5tok)`; the registry keeps the last round's `model` (additive key).
+  Sources: claude = `modelUsage` (dominant entry) + `total_cost_usd` (API-equivalent — notional on a
+  subscription) + `duration_ms`; codex = `$CODEX_HOME/config.toml` `model`/`model_reasoning_effort`
+  (`-m` / `-c model_reasoning_effort=` in `CONFER_CODEX_ARGS` take precedence) + `turn.completed`
+  usage tokens — the codex event stream itself names no model. Missing fields degrade to a shorter
+  header; rounds written before this feature keep the old format.
 
 ## State
 

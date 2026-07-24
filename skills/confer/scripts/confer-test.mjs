@@ -18,7 +18,7 @@ fs.mkdirSync(BIN);
 const FAKE_CLAUDE = `#!/bin/bash
 [[ -n "$FAKE_CLAUDE_SLEEP" ]] && sleep "$FAKE_CLAUDE_SLEEP"
 case "\${FAKE_CLAUDE_MODE:-ok}" in
-  ok)        echo '{"session_id":"sess-claude-1","result":"claude-fake-reply"}' ;;
+  ok)        echo '{"session_id":"sess-claude-1","result":"claude-fake-reply","total_cost_usd":0.12,"duration_ms":3000,"modelUsage":{"claude-fake-model":{"costUSD":0.12,"canonicalModel":"claude-fake-model"}}}' ;;
   fail)      echo 'boom' >&2; exit 1 ;;
   badjson)   echo 'this is not json' ;;
   nosession) echo '{"result":"reply-without-session"}' ;;
@@ -33,7 +33,7 @@ reply=""; prev=""
 for a in "$@"; do [[ "$prev" == "--output-last-message" ]] && reply="$a"; prev="$a"; done
 case "\${FAKE_CODEX_MODE:-ok}" in
   ok)   echo '{"type":"thread.started","thread_id":"thread-codex-1"}'
-        echo '{"type":"turn.completed"}'
+        echo '{"type":"turn.completed","usage":{"input_tokens":1234,"output_tokens":56}}'
         [[ -n "$reply" ]] && printf 'codex-fake-reply' > "$reply" ;;
   fail) echo 'boom' >&2; exit 1 ;;
 esac
@@ -52,7 +52,8 @@ function freshHome() {
 function confer(args, { home, env = {}, timeoutMs = 20000 } = {}) {
   return new Promise((resolve) => {
     const child = spawn("bun", [MJS, ...args], {
-      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, ...env },
+      // CODEX_HOME defaults to ROOT (no config.toml) so provenance stays hermetic
+      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     const out = [], err = [];
@@ -83,6 +84,22 @@ function check(name, cond, detail = "") {
   check("open ok registers round 1", reg(home).t1?.rounds === 1 && reg(home).t1?.session === "sess-claude-1");
   const t = tx(home, "t1");
   check("open ok transcript has → and ←", t.includes("## R1 → claude") && t.includes("## R1 ← claude"));
+  check("claude provenance in ← header", t.includes("· claude-fake-model · $0.12 · 3s"), t.split("\n").find((l) => l.includes("← claude")));
+  check("claude provenance in registry", reg(home).t1?.model === "claude-fake-model");
+}
+
+// 1b. codex provenance: model/effort from CODEX_HOME config, tokens from turn.completed
+{
+  const home = freshHome();
+  const codexHome = fs.mkdtempSync(path.join(ROOT, "codexhome-"));
+  fs.writeFileSync(path.join(codexHome, "config.toml"), 'model = "fake-sol"\nmodel_reasoning_effort = "xhigh"\n');
+  const r = await confer(["open", "codex", "-t", "cx", "q"], { home, env: { CODEX_HOME: codexHome } });
+  check("codex provenance open ok", r.code === 0, r.stderr);
+  const t = tx(home, "cx");
+  check("codex provenance in ← header", t.includes("· fake-sol/xhigh · 1.2k→56tok"), t.split("\n").find((l) => l.includes("← codex")));
+  check("codex provenance in registry", reg(home).cx?.model === "fake-sol/xhigh");
+  const noCfg = await confer(["open", "codex", "-t", "cx2", "q"], { home });
+  check("codex provenance degrades gracefully without config", noCfg.code === 0 && tx(home, "cx2").includes("· 1.2k→56tok"));
 }
 
 // 2. all: one provider fails → other still answers, exit 0, stderr names loser

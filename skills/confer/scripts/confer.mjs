@@ -112,15 +112,17 @@ async function withRegistry(mutate) {
   }
 }
 
-function regSet(name, provider, session, rounds) {
+function regSet(name, provider, session, rounds, model) {
   return withRegistry((reg) => {
-    reg[name] = { provider, session, rounds, updated: now(), created: reg[name]?.created ?? now() };
+    reg[name] = { provider, session, rounds, ...(model ? { model } : {}), updated: now(), created: reg[name]?.created ?? now() };
   });
 }
 
-function transcript(name, round, dir, who, text) {
-  fs.appendFileSync(path.join(TDIR, `${name}.md`), `\n## R${round} ${dir} ${who}  (${now()})\n\n${text}\n`);
+function transcript(name, round, dir, who, text, metaStr = "") {
+  fs.appendFileSync(path.join(TDIR, `${name}.md`), `\n## R${round} ${dir} ${who}  (${now()}${metaStr})\n\n${text}\n`);
 }
+
+const fmtTok = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 
 // ---- child process runner (D5: process-tree contract) ----------------------
 // Detached spawn (own process group); stdout/stderr drained concurrently;
@@ -184,12 +186,37 @@ const providers = {
       try { j = JSON.parse(r.stdout); } catch { throw new ProviderError("claude", `unparseable JSON output: ${r.stdout.slice(0, 200)}`); }
       const newSession = j.session_id;
       if (!newSession) throw new ProviderError("claude", "no session_id in response (protocol error)");
-      return { reply: j.result ?? j.error ?? "(empty reply)", session: newSession };
+      // Provenance (best-effort): dominant modelUsage entry + API-equivalent cost + wall time.
+      const mu = j.modelUsage && Object.entries(j.modelUsage).sort((a, b) => (b[1]?.costUSD ?? 0) - (a[1]?.costUSD ?? 0))[0];
+      const model = mu?.[1]?.canonicalModel ?? mu?.[0] ?? null;
+      const parts = [
+        model,
+        j.total_cost_usd != null ? `$${j.total_cost_usd.toFixed(2)}` : null,
+        j.duration_ms != null ? `${Math.round(j.duration_ms / 1000)}s` : null,
+      ].filter(Boolean);
+      return { reply: j.result ?? j.error ?? "(empty reply)", session: newSession, meta: { model, parts } };
     },
   },
   codex: {
     // Verified against codex-cli 0.145.0: --sandbox is exec-level only (resume has
     // no --sandbox); --skip-git-repo-check keeps the consultant CWD-independent.
+    // Provenance: the event stream carries no model/effort — read config.toml
+    // (CONFER_CODEX_ARGS -m / -c model_reasoning_effort= take precedence).
+    config() {
+      const extra = splitArgs(process.env.CONFER_CODEX_ARGS);
+      let model = null, effort = null;
+      const mi = extra.findIndex((a) => a === "-m" || a === "--model");
+      if (mi >= 0) model = extra[mi + 1] ?? null;
+      effort = extra.find((a) => a.includes("model_reasoning_effort="))?.split("=").pop()?.replace(/"/g, "") ?? null;
+      if (!model || !effort) {
+        try {
+          const s = fs.readFileSync(path.join(process.env.CODEX_HOME || path.join(os.homedir(), ".codex"), "config.toml"), "utf8");
+          const g = (k) => s.match(new RegExp(`^${k}\\s*=\\s*"([^"]+)"`, "m"))?.[1] ?? null;
+          model ??= g("model"); effort ??= g("model_reasoning_effort");
+        } catch {}
+      }
+      return model ? (effort ? `${model}/${effort}` : model) : null;
+    },
     async ask(prompt, session) {
       const replyFile = path.join(os.tmpdir(), `confer-codex-${process.pid}-${crypto.randomBytes(4).toString("hex")}.txt`);
       const base = ["exec", "--sandbox", "read-only", "--skip-git-repo-check"];
@@ -197,7 +224,7 @@ const providers = {
       const args = session ? [...base, "resume", session, ...tail] : [...base, ...tail];
       try {
         const r = await runOrThrow("codex", "codex", args);
-        let threadId = null;
+        let threadId = null, usage = null;
         for (const line of r.stdout.split("\n")) {
           if (!line.trim()) continue;
           let evt;
@@ -207,12 +234,18 @@ const providers = {
               throw new ProviderError("codex", `conflicting thread ids: ${threadId} vs ${evt.thread_id}`);
             threadId = evt.thread_id;
           }
+          if (evt.type === "turn.completed" && evt.usage) usage = evt.usage;
         }
         const sessionId = session ?? threadId;
         if (!sessionId) throw new ProviderError("codex", "no thread.started event with thread_id (protocol error)");
         let reply;
         try { reply = fs.readFileSync(replyFile, "utf8"); } catch { throw new ProviderError("codex", "no --output-last-message file written (protocol error)"); }
-        return { reply, session: sessionId };
+        const model = this.config();
+        const parts = [
+          model,
+          usage ? `${fmtTok(usage.input_tokens ?? 0)}→${fmtTok(usage.output_tokens ?? 0)}tok` : null,
+        ].filter(Boolean);
+        return { reply, session: sessionId, meta: { model, parts } };
       } finally {
         try { fs.unlinkSync(replyFile); } catch {}
       }
@@ -237,8 +270,9 @@ async function runRound(name, provider, prompt, session, round) {
     transcript(name, round, "✗", provider, e.message);
     throw e;
   }
-  transcript(name, round, "←", provider, res.reply);
-  await regSet(name, provider, res.session, round);
+  const metaStr = res.meta?.parts?.length ? ` · ${res.meta.parts.join(" · ")}` : "";
+  transcript(name, round, "←", provider, res.reply, metaStr);
+  await regSet(name, provider, res.session, round, res.meta?.model);
   return `${res.reply}\n\n[confer] thread=${name} provider=${provider} round=${round} — continue: confer.mjs reply ${name} "..."`;
 }
 
