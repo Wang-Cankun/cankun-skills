@@ -1,12 +1,14 @@
 ---
 name: confer
-group: general
-summary: >-
-  Cross-model consultation with resumable threads: ask Codex from Claude Code
-  (or vice versa), keep multi-round peer-review dialogues alive across sessions,
-  fan one question out to every provider concurrently. Single-file bun CLI;
-  records per-round model/cost provenance; safe under concurrent use from
-  multiple agent hosts.
+compatibility: Requires `bun` + the `claude`/`codex` CLIs.
+metadata:
+  group: general
+  summary: >-
+    Cross-model consultation with resumable threads: ask Codex from Claude Code
+    (or vice versa), keep multi-round peer-review dialogues alive across sessions,
+    fan one question out to every provider concurrently. Single-file bun CLI;
+    records per-round model/cost provenance; safe under concurrent use from
+    multiple agent hosts.
 description: Consult a peer AI model (Claude or Codex) and keep the dialogue resumable across rounds. Use when the user wants a second opinion from another model ("ask codex", "问问 codex", "让 claude 看看", "gpt says…"), wants a multi-round cross-model review, wants to resume or continue an earlier consultation thread, or when a conclusion needs independent-model verification.
 ---
 

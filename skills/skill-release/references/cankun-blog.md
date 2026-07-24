@@ -47,7 +47,8 @@ Rules:
   - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/blob/main/skills/<slug>/SKILL.md`
   - has its own repo: `https://github.com/Wang-Cankun/<slug>/blob/main/skills/<slug>/SKILL.md`
 - `group`: `"general"` = useful to anyone; `"internal"` = tooling for
-  Cankun's own workflow (e.g. cankun-blog-preview).
+  Cankun's own workflow (e.g. cankun-blog-preview). Derives from the skill's
+  frontmatter `metadata.group`.
 
 ## Verify, deploy, commit
 

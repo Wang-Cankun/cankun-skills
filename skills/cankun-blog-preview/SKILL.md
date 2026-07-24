@@ -1,10 +1,12 @@
 ---
 name: cankun-blog-preview
-group: internal
-summary: >-
-  Generates and integrates exactly one Franklin Booth-inspired, white-background
-  preview image for a Cankun blog article, then validates its optimized WebP and
-  full-resolution link.
+compatibility: Requires `bun` + a local cankun-blog checkout.
+metadata:
+  group: internal
+  summary: >-
+    Generates and integrates exactly one Franklin Booth-inspired, white-background
+    preview image for a Cankun blog article, then validates its optimized WebP and
+    full-resolution link.
 description: >-
   Generate and integrate exactly one article preview image for cankun-blog by
   inferring one visual metaphor from a target MDX post, maintaining the Franklin

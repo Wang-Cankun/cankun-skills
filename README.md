@@ -25,9 +25,9 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then in
 
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
-| [cankun-blog-preview](./skills/cankun-blog-preview) | Generates and integrates exactly one Franklin Booth-inspired, white-background preview image for a Cankun blog article, then validates its optimized WebP and full-resolution link. | `npx skills@latest add Wang-Cankun/cankun-skills --skill cankun-blog-preview` |
+| [cankun-blog-preview](./skills/cankun-blog-preview) | Generates and integrates exactly one Franklin Booth-inspired, white-background preview image for a Cankun blog article, then validates its optimized WebP and full-resolution link. Requires `bun` + a local cankun-blog checkout. | `npx skills@latest add Wang-Cankun/cankun-skills --skill cankun-blog-preview` |
 | [repo-wayfinder](./skills/repo-wayfinder) | Audits repository documentation by walking real tasks to the code that owns each claim, then returns a decision surface: a wayfinder table, per-document dispositions (keep, point, co-locate, mark historical, delete), and the minimal change set. | `npx skills@latest add Wang-Cankun/cankun-skills --skill repo-wayfinder` |
-| [skill-release](./skills/skill-release) | Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion. | `npx skills@latest add Wang-Cankun/cankun-skills --skill skill-release` |
+| [skill-release](./skills/skill-release) | Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion. Requires `bun` + `curl` + the `skl` CLI. | `npx skills@latest add Wang-Cankun/cankun-skills --skill skill-release` |
 
 ## License
 

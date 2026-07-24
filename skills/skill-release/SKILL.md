@@ -1,7 +1,9 @@
 ---
 name: skill-release
-group: internal
-summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
+compatibility: Requires `bun` + `curl` + the `skl` CLI.
+metadata:
+  group: internal
+  summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
 description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo.
 ---
 
@@ -22,7 +24,7 @@ move, not this skill's.
 
 The human-facing summary of a skill resolves through one chain, highest first:
 
-1. frontmatter `summary:` in `SKILL.md`
+1. frontmatter `metadata.summary` in `SKILL.md`
 2. `agents/openai.yaml` → `interface.short_description`
 3. first sentence of the frontmatter `description`
 
@@ -47,8 +49,8 @@ classification, shown to the user as a one-line-each table.
 
 ## 2. Converge the index
 
-Collection rows are grouped by the frontmatter `group:` key (`general` |
-`internal`, default `general`) into two subsections — **General use**, then
+Collection rows are grouped by the frontmatter `metadata.group` key (`general`
+| `internal`, default `general`) into two subsections — **General use**, then
 **Internal workflow** — the same categories as cankun.me; the cankun-blog
 `group` field derives from this same key. Within a group, regenerate rows
 alphabetically by skill name:
@@ -56,7 +58,7 @@ alphabetically by skill name:
 | cell | derivation |
 |------|------------|
 | Skill | `[<name>](./skills/<name>)` |
-| What it does | resolved summary (verbatim; append requirements only if the skill declares external CLIs) |
+| What it does | resolved summary (verbatim; if the skill sets `compatibility:`, append it verbatim) |
 | Install | `npx skills@latest add Wang-Cankun/cankun-skills --skill <name>` |
 
 Remove an orphan row and warn that its install command breaks for existing
@@ -70,6 +72,11 @@ alone, and relative links resolve.
 
 Per skill being released:
 
+- frontmatter passes the Agent Skills spec (agentskills.io): top-level keys
+  limited to `name`, `description`, `license`, `compatibility`, `metadata`,
+  `allowed-tools` — custom keys (`group`, `summary`) live under `metadata:`;
+  Claude Code runtime keys (e.g. `disable-model-invocation`) are a known,
+  accepted deviation;
 - `agents/openai.yaml` present with `display_name`, `short_description`,
   `default_prompt` — a missing file is created, not merely flagged (it is a
   publish surface inside the write boundary);
