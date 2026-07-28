@@ -67,6 +67,32 @@ Pinned sources:
 - [Agent-adapter `AGENTS.md`](https://github.com/arcboxlabs/linkcode/blob/9de06705f68f7630ba5bc002f18297ad3d3c5544/packages/host/agent-adapter/AGENTS.md)
 - [Pull-request template](https://github.com/arcboxlabs/linkcode/blob/9de06705f68f7630ba5bc002f18297ad3d3c5544/.github/pull_request_template.md)
 
+## CLAUDE.md as a thin re-export
+
+When a repository serves Claude Code alongside other agents, `AGENTS.md` stays
+the single owner of agent instruction at every level; each `CLAUDE.md` is only a
+thin re-export of its sibling, never a second home for content. General shape:
+
+```text
+@AGENTS.md
+
+Claude Code
+Always keep these instructions — this file and the imported AGENTS.md — in
+context; never compact them.
+
+Extra conventions load automatically by scope: per-directory CLAUDE.md files
+(each a thin @AGENTS.md re-export of its sibling) and path-scoped rules under
+.claude/rules/*.md. These are Claude Code mechanisms; other tools read the
+AGENTS.md files and the referenced rules directly.
+```
+
+- The `@AGENTS.md` import line does the routing; prose below it may only name
+  Claude-specific loading mechanics, never repository facts.
+- Mirror the layering: wherever a nested `AGENTS.md` exists and Claude Code is
+  in use, its sibling `CLAUDE.md` is the same re-export.
+- A `CLAUDE.md` that has grown its own constraints is a drift finding: move the
+  content into the owning `AGENTS.md` and restore the re-export.
+
 ## What not to copy
 
 LinkCode's root instruction file also demonstrates the risk:
