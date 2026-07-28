@@ -29,7 +29,7 @@ what changed.
   descZh: "...",               // 简体中文, written for mainland readers,
                                // not a word-for-word translation
   href: "<the skill's SKILL.md on GitHub>",
-  group: "general" | "internal",
+  group: "general" | "design" | "internal",
 }
 ```
 
@@ -46,9 +46,10 @@ Rules:
   returns HTTP 200 with curl BEFORE shipping:
   - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/blob/main/skills/<slug>/SKILL.md`
   - has its own repo: `https://github.com/Wang-Cankun/<slug>/blob/main/skills/<slug>/SKILL.md`
-- `group`: `"general"` = useful to anyone; `"internal"` = tooling for
-  Cankun's own workflow (e.g. cankun-blog-preview). Derives from the skill's
-  frontmatter `metadata.group`.
+- `group`: `"general"` = useful to anyone; `"design"` = design and image
+  skills (the `art-*` family); `"internal"` = tooling for Cankun's own
+  workflow (e.g. cankun-blog-preview). Derives from the skill's frontmatter
+  `metadata.group`.
 
 ## Verify, deploy, commit
 

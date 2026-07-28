@@ -53,9 +53,9 @@ classification, shown to the user as a one-line-each table.
 ## 2. Converge the index
 
 Collection rows are grouped by the frontmatter `metadata.group` key (`general`
-| `internal`, default `general`) into two subsections — **General use**, then
-**Internal workflow** — the same categories as cankun.me; the cankun-blog
-`group` field derives from this same key. Within a group, regenerate rows
+| `design` | `internal`, default `general`) into three subsections — **General
+use**, then **Design**, then **Internal workflow** — the same categories as
+cankun.me; the cankun-blog `group` field derives from this same key. Within a group, regenerate rows
 alphabetically by skill name:
 
 | cell | derivation |

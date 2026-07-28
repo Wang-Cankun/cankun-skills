@@ -6,7 +6,7 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 ## Collection
 
-Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then internal workflow.
+Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then design, then internal workflow.
 
 ### General use
 
@@ -16,6 +16,13 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then in
 | [deposition](./skills/deposition) | Relentless one-question-at-a-time deposition of a plan, decision, or idea: keeps a visible record (✓ settled · ? open · ~ unwalked) and closes only through a nothing-further gate. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
 | [known-unknowns](./skills/known-unknowns) | Guided deliberations on the Rumsfeld matrix: helps articulate tacit judgments, surfaces unrecognized patterns, tours unseen options, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/cankun-skills --skill known-unknowns` |
 | [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) Requires headless Chrome + Python (`pypdf`). | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
+
+### Design
+
+| Skill | What it does | Install |
+| ----- | ------------ | ------- |
+| [art-photo-quiet-light](./skills/art-photo-quiet-light) | Plans, directs, generates, and edits slow-travel and lifestyle photography in the quiet-light visual language associated with Roberta Mazzone: architectural composition, natural light, warm restraint, and quiet cinematic narrative. | `npx skills@latest add Wang-Cankun/cankun-skills --skill art-photo-quiet-light` |
+| [art-poster-mondo](./skills/art-poster-mondo) | Researches, art-directs, creates, and critiques alternate pop-culture posters in the Mondo screen-print tradition: source-grounded concepts, integrated typography, collectible-object craft, and print-ready variants. | `npx skills@latest add Wang-Cankun/cankun-skills --skill art-poster-mondo` |
 
 ### Internal workflow
 
