@@ -22,7 +22,7 @@ Use the matrix to orient a multi-turn deliberation. The topic starts mostly dark
 
 The matrix tracks awareness; tacitness tracks articulability. Classify each entry by awareness, and treat difficulty articulating an already-recognized judgment as a separate named gap. Split descriptions whose parts belong in different cells.
 
-Use the marks as lifecycle shorthand: `✓` settled · `?` named question · `!` recognition candidate · `~` unexplored frontier.
+Use the marks as lifecycle shorthand: `✓` settled · `?` named question · `!` recognition candidate · `~` unexplored frontier. The map always renders as this 2×2 table — every entry sits in its cell with its mark inline; a flat mark list is not a map.
 
 Choose the move by cell:
 
@@ -41,7 +41,7 @@ The opening is done when the full map is visible, every inference is marked, one
 
 ## Each turn
 
-1. **Redraw the full map**, compact enough to stay a card: keep a fixed skeleton and one phrase per entry. Promote whatever the user just recognized, answered, or corrected.
+1. **Redraw the full map**, compact enough to stay a card: keep the four-cell table skeleton and one phrase per entry. Promote whatever the user just recognized, answered, or corrected.
 2. **Enable one aspect-seeing.** Choose one cell and contribute before asking. Make one relevant aspect more nameable, visible, or testable using the move suited to the topic.
 3. **Ask exactly one question.** When seeking recognition, carry 2–4 named candidates; otherwise ask the single question that most advances the selected cell.
 
