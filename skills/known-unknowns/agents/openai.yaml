@@ -1,0 +1,7 @@
+interface:
+  display_name: "Known Unknowns"
+  short_description: "Articulate tacit judgment; surface patterns; tour unseen options"
+  default_prompt: "Use $known-unknowns to help me think through a decision I own: articulate my tacit judgment, surface patterns I may not recognize, and tour options I would not think to ask about."
+
+policy:
+  allow_implicit_invocation: true

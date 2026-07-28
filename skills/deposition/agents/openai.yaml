@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deposition"
+  short_description: "Depose a plan one question at a time until nothing further"
+  default_prompt: "Use $deposition to depose this plan: one question at a time, keep the record in view, and close only when nothing further is left."
+
+policy:
+  allow_implicit_invocation: true
