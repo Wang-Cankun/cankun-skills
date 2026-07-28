@@ -1,6 +1,6 @@
 interface:
   display_name: "Confer"
-  short_description: "Consult a peer AI model in resumable cross-model threads"
+  short_description: "Consult a peer AI model (Claude, Codex, or GPT Pro via Oracle) in resumable threads"
   default_prompt: "Use $confer to get a second opinion on this from a peer model and keep the thread resumable."
 
 policy:

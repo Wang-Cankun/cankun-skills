@@ -1,12 +1,13 @@
 ---
 name: confer
+compatibility: Requires `bun` + at least one provider CLI; Oracle routes require Oracle >= 0.16.2 and an authenticated ChatGPT browser profile.
 metadata:
   group: general
   summary: >-
     Cross-model consultation with resumable threads: ask Claude, Codex, or
-    explicitly requested GPT Pro through Oracle; keep multi-round peer-review
-    dialogues alive across sessions; fan out concurrently without changing the
-    default Claude + Codex set. Single-file bun CLI with per-round provenance and
+    explicitly requested GPT Pro through Oracle; continue peer-review dialogues
+    across sessions; fan out concurrently while keeping Claude + Codex as the
+    default set. Single-file bun CLI with per-round provenance and
     concurrency-safe state.
 description: Consult a peer AI model (Claude or Codex, plus GPT Pro through Oracle when explicitly requested) and keep the dialogue resumable across rounds. Use when the user wants a second opinion from another model ("ask codex", "问问 codex", "让 claude 看看", "gpt says…"), explicitly asks to use/ask GPT Pro or Oracle, wants a multi-round cross-model review, wants to resume or continue an earlier consultation thread, or when a conclusion needs independent-model verification.
 ---
