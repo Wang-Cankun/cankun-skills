@@ -4,7 +4,7 @@ compatibility: Requires `bun` + `curl` + the `skl` CLI.
 metadata:
   group: internal
   summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
-description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo.
+description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo (or fold one back).
 ---
 
 # Skill Release — converge the publish surfaces
@@ -65,8 +65,8 @@ alphabetically by skill name:
 | Install | `npx skills@latest add Wang-Cankun/cankun-skills --skill <name>` |
 
 Remove an orphan row and warn that its install command breaks for existing
-users. The **Flagship** table is hand-owned — touch it only inside the
-promotion branch.
+users. A **Flagship** table exists only while a promoted skill does; it is
+hand-owned, created and retired inside the promotion branch.
 
 **Complete when:** the Collection table is reproducible from the skills' files
 alone, and relative links resolve.
@@ -88,6 +88,8 @@ Per skill being released:
 - examples are free of secrets and machine-local paths;
 - a model-invoked `description` carries trigger branches (or the skill sets
   `disable-model-invocation: true` and keeps a one-line human description);
+- a `design`-group skill's name follows the `art-<medium>-<style>` family, the
+  filterable prefix convention;
 - the skill has been dogfooded: `skl where <name>` shows at least one
   deployment — zero deployments flags "unused", non-blocking like every flag.
 
@@ -116,12 +118,13 @@ lands) — still curl-verify every link before shipping.
 **Complete when:** production serves the entry (smoke test passes) and
 cankun-blog is committed and pushed — or the step is explicitly deferred.
 
-## 6. Promote to flagship
+## 6. Promote to flagship — or fold back
 
-Only when the user asks to move a skill into its own repo, follow
-[`references/promotion.md`](references/promotion.md) — repo layout modeled on
-`known-unknowns`, the index row move, install-command breakage, and skillshelf
-re-linking are all in there.
+Only when the user asks to move a skill into its own repo (or to fold a
+flagship back into the collection), follow
+[`references/promotion.md`](references/promotion.md) — repo layout, the index
+row move, install-command breakage, skillshelf re-linking, and the demotion
+checklist are all in there.
 
 **Complete when:** every checklist item in the reference is done or explicitly
 deferred.

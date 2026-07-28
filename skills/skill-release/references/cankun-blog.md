@@ -16,8 +16,8 @@ Do not touch either unless the layout itself is changing.
 ## Source of truth for the list
 
 The skills live in the sibling repo `~/Documents/GitHub/cankun-skills`
-(`skills/` folder, indexed in its README). Flagship skills live in their own
-repos (e.g. known-unknowns). Diff that against the `skills` array to find
+(`skills/` folder, indexed in its README). A promoted flagship skill, when one
+exists, lives in its own repo. Diff that against the `skills` array to find
 what changed.
 
 ## Shape of one entry
