@@ -126,8 +126,9 @@ Apply these topology rules:
   semantic authority to code-grounded review.
 
 Before proposing a new document topology or a new `AGENTS.md` layer, read
-[`references/precedents.md`](references/precedents.md). Use the precedents as
-constraints and counterexamples, not templates.
+[`references/topology.md`](references/topology.md) — this skill's own templates
+and constraints. Re-derive every shape from the target repository; never paste
+a template blind.
 
 **Complete when:** every authority-bearing unit and duplicate has exactly one
 disposition, and every proposed file survives the owning-question test.
