@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Deterministic test suite for confer.mjs — zero live calls.
-// Fake claude/codex CLIs on a prepended PATH + temp CONFER_HOME per test.
+// Fake provider CLIs on a prepended PATH + temp CONFER_HOME per test.
 // Covers the failure modes live probes can't: hangs (process-tree kill),
 // malformed output, protocol errors, and lock races (concurrent same-thread
 // reply, duplicate open). Run: bun scripts/confer-test.mjs
@@ -39,8 +39,39 @@ case "\${FAKE_CODEX_MODE:-ok}" in
 esac
 `;
 
+const FAKE_ORACLE = `#!/bin/bash
+if [[ -n "$FAKE_ORACLE_CALLS" ]]; then
+  printf '%q ' "$@" >> "$FAKE_ORACLE_CALLS"
+  printf '\\n' >> "$FAKE_ORACLE_CALLS"
+fi
+[[ "$1" == "--version" ]] && { echo "\${FAKE_ORACLE_VERSION:-0.16.2}"; exit 0; }
+reply=""; followup=""; prev=""
+for a in "$@"; do
+  [[ "$prev" == "--write-output" ]] && reply="$a"
+  [[ "$prev" == "--followup" ]] && followup="$a"
+  prev="$a"
+done
+case "\${FAKE_ORACLE_MODE:-ok}" in
+  ok)          if [[ -n "$followup" ]]; then
+                 echo 'Session: oracle-session-child'
+                 [[ -n "$reply" ]] && printf 'oracle-fake-followup' > "$reply"
+               else
+                 echo 'Session: oracle-session-root'
+                 [[ -n "$reply" ]] && printf 'oracle-fake-reply' > "$reply"
+               fi ;;
+  fail)        echo 'oracle boom' >&2; exit 1 ;;
+  nosession)   [[ -n "$reply" ]] && printf 'reply-without-session' > "$reply" ;;
+  nooutput)    echo 'Session: oracle-session-root' ;;
+  emptyoutput) echo 'Session: oracle-session-root'; [[ -n "$reply" ]] && : > "$reply" ;;
+  conflict)    echo 'Session: oracle-session-a'; echo 'Session: oracle-session-b'
+               [[ -n "$reply" ]] && printf 'conflicting-session-reply' > "$reply" ;;
+  hang)        sleep 600 ;;
+esac
+`;
+
 fs.writeFileSync(path.join(BIN, "claude"), FAKE_CLAUDE, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "codex"), FAKE_CODEX, { mode: 0o755 });
+fs.writeFileSync(path.join(BIN, "oracle"), FAKE_ORACLE, { mode: 0o755 });
 
 let n = 0, failed = 0;
 
@@ -88,6 +119,14 @@ function check(name, cond, detail = "") {
   check("claude provenance in registry", reg(home).t1?.model === "claude-fake-model");
 }
 
+// 1a. the public help reports the runtime-owned default timeout
+{
+  const home = freshHome();
+  const r = await confer([], { home });
+  check("default provider timeout is 20 minutes", r.code === 0 && r.stdout.includes("CONFER_TIMEOUT (s, default 1200)"), r.stdout);
+  check("default Oracle timeout is 65 minutes", r.code === 0 && r.stdout.includes("CONFER_ORACLE_TIMEOUT (s, default 3900)"), r.stdout);
+}
+
 // 1b. codex provenance: model/effort from CODEX_HOME config, tokens from turn.completed
 {
   const home = freshHome();
@@ -100,6 +139,122 @@ function check(name, cond, detail = "") {
   check("codex provenance in registry", reg(home).cx?.model === "fake-sol/xhigh");
   const noCfg = await confer(["open", "codex", "-t", "cx2", "q"], { home });
   check("codex provenance degrades gracefully without config", noCfg.code === 0 && tx(home, "cx2").includes("· 1.2k→56tok"));
+}
+
+// 1c. Oracle is an explicit GPT Pro provider with child-session followups.
+{
+  const home = freshHome();
+  const calls = path.join(home, "oracle-calls");
+  const r1 = await confer(["open", "oracle", "-t", "pro", "q"], {
+    home, env: { FAKE_ORACLE_CALLS: calls },
+  });
+  check("oracle open exits 0", r1.code === 0 && r1.stdout.includes("oracle-fake-reply"), r1.stderr);
+  check("oracle open stores root session", reg(home).pro?.session === "oracle-session-root" && reg(home).pro?.model === "gpt-5.6/pro");
+  check("oracle provenance in ← header", tx(home, "pro").includes("· gpt-5.6/pro ·"), tx(home, "pro"));
+  const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("oracle pins browser GPT-5.6 Pro", [
+    "--engine browser",
+    "--model gpt-5.6",
+    "--browser-thinking-time heavy",
+    "--browser-timeout 60m",
+    "--wait",
+    "--no-notify",
+    "--browser-archive never",
+    "--write-output",
+  ].every((s) => openArgs.includes(s)), openArgs);
+
+  const r2 = await confer(["reply", "pro", "again"], {
+    home, env: { FAKE_ORACLE_CALLS: calls },
+  });
+  check("oracle followup exits 0", r2.code === 0 && r2.stdout.includes("oracle-fake-followup"), r2.stderr);
+  check("oracle followup refreshes child session", reg(home).pro?.session === "oracle-session-child" && reg(home).pro?.rounds === 2);
+  const followupArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("oracle followup passes parent session", followupArgs.includes("--followup oracle-session-root"), followupArgs);
+}
+
+// 1d. Oracle version and output/session protocol gates fail closed.
+{
+  const home = freshHome();
+  const calls = path.join(home, "oracle-calls");
+  const old = await confer(["open", "oracle", "-t", "old", "q"], {
+    home, env: { FAKE_ORACLE_VERSION: "0.16.1", FAKE_ORACLE_CALLS: calls },
+  });
+  const oldCalls = fs.readFileSync(calls, "utf8").trim().split("\n");
+  check("oracle <0.16.2 is rejected", old.code === 1 && old.stderr.includes("need >= 0.16.2"), old.stderr);
+  check("old oracle is rejected before prompt submission", oldCalls.length === 1 && oldCalls[0] === "--version", oldCalls.join(" | "));
+
+  const prereleaseHome = freshHome();
+  const prerelease = await confer(["open", "oracle", "-t", "prerelease", "q"], {
+    home: prereleaseHome, env: { FAKE_ORACLE_VERSION: "0.16.2-beta.1" },
+  });
+  check("oracle 0.16.2 prerelease is below stable minimum", prerelease.code === 1 && prerelease.stderr.includes("need >= 0.16.2"), prerelease.stderr);
+
+  for (const [mode, expected] of [
+    ["nosession", "no Session:"],
+    ["nooutput", "no --write-output"],
+    ["emptyoutput", "empty --write-output"],
+    ["conflict", "conflicting session ids"],
+  ]) {
+    const h = freshHome();
+    const r = await confer(["open", "oracle", "-t", mode, "q"], {
+      home: h, env: { FAKE_ORACLE_MODE: mode },
+    });
+    check(`oracle ${mode} is a protocol error`, r.code === 1 && r.stderr.includes(expected), r.stderr);
+  }
+}
+
+// 1e. Oracle keeps its own 65-minute budget and honors the test override.
+{
+  const home = freshHome();
+  const t0 = Date.now();
+  const r = await confer(["open", "oracle", "-t", "oracle-hung", "q"], {
+    home, env: { FAKE_ORACLE_MODE: "hang", CONFER_ORACLE_TIMEOUT: "1" },
+  });
+  const elapsed = Date.now() - t0;
+  check("oracle timeout override fails fast", r.code === 1 && elapsed < 6000, `code=${r.code} elapsed=${elapsed}ms`);
+  check("oracle timeout reports its own budget", r.stderr.includes("timed out after 1s"), r.stderr);
+}
+
+// 1f. Oracle is excluded from implicit fan-out and included only by explicit flag.
+{
+  const home = freshHome();
+  const calls = path.join(home, "oracle-calls");
+  const implicit = await confer(["all", "q"], {
+    home, env: { FAKE_ORACLE_CALLS: calls },
+  });
+  check("bare all keeps claude+codex behavior", implicit.code === 0 && !implicit.stdout.includes("════ oracle ════"), implicit.stdout);
+  check("bare all does not invoke oracle", !fs.existsSync(calls));
+
+  const explicitHome = freshHome();
+  const explicitCalls = path.join(explicitHome, "oracle-calls");
+  const explicit = await confer(["all", "--with-oracle", "q"], {
+    home: explicitHome, env: { FAKE_ORACLE_CALLS: explicitCalls },
+  });
+  check("all --with-oracle includes GPT Pro", explicit.code === 0 && explicit.stdout.includes("════ oracle ════") && explicit.stdout.includes("oracle-fake-reply"), explicit.stderr);
+  check("explicit fan-out registers oracle thread", Object.values(reg(explicitHome)).some((t) => t.provider === "oracle"));
+
+  const partialHome = freshHome();
+  const partial = await confer(["all", "--with-oracle", "q"], {
+    home: partialHome, env: { FAKE_ORACLE_MODE: "fail" },
+  });
+  check("explicit fan-out isolates oracle failure", partial.code === 0 && partial.stderr.includes("oracle failed") && partial.stdout.includes("codex-fake-reply"), partial.stderr);
+}
+
+// 1g. Doctor only exercises Oracle live when the provider is named explicitly.
+{
+  const home = freshHome();
+  const calls = path.join(home, "oracle-calls");
+  const implicit = await confer(["doctor", "--live"], {
+    home, env: { FAKE_ORACLE_CALLS: calls },
+  });
+  const implicitOracleCalls = fs.readFileSync(calls, "utf8").trim().split("\n");
+  check("doctor --live excludes oracle live calls", implicit.code === 0 && implicitOracleCalls.length === 1 && implicitOracleCalls[0] === "--version", implicit.stdout);
+  check("doctor --live reports only default live providers", implicit.stdout.includes("── live: claude") && implicit.stdout.includes("── live: codex") && !implicit.stdout.includes("── live: oracle"), implicit.stdout);
+
+  const explicitHome = freshHome();
+  const explicit = await confer(["doctor", "--live", "oracle"], { home: explicitHome });
+  check("doctor --live oracle exercises only oracle", explicit.code === 0 && explicit.stdout.includes("── live: oracle") && !explicit.stdout.includes("── live: claude") && !explicit.stdout.includes("── live: codex"), explicit.stderr);
+  check("doctor cleans explicit oracle thread", Object.keys(reg(explicitHome)).length === 0);
 }
 
 // 2. all: one provider fails → other still answers, exit 0, stderr names loser

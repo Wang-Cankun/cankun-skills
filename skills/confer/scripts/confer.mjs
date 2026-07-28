@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// confer — consult a peer AI model (claude / codex) with resumable threads.
+// confer — consult a peer AI model (claude / codex / explicit oracle) with resumable threads.
 // State: ~/.confer/threads.json (registry) + ~/.confer/threads/<name>.md (transcripts)
 // Locks: ~/.confer/locks/ — per-thread operation lock (held across the provider call)
 //        + short registry transaction lock. See references/providers.md.
@@ -14,7 +14,14 @@ const CONFER_HOME = process.env.CONFER_HOME || path.join(os.homedir(), ".confer"
 const REG = path.join(CONFER_HOME, "threads.json");
 const TDIR = path.join(CONFER_HOME, "threads");
 const LOCKDIR = path.join(CONFER_HOME, "locks");
-const TIMEOUT_MS = (parseInt(process.env.CONFER_TIMEOUT, 10) || 300) * 1000;
+const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
+const DEFAULT_ORACLE_TIMEOUT_SECONDS = 65 * 60;
+const TIMEOUT_MS = (parseInt(process.env.CONFER_TIMEOUT, 10) || DEFAULT_TIMEOUT_SECONDS) * 1000;
+const ORACLE_TIMEOUT_MS =
+  (parseInt(process.env.CONFER_ORACLE_TIMEOUT, 10) || DEFAULT_ORACLE_TIMEOUT_SECONDS) * 1000;
+const ORACLE_MIN_VERSION = "0.16.2";
+const ORACLE_MODEL = "gpt-5.6";
+const ORACLE_MODEL_LABEL = "gpt-5.6/pro";
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
 const PREAMBLE =
@@ -51,6 +58,31 @@ function validName(name) {
 }
 
 function splitArgs(v) { return (v || "").split(/\s+/).filter(Boolean); }
+
+function parseVersion(text) {
+  const m = text.match(/\b(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?\b/);
+  return m ? { raw: m[0], parts: m.slice(1, 4).map(Number), prerelease: m[4] ?? null } : null;
+}
+
+function versionAtLeast(actual, minimum) {
+  const a = parseVersion(actual), b = parseVersion(minimum);
+  if (!a || !b) return false;
+  for (let i = 0; i < 3; i++) {
+    if (a.parts[i] !== b.parts[i]) return a.parts[i] > b.parts[i];
+  }
+  if (a.prerelease && !b.prerelease) return false;
+  return true;
+}
+
+async function requireOracleVersion() {
+  const r = await runOrThrow("oracle", "oracle", ["--version"], { timeoutMs: 15000 });
+  const version = parseVersion(`${r.stdout}\n${r.stderr}`);
+  if (!version)
+    throw new ProviderError("oracle", `unparseable --version output (need >= ${ORACLE_MIN_VERSION})`);
+  if (!versionAtLeast(version.raw, ORACLE_MIN_VERSION))
+    throw new ProviderError("oracle", `version ${version.raw} is too old (need >= ${ORACLE_MIN_VERSION})`);
+  return version.raw;
+}
 
 // ---- locks -----------------------------------------------------------------
 // O_EXCL lock files containing {pid, nonce, ts}. Stale (owner pid dead) locks
@@ -156,16 +188,16 @@ function run(cmd, args, { timeoutMs = TIMEOUT_MS } = {}) {
   });
 }
 
-async function runOrThrow(provider, cmd, args) {
+async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS } = {}) {
   let r;
   try {
-    r = await run(cmd, args);
+    r = await run(cmd, args, { timeoutMs });
   } catch (e) {
     if (e.code === "ENOENT") throw new ProviderError(provider, `'${cmd}' CLI not found (run: confer.mjs doctor)`);
     throw new ProviderError(provider, e.message);
   }
   if (r.timedOut)
-    throw new ProviderError(provider, `timed out after ${TIMEOUT_MS / 1000}s`, { stderr: r.stderr.trim(), timedOut: true });
+    throw new ProviderError(provider, `timed out after ${timeoutMs / 1000}s`, { stderr: r.stderr.trim(), timedOut: true });
   if (r.code !== 0)
     throw new ProviderError(provider, `exited ${r.code}`, { exitCode: r.code, stderr: r.stderr.trim() });
   return r;
@@ -251,8 +283,57 @@ const providers = {
       }
     },
   },
+  oracle: {
+    defaultFanout: false,
+    minVersion: ORACLE_MIN_VERSION,
+    async ask(prompt, session) {
+      await requireOracleVersion();
+      const replyFile = path.join(os.tmpdir(), `confer-oracle-${process.pid}-${crypto.randomBytes(4).toString("hex")}.txt`);
+      const args = [
+        ...splitArgs(process.env.CONFER_ORACLE_ARGS),
+        "--engine", "browser",
+        "--model", ORACLE_MODEL,
+        "--browser-thinking-time", "heavy",
+        "--browser-timeout", "60m",
+        "--wait",
+        "--no-notify",
+        "--browser-archive", "never",
+        ...(session ? ["--followup", session] : []),
+        "--write-output", replyFile,
+        "--prompt", prompt,
+      ];
+      const started = Date.now();
+      try {
+        const r = await runOrThrow("oracle", "oracle", args, { timeoutMs: ORACLE_TIMEOUT_MS });
+        let newSession = null;
+        for (const line of r.stdout.split("\n")) {
+          const m = line.match(/^Session:\s+(\S+)\s*$/);
+          if (!m) continue;
+          if (newSession && newSession !== m[1])
+            throw new ProviderError("oracle", `conflicting session ids: ${newSession} vs ${m[1]}`);
+          newSession = m[1];
+        }
+        if (!newSession)
+          throw new ProviderError("oracle", "no Session: <id> line in output (protocol error)");
+        let reply;
+        try { reply = fs.readFileSync(replyFile, "utf8"); }
+        catch { throw new ProviderError("oracle", "no --write-output file written (protocol error)"); }
+        if (!reply.trim())
+          throw new ProviderError("oracle", "empty --write-output file (protocol error)");
+        const duration = `${Math.round((Date.now() - started) / 1000)}s`;
+        return {
+          reply,
+          session: newSession,
+          meta: { model: ORACLE_MODEL_LABEL, parts: [ORACLE_MODEL_LABEL, duration] },
+        };
+      } finally {
+        try { fs.unlinkSync(replyFile); } catch {}
+      }
+    },
+  },
 };
 const PROVIDERS = Object.keys(providers);
+const DEFAULT_FANOUT_PROVIDERS = PROVIDERS.filter((p) => providers[p].defaultFanout !== false);
 
 // ---- rounds ----------------------------------------------------------------
 // The outbound "→" block is written before the call. On success: "←" block +
@@ -322,15 +403,18 @@ async function cmdReply(args) {
 }
 
 async function cmdAll(args) {
+  const withOracle = args[0] === "--with-oracle";
+  if (withOracle) args.shift();
+  const selected = withOracle ? PROVIDERS : DEFAULT_FANOUT_PROVIDERS;
   const prompt = readPrompt(args);
   const results = await Promise.allSettled(
-    PROVIDERS.map((p) => openThread(p, autoName(p), prompt)),
+    selected.map((p) => openThread(p, autoName(p), prompt)),
   );
   let ok = 0;
   results.forEach((r, i) => {
-    console.log(`════ ${PROVIDERS[i]} ════`);
+    console.log(`════ ${selected[i]} ════`);
     if (r.status === "fulfilled") { ok++; console.log(r.value); }
-    else console.error(`confer: ${PROVIDERS[i]} failed: ${r.reason.message}`);
+    else console.error(`confer: ${selected[i]} failed: ${r.reason.message}`);
   });
   if (ok === 0) die("all providers failed");
 }
@@ -353,18 +437,40 @@ function cmdShow(args) {
 }
 
 async function cmdDoctor(args) {
+  let liveProviders = null;
+  if (args.length) {
+    if (args[0] !== "--live" || args.length > 2)
+      die("usage: confer.mjs doctor [--live [provider]]");
+    const requested = args[1];
+    if (requested && !providers[requested])
+      die(`unknown provider '${requested}' (have: ${PROVIDERS.join(" ")})`);
+    liveProviders = requested ? [requested] : DEFAULT_FANOUT_PROVIDERS;
+  }
   let ok = true;
   for (const c of PROVIDERS) {
     const r = await run(c, ["--version"], { timeoutMs: 15000 }).catch(() => null);
-    if (r && r.code === 0) console.log(`ok   ${c} ${r.stdout.trim().split("\n")[0]}`);
-    else { console.log(`MISS ${c}`); ok = false; }
+    if (!r || r.code !== 0) {
+      console.log(`MISS ${c}`);
+      ok = false;
+      continue;
+    }
+    const output = `${r.stdout}\n${r.stderr}`.trim();
+    const firstLine = output.split("\n").find((line) => line.trim())?.trim() ?? "(unknown version)";
+    const minimum = providers[c].minVersion;
+    const version = minimum ? parseVersion(output) : null;
+    if (minimum && (!version || !versionAtLeast(version.raw, minimum))) {
+      console.log(`OLD  ${c} ${version?.raw ?? firstLine} (need >= ${minimum})`);
+      ok = false;
+    } else {
+      console.log(`ok   ${c} ${firstLine}`);
+    }
   }
   initHome();
   console.log(`ok   state ${CONFER_HOME} (threads: ${Object.keys(readReg()).length})`);
-  if (args[0] === "--live") {
+  if (liveProviders) {
     const mine = []; // clean up exactly the threads this run creates, in finally
     try {
-      for (const p of PROVIDERS) {
+      for (const p of liveProviders) {
         console.log(`── live: ${p} (open + resume) ──`);
         const name = `doctor-${p}-${process.pid}-${crypto.randomBytes(3).toString("hex")}`;
         try {
@@ -395,10 +501,11 @@ const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   open <provider> [-t name] <prompt|->   start a thread (${PROVIDERS.join("|")}); '-' reads prompt from stdin
   ask  <provider> <prompt|->             alias of open (auto thread name)
   reply <thread> <prompt|->              continue a thread (session resumed provider-side)
-  all <prompt|->                         fan the same question out to every provider (concurrent)
+  all [--with-oracle] <prompt|->         fan out to claude+codex; explicit flag adds GPT Pro
   list | show <thread>                   registry / full transcript
-  doctor [--live]                        check CLIs; --live does a real open+resume per provider
-env: CONFER_TIMEOUT (s, default 300) · CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS · CONFER_HOME`;
+  doctor [--live [provider]]             check CLIs; live defaults to claude+codex
+env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
+     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_HOME`;
 
 const [cmd, ...rest] = process.argv.slice(2);
 try {
