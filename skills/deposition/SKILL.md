@@ -13,7 +13,7 @@ Interview me relentlessly about every aspect of this plan, decision, or idea unt
 
 Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering.
 
-Keep the record in view: redraw it compactly before every question — `✓` settled decisions, one phrase each · `?` the branch this question sits on · `~` branches we have not walked yet. Promote entries as I answer; a decision I defer stays on the record marked deferred instead of vanishing. The record is how we both see how far shared understanding still is.
+Keep the record in view: redraw it before every question as an indented tree in a code fence, headed by the tally `✓n · ?1 · ~m` — `✓` settled decisions, one phrase each; exactly one `?` carrying the cursor on the branch this question sits on; `~` unwalked branches hanging under the branch that owns them, in walk order. Collapse a fully settled branch into its parent's one-line conclusion so the record stays a card; a flat mark list is not the record. Promote entries as I answer; a decision I defer stays marked deferred instead of vanishing. The record is how we both see how far shared understanding still is.
 
 If a *fact* can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
 
