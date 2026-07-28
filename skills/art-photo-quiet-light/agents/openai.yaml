@@ -1,0 +1,12 @@
+interface:
+  display_name: "Art Photo — Quiet Light"
+  short_description: "Slow-travel photography in the quiet-light visual language"
+  default_prompt: "Use $art-photo-quiet-light to design a slow-travel photography plan for this shoot."
+
+policy:
+  products:
+    - chatgpt
+    - codex
+    - api
+    - atlas
+  allow_implicit_invocation: true

@@ -1,0 +1,12 @@
+interface:
+  display_name: "Art Poster — Mondo"
+  short_description: "Alternate pop-culture posters in the Mondo screen-print tradition"
+  default_prompt: "Use $art-poster-mondo to develop three original art-direction routes for a collectible alternate movie poster."
+
+policy:
+  products:
+    - chatgpt
+    - codex
+    - api
+    - atlas
+  allow_implicit_invocation: true
