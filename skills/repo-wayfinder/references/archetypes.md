@@ -77,6 +77,8 @@ ones** · open decisions.
 **Trigger**: a decision changes or an assumption resolves.
 Record refutations: an unrecorded dead end is proposed again. Prefer this name over
 "argument", which invites essays.
+A deliberately deferred choice remains a decision. Once a defect has an accepted repair
+order and exit proof, its active owner is the plan; leave at most a pointer here.
 
 ### evidence
 *What was measured, when, and how do I re-run it?* Anyone challenging a claim.
@@ -94,6 +96,8 @@ Ordered phases, each with an exit proof that is a command or an observation.
 **Trigger**: a phase completes or the order changes.
 This is the document that legitimately carries state, which is what frees the others
 from carrying any.
+Own accepted defects here once their repair is planned; do not duplicate their action
+steps in the decision record.
 
 ### generated reference
 Owned by its generator. Never hand-edited; regenerate instead.

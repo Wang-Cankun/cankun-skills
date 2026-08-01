@@ -1,7 +1,4 @@
 interface:
   display_name: "Repo Wayfinder"
-  short_description: "Ground repository docs in current code"
-  default_prompt: "Use $repo-wayfinder to audit this repository’s documentation authority and propose the smallest code-grounded wayfinding map."
-
-policy:
-  allow_implicit_invocation: true
+  short_description: "Design or repair repository documentation systems"
+  default_prompt: "Use $repo-wayfinder to establish a minimal documentation ruleset and wayfinding map for this new or existing repository."
