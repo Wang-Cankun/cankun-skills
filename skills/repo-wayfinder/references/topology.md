@@ -83,8 +83,6 @@ AGENTS.md files and the referenced rules directly.
 
 ## Anti-patterns
 
-- Volatile facts — protocol versions, issue identifiers, dependency behavior,
-  implementation censuses — in an always-loaded instruction file.
 - A routing layer that grows into a second architecture and tooling manual.
 - A file created to complete a taxonomy. Prefer a pointer when the fact already
   has an owner, and no file when no distinct owning question exists.

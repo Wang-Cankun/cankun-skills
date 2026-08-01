@@ -43,14 +43,25 @@ templates in scope.
 
 Assign every discovered document a primary role:
 
+- on-ramp — what this is, where to start;
 - routing or agent instruction;
+- map — where components live and how they connect;
 - current contract;
 - operational runbook;
 - measurement or evidence;
-- decision or history;
-- proposal or bet;
+- rationale or decision;
+- proposal or plan;
 - generated reference;
 - unclassified.
+
+Tag lifecycle — current, proposed, historical — separately from role.
+
+Record two roles, not one: the **observed** role the content performs, and the
+**declared** role it is intended to carry. A filename decides neither, and existing
+content is not evidence of intent — `ARCHITECTURE.md` is a map in one repository and
+a rationale in the next. **A mismatch is itself a primary finding.** Where the
+declared role is unstated and two readings would produce materially different
+documents, ask.
 
 For each document, identify its **owning question**, audience, update trigger,
 proof boundary, and any current claims it duplicates. Classify sections or claims
@@ -58,8 +69,9 @@ separately when one file mixes roles or time domains; do not force a heterogeneo
 file into one authority class. A document with no owning question is a sediment
 candidate.
 
-**Complete when:** every document in scope has a primary role or is explicitly
-unclassified, and every mixed-role or mixed-time block is identified.
+**Complete when:** every document in scope has an observed role, a declared role, and
+a lifecycle tag or is explicitly unclassified; every observed/declared mismatch is
+recorded as a finding; and every mixed-role or mixed-time block is identified.
 
 ## 3. Walk real journeys
 
@@ -102,6 +114,13 @@ is homogeneous, and a section or claim when it is mixed.
 
 Apply these topology rules:
 
+- **Guidance is evergreen**: a document carries facts whose change trigger matches
+  its owning question. Not "never changes" — a map updates when a directory's purpose
+  changes, which is its trigger; but finishing a planned phase must not drag the
+  on-ramp and the instruction file with it. Route live state to its owner: counts and
+  benchmarks to evidence, what-exists-yet to the plan, behavior to the code. Judge by
+  trigger, not by whether a number appears — a version inside a versioned contract or
+  a runbook is where it belongs.
 - Give each current claim one authoritative owner; allow many pointers.
 - Keep root `AGENTS.md` to repo-wide, non-inferable constraints, verification,
   and task routing. Add nested instructions only where local rules materially
@@ -125,10 +144,11 @@ Apply these topology rules:
 - Automate syntax, generated coupling, and link integrity where useful. Leave
   semantic authority to code-grounded review.
 
-Before proposing a new document topology or a new `AGENTS.md` layer, read
-[`references/topology.md`](references/topology.md) — this skill's own templates
-and constraints. Re-derive every shape from the target repository; never paste
-a template blind.
+Before creating, splitting, or materially rewriting any document, read
+[`references/archetypes.md`](references/archetypes.md) and admit only the sections
+the repository actually justifies. Before proposing a new document topology or a new
+`AGENTS.md` layer, read [`references/topology.md`](references/topology.md). Re-derive
+every shape from the target repository; never paste a template blind.
 
 **Complete when:** every authority-bearing unit and duplicate has exactly one
 disposition, and every proposed file survives the owning-question test.
@@ -142,7 +162,10 @@ Lead with the decision rather than an evidence dump. Return:
 3. **Disposition table** — current path plus section or claim when needed,
    owning question, disposition, and why.
 4. **Minimal change set** — ordered edits, including deletions and pointers
-   before additions.
+   before additions. For every document that will be created, split, or rewritten,
+   name its **archetype and destination path here**, where the user can accept or
+   reject them. Deciding either while writing changes an accepted topology without
+   consent.
 5. **Verification appendix** — exact commit, source anchors, probes, and residual
    unknowns for someone who wants to challenge the verdict.
 
@@ -160,8 +183,27 @@ lifecycles. Run the relevant link, build, test, and driven-flow checks. Follow a
 repository-required independent review; if a fresh refuter is unavailable, mark
 that verification as outstanding rather than silently self-certifying.
 
+Writing one document and then the next carries rules forward into both, and a
+correction that lands in one copy leaves the pair issuing opposite instructions —
+which a reader resolves by obeying whichever comes first. So finish with four
+**sweeps** across the whole set:
+
+- **owner** — for each mutable claim, name its owner, then classify every other
+  occurrence as pointer, evidence citation, or a second assertion. Grep only
+  generates candidates: a pointer is a legitimate second hit, and a rephrased
+  restatement is not greppable at all.
+- **evergreen** — in guidance documents, find facts whose change trigger does not
+  match the owning question, and route them to the owner whose trigger does.
+- **reference** — after any renumber or rename, resolve every identifier: phase and
+  section labels, numbered principles, paths, heading anchors, renamed symbols,
+  routing destinations. Search identifiers, not old headings — a renamed heading
+  puts its own references out of reach of a heading search.
+- **cold-start** — re-walk two journeys from the entry document without the author's
+  memory. Step 3 walked them before the edits; they prove navigation only if they
+  still land after.
+
 Do not commit, push, open issues, or publish unless the user asks.
 
-**Complete when:** each changed path implements an accepted disposition, every
-affected journey still reaches its owner, relevant checks pass, and remaining
-uncertainty is explicit.
+**Complete when:** each changed path implements an accepted disposition, all four
+sweeps are clean, every affected journey still reaches its owner, and every surviving
+line changes an action, a judgment, or a route, or supports independent verification.
