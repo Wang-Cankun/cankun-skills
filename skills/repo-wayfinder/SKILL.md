@@ -170,6 +170,12 @@ Apply these topology rules:
 - Keep a deliberately deferred choice in rationale or decisions. Put an accepted defect
   with an ordered repair and exit proof in the plan; the decision document may point to
   it but must not own the repair twice.
+- Add a durable roadmap only when short-lived delivery plans are intentionally archived and no
+  current owner answers which product or system capability horizon remains eligible for later
+  work. Let that roadmap own capability ordering, promotion evidence, and the remainder after a
+  plan closes—not implementation tasks or execution authority. Keep commissioned work in the
+  active goal or issue, require plan completion or abandonment to reconcile the roadmap, and omit
+  the roadmap when an existing current plan already owns this question.
 - Create no document merely to complete a taxonomy. Require every proposed file
   to state its owning question, non-ownership boundary, update trigger, and
   proof boundary.
