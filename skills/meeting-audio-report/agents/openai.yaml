@@ -1,0 +1,7 @@
+interface:
+  display_name: "Meeting Audio Report"
+  short_description: "Recording to verbatim transcript plus an evidence-graded DOCX/PDF report"
+  default_prompt: "Use $meeting-audio-report on this recording: transcribe it, pass the coverage gate, then write the report to DOCX and PDF."
+
+policy:
+  allow_implicit_invocation: true
