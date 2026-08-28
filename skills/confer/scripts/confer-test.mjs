@@ -69,9 +69,31 @@ case "\${FAKE_ORACLE_MODE:-ok}" in
 esac
 `;
 
+const FAKE_PI = `#!/bin/bash
+if [[ -n "$FAKE_PI_CALLS" ]]; then
+  printf '%q ' "$@" >> "$FAKE_PI_CALLS"
+  printf '\\n' >> "$FAKE_PI_CALLS"
+fi
+[[ "$1" == "--version" ]] && { echo 0.84.2; exit 0; }
+session=""; model=""; prev=""
+for a in "$@"; do
+  [[ "$prev" == "--session" || "$prev" == "--session-id" ]] && session="$a"
+  [[ "$prev" == "--model" ]] && model="$a"
+  prev="$a"
+done
+case "\${FAKE_PI_MODE:-ok}" in
+  ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-fake-reply\\"}],\\"provider\\":\\"cation\\",\\"model\\":\\"fw-kimi-k3\\",\\"usage\\":{\\"input\\":2345,\\"output\\":67}}}" ;;
+  badjson) echo 'not-json' ;;
+  nosession) echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"reply"}]}}' ;;
+  noreply) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}" ;;
+esac
+`;
+
 fs.writeFileSync(path.join(BIN, "claude"), FAKE_CLAUDE, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "codex"), FAKE_CODEX, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "oracle"), FAKE_ORACLE, { mode: 0o755 });
+fs.writeFileSync(path.join(BIN, "pi"), FAKE_PI, { mode: 0o755 });
 
 let n = 0, failed = 0;
 
@@ -172,6 +194,33 @@ function check(name, cond, detail = "") {
   check("oracle followup passes parent session", followupArgs.includes("--followup oracle-session-root"), followupArgs);
 }
 
+// 1c-pi. Pi uses the local CATION Kimi model and resumes the same session.
+{
+  const home = freshHome();
+  const calls = path.join(home, "pi-calls");
+  const r1 = await confer(["open", "pi", "-t", "kimi", "q"], { home, env: { FAKE_PI_CALLS: calls } });
+  check("pi open exits 0", r1.code === 0 && r1.stdout.includes("pi-fake-reply"), r1.stderr);
+  check("pi stores session and model", reg(home).kimi?.session && reg(home).kimi?.model === "cation/fw-kimi-k3");
+  check("pi provenance in ← header", tx(home, "kimi").includes("· cation/fw-kimi-k3 · 2.3k→67tok"), tx(home, "kimi"));
+  const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("pi pins read-only Kimi invocation", [
+    "--mode json", "--print", "--no-tools", "--no-context-files", "--no-skills",
+    "--no-extensions", "--model cation/fw-kimi-k3", "--session-dir", "--session-id",
+  ].every((s) => openArgs.includes(s)), openArgs);
+
+  const session = reg(home).kimi.session;
+  const r2 = await confer(["reply", "kimi", "again"], { home, env: { FAKE_PI_CALLS: calls } });
+  check("pi reply exits 0", r2.code === 0 && reg(home).kimi?.rounds === 2, r2.stderr);
+  const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("pi reply resumes stored session", replyArgs.includes(`--session ${session}`), replyArgs);
+
+  for (const [mode, expected] of [["badjson", "malformed JSONL"], ["nosession", "unexpected session id"], ["noreply", "no assistant text"]]) {
+    const h = freshHome();
+    const r = await confer(["open", "pi", "-t", mode, "q"], { home: h, env: { FAKE_PI_MODE: mode } });
+    check(`pi ${mode} is a protocol error`, r.code === 1 && r.stderr.includes(expected), r.stderr);
+  }
+}
+
 // 1d. Oracle version and output/session protocol gates fail closed.
 {
   const home = freshHome();
@@ -223,6 +272,7 @@ function check(name, cond, detail = "") {
     home, env: { FAKE_ORACLE_CALLS: calls },
   });
   check("bare all keeps claude+codex behavior", implicit.code === 0 && !implicit.stdout.includes("════ oracle ════"), implicit.stdout);
+  check("bare all excludes pi", !implicit.stdout.includes("════ pi ════"), implicit.stdout);
   check("bare all does not invoke oracle", !fs.existsSync(calls));
 
   const explicitHome = freshHome();
@@ -231,6 +281,7 @@ function check(name, cond, detail = "") {
     home: explicitHome, env: { FAKE_ORACLE_CALLS: explicitCalls },
   });
   check("all --with-oracle includes GPT Pro", explicit.code === 0 && explicit.stdout.includes("════ oracle ════") && explicit.stdout.includes("oracle-fake-reply"), explicit.stderr);
+  check("all --with-oracle still excludes pi", !explicit.stdout.includes("════ pi ════"), explicit.stdout);
   check("explicit fan-out registers oracle thread", Object.values(reg(explicitHome)).some((t) => t.provider === "oracle"));
 
   const partialHome = freshHome();

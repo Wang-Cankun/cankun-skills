@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// confer — consult a peer AI model (claude / codex / explicit oracle) with resumable threads.
+// confer — consult a peer AI model (claude / codex / pi / explicit oracle) with resumable threads.
 // State: ~/.confer/threads.json (registry) + ~/.confer/threads/<name>.md (transcripts)
 // Locks: ~/.confer/locks/ — per-thread operation lock (held across the provider call)
 //        + short registry transaction lock. See references/providers.md.
@@ -22,6 +22,8 @@ const ORACLE_TIMEOUT_MS =
 const ORACLE_MIN_VERSION = "0.16.2";
 const ORACLE_MODEL = "gpt-5.6";
 const ORACLE_MODEL_LABEL = "gpt-5.6/pro";
+const PI_MODEL = process.env.CONFER_PI_MODEL || "cation/fw-kimi-k3";
+const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
 const PREAMBLE =
@@ -283,6 +285,46 @@ const providers = {
       }
     },
   },
+  pi: {
+    defaultFanout: false,
+    async ask(prompt, session) {
+      fs.mkdirSync(PI_SESSION_DIR, { recursive: true });
+      const sessionId = session ?? crypto.randomUUID();
+      const args = [
+        "--mode", "json",
+        "--print",
+        "--no-tools",
+        "--no-context-files",
+        "--no-skills",
+        "--no-extensions",
+        "--model", PI_MODEL,
+        "--session-dir", PI_SESSION_DIR,
+        ...(session ? ["--session", session] : ["--session-id", sessionId]),
+        prompt,
+      ];
+      const r = await runOrThrow("pi", "pi", args);
+      let reportedSession = null, message = null;
+      for (const line of r.stdout.split("\n")) {
+        if (!line.trim()) continue;
+        let evt;
+        try { evt = JSON.parse(line); }
+        catch { throw new ProviderError("pi", `malformed JSONL event: ${line.slice(0, 200)}`); }
+        if (evt.type === "session" && evt.id) reportedSession = evt.id;
+        if (evt.type === "message_end" && evt.message?.role === "assistant") message = evt.message;
+      }
+      if (reportedSession !== sessionId)
+        throw new ProviderError("pi", `unexpected session id: ${reportedSession ?? "missing"} (expected ${sessionId})`);
+      const reply = message?.content?.filter((c) => c.type === "text").map((c) => c.text).join("") ?? "";
+      if (!reply.trim()) throw new ProviderError("pi", "no assistant text in response (protocol error)");
+      const model = message.provider && message.model ? `${message.provider}/${message.model}` : PI_MODEL;
+      const usage = message.usage;
+      const parts = [
+        model,
+        usage ? `${fmtTok(usage.input ?? 0)}→${fmtTok(usage.output ?? 0)}tok` : null,
+      ].filter(Boolean);
+      return { reply, session: sessionId, meta: { model, parts } };
+    },
+  },
   oracle: {
     defaultFanout: false,
     minVersion: ORACLE_MIN_VERSION,
@@ -405,7 +447,7 @@ async function cmdReply(args) {
 async function cmdAll(args) {
   const withOracle = args[0] === "--with-oracle";
   if (withOracle) args.shift();
-  const selected = withOracle ? PROVIDERS : DEFAULT_FANOUT_PROVIDERS;
+  const selected = withOracle ? [...DEFAULT_FANOUT_PROVIDERS, "oracle"] : DEFAULT_FANOUT_PROVIDERS;
   const prompt = readPrompt(args);
   const results = await Promise.allSettled(
     selected.map((p) => openThread(p, autoName(p), prompt)),
@@ -505,7 +547,7 @@ const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   list | show <thread>                   registry / full transcript
   doctor [--live [provider]]             check CLIs; live defaults to claude+codex
 env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
-     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_HOME`;
+     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_PI_MODEL (default ${PI_MODEL}) · CONFER_HOME`;
 
 const [cmd, ...rest] = process.argv.slice(2);
 try {

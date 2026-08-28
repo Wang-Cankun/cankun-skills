@@ -1,25 +1,25 @@
 ---
 name: confer
-compatibility: Requires `bun` + at least one provider CLI; Oracle routes require Oracle >= 0.16.2 and an authenticated ChatGPT browser profile.
+compatibility: Requires `bun` + at least one provider CLI; Pi uses a locally configured model; Oracle routes require Oracle >= 0.16.2 and an authenticated ChatGPT browser profile.
 metadata:
   group: general
   summary: >-
-    Cross-model consultation with resumable threads: ask Claude, Codex, or
-    explicitly requested GPT Pro through Oracle; continue peer-review dialogues
-    across sessions; fan out concurrently while keeping Claude + Codex as the
-    default set. Single-file bun CLI with per-round provenance and
-    concurrency-safe state.
-description: Consult a peer AI model (Claude or Codex, plus GPT Pro through Oracle when explicitly requested) and keep the dialogue resumable across rounds. Use when the user wants a second opinion from another model ("ask codex", "问问 codex", "让 claude 看看", "gpt says…"), explicitly asks to use/ask GPT Pro or Oracle, wants a multi-round cross-model review, wants to resume or continue an earlier consultation thread, or when a conclusion needs independent-model verification.
+    Cross-model consultation with resumable threads: ask Claude, Codex, Kimi
+    through Pi, or explicitly requested GPT Pro through Oracle; continue
+    peer-review dialogues across sessions; fan out concurrently while keeping
+    Claude + Codex as the default set. Single-file bun CLI with per-round
+    provenance and concurrency-safe state.
+description: Consult a peer AI model (Claude, Codex, or a local Pi model, plus GPT Pro through Oracle when explicitly requested) and keep the dialogue resumable across rounds. Use when the user wants a second opinion from another model ("ask codex", "问问 codex", "让 claude 看看", "ask kimi"), explicitly asks to use Pi, Kimi, GPT Pro, or Oracle, wants a multi-round cross-model review, wants to resume an earlier consultation thread, or when a conclusion needs independent-model verification.
 ---
 
 # Confer — cross-model consultation with resumable threads
 
-Requires `bun` plus at least one provider CLI (`claude`, `codex`, or Oracle >= 0.16.2 with an authenticated ChatGPT browser profile).
+Requires `bun` plus at least one provider CLI (`claude`, `codex`, `pi`, or Oracle >= 0.16.2 with an authenticated ChatGPT browser profile).
 
-You talk to a peer model through **threads**: open one with a question, the peer's session id is stored, and any later round — today or next week, from any host session — resumes the same peer-side context. All mechanics live in `scripts/confer.mjs` (single source of truth); never assemble raw `claude -p`, `codex exec`, or `oracle` calls yourself.
+You talk to a peer model through **threads**: open one with a question, the peer's session id is stored, and any later round — today or next week, from any host session — resumes the same peer-side context. All mechanics live in `scripts/confer.mjs` (single source of truth); use it instead of assembling provider CLI calls.
 
 ```
-scripts/confer.mjs open <provider> [-t name] <prompt|->   # start thread (claude|codex|oracle)
+scripts/confer.mjs open <provider> [-t name] <prompt|->   # start thread (claude|codex|pi|oracle)
 scripts/confer.mjs reply <thread> <prompt|->              # continue with full peer-side context
 scripts/confer.mjs all [--with-oracle] <prompt|->         # default claude+codex; flag explicitly adds GPT Pro
 scripts/confer.mjs list | show <thread>                   # registry / transcript
@@ -32,7 +32,7 @@ A round can take minutes. When you expect a long consultation and have other wor
 
 ## Steps
 
-1. **Resolve the target.** Which provider, and new thread or continuation? Route to `oracle` only when the user explicitly asks to use/ask GPT Pro or Oracle; task difficulty alone is never enough. Bare `all` and bare `doctor --live` exclude Oracle; use `all --with-oracle` or `doctor --live oracle` only on explicit request. Otherwise prefer a peer that is **not your own model family** — a same-model consult is not an independent second opinion. When the user says 继续/上次/"what does it say now", run `list` and match — never open a fresh thread for what is semantically round N of an old one. Name threads you expect to revisit (`-t zhang-pe-review`); let one-shots auto-name. Done when: provider + thread decided.
+1. **Resolve the target.** Which provider, and new thread or continuation? "Ask Kimi" routes to `pi`, whose default model is `cation/fw-kimi-k3`; set `CONFER_PI_MODEL` to another model already configured in Pi. Route to `oracle` only when the user explicitly asks to use/ask GPT Pro or Oracle. Bare `all` and bare `doctor --live` remain Claude + Codex; use `doctor --live pi` to test Pi and `all --with-oracle` or `doctor --live oracle` only on explicit request. Otherwise prefer a peer outside your own model family. When the user says 继续/上次/"what does it say now", run `list` and match the existing thread. Name threads you expect to revisit (`-t zhang-pe-review`); let one-shots auto-name. Done when: provider + thread decided.
 
 2. **Compose a self-contained prompt.** The peer sees none of your conversation, files, or context — only what you send. Inline the code, text, or claims under discussion; state the question precisely; for review requests, ask for a verdict plus reasoning, not vibes. Long material → heredoc via stdin (`... <<'EOF' | scripts/confer.mjs open codex -t name -`). Done when: the peer could answer with zero access to your session.
 
@@ -40,7 +40,7 @@ A round can take minutes. When you expect a long consultation and have other wor
 
 ## Guardrails
 
-- The peer is **advisory and read-only**: it must never be asked to edit files or run state-changing commands (codex threads open sandboxed; claude print-mode cannot approve writes). If the peer proposes changes, you apply them under your own judgment.
+- The peer is **advisory and read-only**: it must never be asked to edit files or run state-changing commands. Codex opens sandboxed, Claude print mode cannot approve writes, and Pi runs with tools, context files, skills, and extensions disabled. If the peer proposes changes, you apply them under your own judgment.
 - Never send secrets, API keys, or credentials in a prompt — transcripts persist in plaintext under `~/.confer/`; Oracle browser/account configuration remains machine-local under `~/.oracle/`.
 - A peer's agreement is not verification. Treat "the other model also thinks so" as one signal, not proof; a peer that refutes you is the more valuable outcome.
 
