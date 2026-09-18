@@ -1,0 +1,7 @@
+interface:
+  display_name: "CK Arena"
+  short_description: "Compare independent candidates and verify the synthesis"
+  default_prompt: "Use $ck-arena to generate independent candidates for this task, compare their artifacts, and synthesize a verified result."
+
+policy:
+  allow_implicit_invocation: true

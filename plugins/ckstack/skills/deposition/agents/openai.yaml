@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deposition"
+  short_description: "Ground decisions through evidence and focused question rounds"
+  default_prompt: "Use $deposition to understand and stress-test this plan: investigate the evidence, group related independent questions, explore consequential tradeoffs, and keep a visible decision tree until we reach a shared understanding."
+
+policy:
+  allow_implicit_invocation: true

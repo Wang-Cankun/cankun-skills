@@ -56,7 +56,57 @@ Use the skills that fit the task; this is not a mandatory sequence. `ck-teach` c
 
 `ck-verify-create` generates a concrete skill such as `ck-verify-count-summary`. The name `ck-verify-<project>` is a template, not another global skill to install. The generated skill stays with its project and records that project's commands, inputs, expected outputs, and cleanup. Computational checks and scientific validity remain distinct.
 
-### Maintain with skillshelf
+### Install and maintain the CK Stack plugin
+
+The [CK Stack plugin](./plugins/ckstack) bundles the eight `ck-*` skills and `deposition` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
+
+The package definition in [`packaging/ckstack.json`](./packaging/ckstack.json) owns membership, version, and presentation. Build and check the distributable with:
+
+```sh
+python3 scripts/build_plugins.py
+python3 scripts/build_plugins.py --check
+```
+
+For a personal installation, first generate the source directory at `~/plugins/ckstack`:
+
+```sh
+python3 scripts/build_plugins.py --output-dir ~/plugins/ckstack
+```
+
+Register that existing package in `~/.agents/plugins/marketplace.json` using the built-in `plugin-creator`'s marketplace helper. This registration step runs once; it does not scaffold files over the generated package:
+
+```sh
+python3 -B - <<'PY'
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path.home() / ".codex/skills/.system/plugin-creator/scripts"))
+from create_basic_plugin import update_marketplace_json
+update_marketplace_json(
+    marketplace_path=Path.home() / ".agents/plugins/marketplace.json",
+    marketplace_name=None,
+    plugin_name="ckstack",
+    install_policy="AVAILABLE",
+    auth_policy="ON_INSTALL",
+    category="Developer Tools",
+    force=False,
+)
+PY
+codex plugin add ckstack@personal
+```
+
+Use the marketplace's actual name if the existing personal catalog uses another name. During local iteration, regenerate the personal source directory and use `plugin-creator`'s cachebuster/reinstall flow. Its current helper updates the compatibility manifest only: copy that resulting version into the personal package's root `plugin.json` before reinstalling so both identities stay aligned. Test in a new conversation. For published package changes, update the version in the package definition and regenerate. Installing into a local marketplace is separate from publishing to a ChatGPT workspace or the public plugin directory.
+
+The builder refuses unknown files in an existing output directory. When removing or renaming packaged files, inspect and move the obsolete output files before rebuilding; it never deletes them automatically.
+
+After confirming that the installed plugin contains all nine skills and references, remove their individual Codex deployments to avoid loading both forms:
+
+```sh
+skl drop ck-how ck-why ck-teach ck-prototype ck-arena ck-architect ck-verify-create ck-verify-maintain deposition --agent codex --global
+```
+
+This removes the deployment links, preserving the skillshelf library and canonical source. Individual skill installation remains available for hosts or projects that use it.
+
+### Maintain individual skills with skillshelf
 
 This repo is the canonical source. For local development, register a linked library entry for each desired skill, then activate the named skills in the consuming project:
 

@@ -1,0 +1,38 @@
+{
+  "plugin": {
+    "name": "ckstack",
+    "version": "0.1.0",
+    "description": "Evidence-grounded understanding, decisions, design, and verification for software and analysis workflows.",
+    "author": {
+      "name": "Cankun Wang",
+      "url": "https://github.com/Wang-Cankun"
+    },
+    "homepage": "https://github.com/Wang-Cankun/cankun-skills",
+    "repository": "https://github.com/Wang-Cankun/cankun-skills",
+    "license": "MIT"
+  },
+  "interface": {
+    "displayName": "CK Stack",
+    "shortDescription": "Understand, design, and verify software and analysis workflows",
+    "longDescription": "Nine complementary skills for implementation tracing, historical rationale, teaching, decision examination, prototypes, independent candidates, architecture, and project verification.",
+    "developerName": "Cankun Wang",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": [
+      "Explain this workflow using CK Teach.",
+      "Compare implementation candidates using CK Arena.",
+      "Create a repeatable project verification skill."
+    ]
+  },
+  "skills": [
+    "ck-architect",
+    "ck-arena",
+    "ck-how",
+    "ck-prototype",
+    "ck-teach",
+    "ck-verify-create",
+    "ck-verify-maintain",
+    "ck-why",
+    "deposition"
+  ]
+}
