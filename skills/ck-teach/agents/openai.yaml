@@ -1,0 +1,6 @@
+interface:
+  display_name: "CK Teach"
+  short_description: "Explain mechanisms and rationale plainly"
+  default_prompt: "Use $ck-teach to help me understand this system, change, or analysis workflow."
+policy:
+  allow_implicit_invocation: true

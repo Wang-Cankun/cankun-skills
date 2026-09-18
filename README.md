@@ -12,8 +12,16 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
+| [ck-architect](./skills/ck-architect) | Ground the system, compare independent design sketches, and implement within the requested scope, redesigning when evidence invalidates the shape. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-architect` |
+| [ck-arena](./skills/ck-arena) | Generate independent candidates, compare them against shared criteria, and synthesize a verified artifact with a concise decision record. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-arena` |
+| [ck-how](./skills/ck-how) | Trace implementation, inputs, outputs, and boundaries to build a working mental model. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-how` |
+| [ck-prototype](./skills/ck-prototype) | Build disposable prototypes and small experiments to compare approaches through observable behavior, measurements, and concrete tradeoffs. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-prototype` |
+| [ck-teach](./skills/ck-teach) | Combine mechanism and rationale into a clear explanation at the reader's pace. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-teach` |
+| [ck-verify-create](./skills/ck-verify-create) | Generate and prove a project verification skill with launch, health checks, executable recipes, observable outcomes, and cleanup that retains evidence. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-create` |
+| [ck-verify-maintain](./skills/ck-verify-maintain) | Keep project verification instructions accurate through source inspection, live recipe coverage, proved repairs, and explicit reporting of gaps. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-maintain` |
+| [ck-why](./skills/ck-why) | Reconstruct rationale from evidence while separating documented intent, inference, and unknowns. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-why` |
 | [confer](./skills/confer) | Cross-model consultation with resumable threads: ask Claude, Codex, Kimi through Pi, or explicitly requested GPT Pro through Oracle; continue peer-review dialogues across sessions; fan out concurrently while keeping Claude + Codex as the default set. Single-file bun CLI with per-round provenance and concurrency-safe state. Requires `bun` + at least one provider CLI; Pi uses a locally configured model; Oracle routes require Oracle >= 0.16.2 and an authenticated ChatGPT browser profile. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
-| [deposition](./skills/deposition) | Relentless one-question-at-a-time deposition of a plan, decision, or idea: keeps a visible record (✓ settled · ? open · ~ unwalked) and closes only through a nothing-further gate. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
+| [deposition](./skills/deposition) | Ground a plan, decision, or idea in evidence, then examine consequential choices through focused question rounds, concrete alternatives, and a visible decision tree. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
 | [known-unknowns](./skills/known-unknowns) | Guided deliberations on the Rumsfeld matrix: helps articulate tacit judgments, surfaces unrecognized patterns, tours unseen options, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/cankun-skills --skill known-unknowns` |
 | [meeting-audio-report](./skills/meeting-audio-report) | Turns a meeting recording into a verbatim transcript plus an evidence-graded DOCX/PDF report, gated on block-level coverage so dropped audio surfaces instead of vanishing. Requires `ffmpeg`, `pandoc`, LibreOffice, Python 3.10+ with `requests` and `python-docx`, and an `OPENROUTER_API_KEY`. | `npx skills@latest add Wang-Cankun/cankun-skills --skill meeting-audio-report` |
 | [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) Requires headless Chrome + Python (`pypdf`). | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
@@ -32,6 +40,36 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 | [cankun-blog-preview](./skills/cankun-blog-preview) | Generates and integrates exactly one Franklin Booth-inspired, white-background preview image for a Cankun blog article, then validates its optimized WebP and full-resolution link. Requires `bun` + a local cankun-blog checkout. | `npx skills@latest add Wang-Cankun/cankun-skills --skill cankun-blog-preview` |
 | [repo-wayfinder](./skills/repo-wayfinder) | Designs or repairs a repository's documentation system: project identity, document ownership rules, task-to-authority routes, and the smallest justified file set for a new or existing project. | `npx skills@latest add Wang-Cankun/cankun-skills --skill repo-wayfinder` |
 | [skill-release](./skills/skill-release) | Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion. Requires `bun` + `curl` + the `skl` CLI. | `npx skills@latest add Wang-Cankun/cankun-skills --skill skill-release` |
+
+## CK Stack
+
+CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/main/pstack) into portable workflows for software and analysis projects. Each skill retains its upstream MIT license and attribution. The instructions use the tools and agent capabilities available in the current environment; project paths, environments, reference data, and acceptance criteria belong in the consuming project.
+
+| Need | Skills | Result |
+| ---- | ------ | ------ |
+| Understand | `ck-how`, `ck-why`, `ck-teach` | Traced mechanics, evidence for historical choices, and a clear explanation |
+| Explore | `deposition`, `ck-prototype` | Settled decisions and small experiments that distinguish approaches |
+| Design and build | `ck-arena`, `ck-architect` | Independent candidates, a coherent synthesis, and verification within the requested scope |
+| Verify repeatedly | `ck-verify-create`, `ck-verify-maintain` | A project-owned verification skill, feature map, executable recipes, and retained evidence |
+
+Use the skills that fit the task; this is not a mandatory sequence. `ck-teach` composes `ck-how` and `ck-why`. `ck-architect` uses `ck-how`, `ck-arena`, and, when historical rationale matters, `ck-why`. Install those companions together when using a composed workflow. `obelisk` can supply historical leads when available; it is optional.
+
+`ck-verify-create` generates a concrete skill such as `ck-verify-count-summary`. The name `ck-verify-<project>` is a template, not another global skill to install. The generated skill stays with its project and records that project's commands, inputs, expected outputs, and cleanup. Computational checks and scientific validity remain distinct.
+
+### Maintain with skillshelf
+
+This repo is the canonical source. For local development, register a linked library entry for each desired skill, then activate the named skills in the consuming project:
+
+```sh
+# From this repo; repeat for the skills you want to maintain.
+skl link --from "$PWD/skills/ck-how"
+skl tag ck-how ck-stack
+
+# From the consuming project; register the companions first.
+skl use ck-how ck-why ck-teach --agent codex
+```
+
+Use `--agent claude` or the appropriate agent identifier for other supported hosts. The dedicated `ck-stack` tag groups the collection without adding it to a broad existing bundle. Registration and activation are separate; neither requires creating a project-specific verifier in advance. Update the source here and review upstream changes deliberately, because `skl update` skips linked entries.
 
 ## License
 

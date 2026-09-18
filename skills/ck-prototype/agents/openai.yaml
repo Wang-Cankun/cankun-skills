@@ -1,0 +1,7 @@
+interface:
+  display_name: "CK Prototype"
+  short_description: "Explore a decision with disposable, observable prototypes"
+  default_prompt: "Use $ck-prototype to explore this decision with small experiments, compare the observed results, and recommend a direction."
+
+policy:
+  allow_implicit_invocation: true

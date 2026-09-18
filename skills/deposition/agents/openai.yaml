@@ -1,7 +1,7 @@
 interface:
   display_name: "Deposition"
-  short_description: "Depose a plan one question at a time until nothing further"
-  default_prompt: "Use $deposition to depose this plan: one question at a time, keep the record in view, and close only when nothing further is left."
+  short_description: "Ground decisions through evidence and focused question rounds"
+  default_prompt: "Use $deposition to understand and stress-test this plan: investigate the evidence, group related independent questions, explore consequential tradeoffs, and keep a visible decision tree until we reach a shared understanding."
 
 policy:
   allow_implicit_invocation: true

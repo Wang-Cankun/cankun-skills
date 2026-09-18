@@ -3,22 +3,71 @@ name: deposition
 metadata:
   group: general
   summary: >-
-    Relentless one-question-at-a-time deposition of a plan, decision, or idea:
-    keeps a visible record (✓ settled · ? open · ~ unwalked) and closes only
-    through a nothing-further gate.
-description: Depose a plan, decision, or idea — relentless one-question-at-a-time examination with a visible record (✓ settled · ? open · ~ unwalked) and a nothing-further closing gate. Use when the user wants to stress-test their thinking before acting, says "depose this", or uses any 'grill' trigger phrases.
+    Ground a plan, decision, or idea in evidence, then examine consequential
+    choices through focused question rounds, concrete alternatives, and a
+    visible decision tree.
+description: Depose a plan, decision, or idea before commitment. Build a shared understanding of the problem, investigate uncertainties, and examine consequential choices through focused question rounds. Use when the user asks to stress-test their thinking, says "depose this", or asks to be grilled about a plan.
 ---
 
-Interview me relentlessly about every aspect of this plan, decision, or idea until we reach a shared understanding. Walk down each branch of the decision tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer. When a question lands deep in the details, zoom out and frame it first — what is actually being asked, and why it matters — then ground it with a concrete case or example showing how the answers would play out differently, because I cannot answer a question I don't understand.
+# Deposition
 
-Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering.
+Reach a shared understanding that supports a real decision. Be relentless about consequential uncertainty; let the evidence and the user's answers determine the branches to explore.
 
-Keep the record in view: redraw it before every question as an indented tree in a code fence, headed by the tally `✓n · ?1 · ~m` — `✓` settled decisions, one phrase each; exactly one `?` carrying the cursor on the branch this question sits on; `~` unwalked branches hanging under the branch that owns them, in walk order. Collapse a fully settled branch into its parent's one-line conclusion so the record stays a card; a flat mark list is not the record. Promote entries as I answer; a decision I defer stays marked deferred instead of vanishing. The record is how we both see how far shared understanding still is.
+## Ground the problem
 
-If a *fact* can be found by exploring the environment (filesystem, tools, etc.), look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
+Read the supplied material and inspect relevant evidence before proposing choices. For continuing work, retrieve relevant past decisions when available. Separate what is happening, what the user wants to achieve, and actual constraints from any proposed solution. Treat explanations of the cause as hypotheses until supported.
 
-Do not act until I confirm we have reached a shared understanding — and do not ask for that confirmation while the record still shows an unwalked `~` or an open `?` I have not explicitly deferred. Nothing further only when nothing further is left.
+Restate the underlying problem in your own words and plain language: explain the mechanism as far as the evidence supports it, what a successful outcome would look like, and the uncertainty that matters next. Use a concrete example from the material where possible. Make assumptions and missing evidence visible.
+
+If different interpretations would change the next step, resolve the most consequential ambiguity first. Otherwise proceed from the stated understanding. When the user corrects the framing, update it and reconsider dependent branches before continuing.
+
+## Resolve uncertainty before asking for a choice
+
+Choose the next move by the kind of uncertainty:
+
+- **Discoverable fact:** inspect the files, tools, sources, or history yourself. Report the relevant evidence.
+- **Empirical question:** use the smallest useful check, worked example, or disposable prototype within the authorized scope. Show what it established and what remains untested. If evidence is unavailable, retain the uncertainty and identify the check that would resolve it.
+- **Human judgment:** ask about goals, priorities, lived experience, acceptable costs, or commitments the evidence cannot decide.
+- **Routine implementation detail:** infer it from settled constraints and explain it only when it affects the user's decision. Bring material consequences back to the user.
+
+Work backwards from a concrete use case or desired result. A usage sketch, sample output, or small experiment can expose a mistaken premise before an abstract design debate grows around it. Investigate enough to distinguish the live alternatives; keep exploration proportional to the decision.
+
+For an empirical check, define the observable result that would support or challenge the explanation. Reuse available tools and verification procedures to exercise a representative real scenario. Record the setup, action, and observed result sufficiently for someone else to repeat the check. Preserve material evidence when disposing of scratch work. Keep observed results distinct from predictions and untested sketches.
+
+## Ask focused questions
+
+Organize each round around a coherent decision or information gap. Group a few related, independently answerable questions when the user can address them together. Ask dependent or demanding questions separately, letting each answer shape what follows. Wait for the user's response before advancing decisions that depend on it; continue independent investigation where useful.
+
+Prioritize unresolved dependencies whose answers could change the direction, scope, or next investigation. Before asking, identify how different plausible answers would change what follows; if they would not, resolve or set aside that branch yourself. Incorporate partial answers and keep unanswered material questions visible.
+
+Frame the question briefly: what is at stake, why it matters now, and how it appears in a concrete case. For missing experience or intent, ask an open question without supplying a preferred account of the user's experience. A recommendation belongs to a decision with enough context to support one.
+
+Offer selections only when the decision space is understood:
+
+- Derive alternatives from the problem, constraints, and evidence. Let their number and presentation follow the actual decision space. Explain the distinct viable approaches and why each deserves consideration. If only one is viable, recommend it with its basis. Use prose when a selection widget would distort the decision.
+- Compare alternatives through the same concrete scenario, making their different outcomes and costs clear. Explain when each is attractive. Compatible ideas may be combined; separate independent decisions instead of forcing them into opposing packages.
+- Give your recommendation with its basis and the condition that would change it. When evidence is insufficient, recommend the next investigation rather than inventing certainty.
+
+## Keep the record in view
+
+Before each question round, show a compact indented tree in a code fence, headed by `✓n · ?k · ~m`:
+
+- `✓` settled conclusions or decisions, one phrase each. Ground factual conclusions in evidence; reserve user decisions for their answers or explicit delegation.
+- `?` a pending question, under the branch that owns it. For grouped questions, use matching short labels in the tree and the questions; `k` counts all pending questions, including unanswered ones from earlier rounds.
+- `~` relevant branches still to investigate, nested under their dependencies in likely walk order.
+
+Collapse a fully settled branch into its parent's one-line conclusion. Count the visible markers; use `?0` when no question is pending. Keep explicitly deferred items visible as `deferred`, with their consequence and revisit condition. Deferred items are not settled.
+
+Build the tree as understanding develops. Add branches when evidence or a concrete failure mechanism shows they could change the decision. Retire branches made irrelevant by an answer, with a brief reason; reopen settled conclusions when their supporting premise changes. Keep the tree focused on dependencies and material uncertainty.
+
+## Close on a usable understanding
+
+When no material branch remains open or unwalked, summarize the problem, agreed outcome, consequential decisions and their basis, plus any explicit deferrals. Distinguish what has been verified from what still needs checking, with an observable success criterion for the chosen direction. “Nothing further” means nothing material remains for this decision within its scope.
+
+Then ask whether this captures the shared understanding. The final confirmation is the sole pending question; do not add it while other unresolved branches remain. An instruction to proceed from the settled summary counts as confirmation.
+
+Implementation or commitments under examination wait for that confirmation. Evidence gathering and disposable experiments within the authorized scope can happen throughout the deposition; they do not authorize deploying changes or making external commitments.
 
 ---
 
-*Forked from [mattpocock/skills](https://github.com/mattpocock/skills) `grilling`; the record and the closing gate are the fork.*
+*Forked from [mattpocock/skills](https://github.com/mattpocock/skills) `grilling`; the record and the closing gate are the fork. Grounding and verification informed by Lauren (@poteto), “The Complete Guide to pstack,” Parts 1–2, and [pstack's verification workflow](https://github.com/cursor/plugins/blob/main/pstack/skills/create-verification-skill/SKILL.md).*

@@ -1,0 +1,7 @@
+interface:
+  display_name: "CK Architect"
+  short_description: "Compare designs for interfaces and data flows"
+  default_prompt: "Use $ck-architect to ground this change and compare concrete designs before implementing within the requested scope."
+
+policy:
+  allow_implicit_invocation: true
