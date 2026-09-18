@@ -24,7 +24,8 @@ class PluginBuildTests(unittest.TestCase):
     def test_real_bundle_contains_companions_references_and_licenses(self):
         builder.build(ROOT, self.output)
         names = {path.name for path in (self.output / "skills").iterdir()}
-        self.assertEqual(names, {"ck-architect", "ck-arena", "ck-how", "ck-prototype", "ck-teach",
+        self.assertEqual(names, {"ck-architect", "ck-arena", "ck-how", "ck-impact", "ck-prototype",
+                                 "ck-reflect", "ck-skill-creator", "ck-teach",
                                  "ck-verify-create", "ck-verify-maintain", "ck-why", "confer", "deposition"})
         for name in names:
             for original in (ROOT / "skills" / name).rglob("*"):
@@ -42,6 +43,11 @@ class PluginBuildTests(unittest.TestCase):
             self.assertTrue((self.output / "skills/confer" / relative).is_file(), relative)
         self.assertTrue((self.output / "skills/confer/scripts/confer.mjs").stat().st_mode & 0o111,
                         "The installed confer CLI must remain executable")
+        creator = self.output / "skills/ck-skill-creator"
+        for relative in ("scripts/validate_skill.py", "eval-viewer/generate_review.py",
+                         "eval-viewer/viewer.html", "references/evaluation.md", "LICENSE-APACHE-2.0"):
+            self.assertTrue((creator / relative).is_file(), relative)
+        self.assertTrue((creator / "scripts/validate_skill.py").stat().st_mode & 0o111)
         self.assertEqual((self.output / "LICENSE").read_bytes(), (ROOT / "LICENSE").read_bytes())
         portable = json.loads((self.output / "plugin.json").read_bytes())
         codex = json.loads((self.output / ".codex-plugin/plugin.json").read_bytes())

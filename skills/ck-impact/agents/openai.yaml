@@ -1,0 +1,3 @@
+interface:
+  display_name: "CK Impact"
+  short_description: "Trace change impact and test compatibility assumptions"

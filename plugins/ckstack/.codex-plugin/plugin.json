@@ -1,7 +1,7 @@
 {
   "name": "ckstack",
-  "version": "0.2.1",
-  "description": "Evidence-grounded understanding, peer consultation, decisions, design, and verification for software and analysis workflows.",
+  "version": "0.3.0",
+  "description": "Evidence-grounded understanding, design, impact review, reflection, skill authoring, and verification for software and analysis workflows.",
   "author": {
     "name": "Cankun Wang",
     "url": "https://github.com/Wang-Cankun"
@@ -12,8 +12,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "CK Stack",
-    "shortDescription": "Understand, consult, design, and verify project workflows",
-    "longDescription": "Ten complementary skills for implementation tracing, historical rationale, teaching, resumable peer-model consultation, decision examination, prototypes, independent candidates, architecture, and project verification.",
+    "shortDescription": "Understand, build, reflect, and improve reusable workflows",
+    "longDescription": "Thirteen complementary skills for implementation tracing, rationale, teaching, peer consultation, decisions, prototypes, independent candidates, architecture, impact analysis, reflection, skill authoring, and proportionate project verification.",
     "developerName": "Cankun Wang",
     "category": "Developer Tools",
     "capabilities": [
@@ -23,7 +23,7 @@
     "defaultPrompt": [
       "Explain this workflow using CK Teach.",
       "Compare implementation candidates using CK Arena.",
-      "Create a repeatable project verification skill."
+      "Improve this skill and check its behavior using CK Skill Creator."
     ]
   }
 }
