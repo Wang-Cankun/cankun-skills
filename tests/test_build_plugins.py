@@ -25,7 +25,7 @@ class PluginBuildTests(unittest.TestCase):
         builder.build(ROOT, self.output)
         names = {path.name for path in (self.output / "skills").iterdir()}
         self.assertEqual(names, {"ck-architect", "ck-arena", "ck-how", "ck-prototype", "ck-teach",
-                                 "ck-verify-create", "ck-verify-maintain", "ck-why", "deposition"})
+                                 "ck-verify-create", "ck-verify-maintain", "ck-why", "confer", "deposition"})
         for name in names:
             for original in (ROOT / "skills" / name).rglob("*"):
                 if any(part in builder.IGNORED_NAMES for part in original.relative_to(ROOT / "skills" / name).parts):
@@ -38,6 +38,10 @@ class PluginBuildTests(unittest.TestCase):
         self.assertTrue((self.output / "skills/ck-architect/references/runner-prompt.md").is_file())
         self.assertTrue((self.output / "skills/ck-how/SKILL.md").is_file())
         self.assertTrue((self.output / "skills/ck-why/SKILL.md").is_file())
+        for relative in ("scripts/confer.mjs", "scripts/confer-test.mjs", "references/providers.md", "agents/openai.yaml"):
+            self.assertTrue((self.output / "skills/confer" / relative).is_file(), relative)
+        self.assertTrue((self.output / "skills/confer/scripts/confer.mjs").stat().st_mode & 0o111,
+                        "The installed confer CLI must remain executable")
         self.assertEqual((self.output / "LICENSE").read_bytes(), (ROOT / "LICENSE").read_bytes())
         portable = json.loads((self.output / "plugin.json").read_bytes())
         codex = json.loads((self.output / ".codex-plugin/plugin.json").read_bytes())

@@ -20,7 +20,7 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 | [ck-verify-create](./skills/ck-verify-create) | Generate and prove a project verification skill with launch, health checks, executable recipes, observable outcomes, and cleanup that retains evidence. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-create` |
 | [ck-verify-maintain](./skills/ck-verify-maintain) | Keep project verification instructions accurate through source inspection, live recipe coverage, proved repairs, and explicit reporting of gaps. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-maintain` |
 | [ck-why](./skills/ck-why) | Reconstruct rationale from evidence while separating documented intent, inference, and unknowns. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-why` |
-| [confer](./skills/confer) | Cross-model consultation with resumable threads: ask Claude, Codex, Kimi through Pi, or explicitly requested GPT Pro through Oracle; continue peer-review dialogues across sessions; fan out concurrently while keeping Claude + Codex as the default set. Single-file bun CLI with per-round provenance and concurrency-safe state. Requires `bun` + at least one provider CLI; Pi uses a locally configured model; Oracle routes require Oracle >= 0.16.2 and an authenticated ChatGPT browser profile. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
+| [confer](./skills/confer) | Resumable cross-model consultation: GPT-6 Pro through Oracle by default, Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi, with saved preferences, per-round provenance, and concurrency-safe state. Requires `bun` and at least one provider CLI; Pi models must be configured locally; Oracle requires version 0.21.1 or newer and a signed-in ChatGPT browser profile. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
 | [deposition](./skills/deposition) | Ground a plan, decision, or idea in evidence, then examine consequential choices through focused question rounds, concrete alternatives, and a visible decision tree. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
 | [known-unknowns](./skills/known-unknowns) | Guided deliberations on the Rumsfeld matrix: helps articulate tacit judgments, surfaces unrecognized patterns, tours unseen options, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/cankun-skills --skill known-unknowns` |
 | [meeting-audio-report](./skills/meeting-audio-report) | Turns a meeting recording into a verbatim transcript plus an evidence-graded DOCX/PDF report, gated on block-level coverage so dropped audio surfaces instead of vanishing. Requires `ffmpeg`, `pandoc`, LibreOffice, Python 3.10+ with `requests` and `python-docx`, and an `OPENROUTER_API_KEY`. | `npx skills@latest add Wang-Cankun/cankun-skills --skill meeting-audio-report` |
@@ -43,22 +43,25 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 
 ## CK Stack
 
-CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/main/pstack) into portable workflows for software and analysis projects. Each skill retains its upstream MIT license and attribution. The instructions use the tools and agent capabilities available in the current environment; project paths, environments, reference data, and acceptance criteria belong in the consuming project.
+CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/main/pstack) into portable workflows for software and analysis projects, alongside `deposition` and `confer`. Adapted skills retain their upstream MIT license and attribution. The instructions use the tools and agent capabilities available in the current environment; project paths, environments, reference data, and acceptance criteria belong in the consuming project.
 
 | Need | Skills | Result |
 | ---- | ------ | ------ |
 | Understand | `ck-how`, `ck-why`, `ck-teach` | Traced mechanics, evidence for historical choices, and a clear explanation |
 | Explore | `deposition`, `ck-prototype` | Settled decisions and small experiments that distinguish approaches |
 | Design and build | `ck-arena`, `ck-architect` | Independent candidates, a coherent synthesis, and verification within the requested scope |
+| Consult a peer | `confer` | A named model's advisory response and a resumable consultation thread |
 | Verify repeatedly | `ck-verify-create`, `ck-verify-maintain` | A project-owned verification skill, feature map, executable recipes, and retained evidence |
 
 Use the skills that fit the task; this is not a mandatory sequence. `ck-teach` composes `ck-how` and `ck-why`. `ck-architect` uses `ck-how`, `ck-arena`, and, when historical rationale matters, `ck-why`. Install those companions together when using a composed workflow. `obelisk` can supply historical leads when available; it is optional.
+
+`ck-arena` produces and judges independent candidates for an artifact. `confer` asks a peer model for advice and preserves the dialogue across rounds. A peer's agreement does not replace the arena's comparison or the project's verification.
 
 `ck-verify-create` generates a concrete skill such as `ck-verify-count-summary`. The name `ck-verify-<project>` is a template, not another global skill to install. The generated skill stays with its project and records that project's commands, inputs, expected outputs, and cleanup. Computational checks and scientific validity remain distinct.
 
 ### Install and maintain the CK Stack plugin
 
-The [CK Stack plugin](./plugins/ckstack) bundles the eight `ck-*` skills and `deposition` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
+The [CK Stack plugin](./plugins/ckstack) bundles the eight `ck-*` skills, `deposition`, and `confer` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. `confer` additionally needs Bun and the selected provider CLI and authentication, as described in [its requirements](./skills/confer/SKILL.md). Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
 
 The package definition in [`packaging/ckstack.json`](./packaging/ckstack.json) owns membership, version, and presentation. Build and check the distributable with:
 
@@ -98,10 +101,10 @@ Use the marketplace's actual name if the existing personal catalog uses another 
 
 The builder refuses unknown files in an existing output directory. When removing or renaming packaged files, inspect and move the obsolete output files before rebuilding; it never deletes them automatically.
 
-After confirming that the installed plugin contains all nine skills and references, remove their individual Codex deployments to avoid loading both forms:
+After confirming that the installed plugin contains all ten skills and references, remove their individual Codex deployments to avoid loading both forms:
 
 ```sh
-skl drop ck-how ck-why ck-teach ck-prototype ck-arena ck-architect ck-verify-create ck-verify-maintain deposition --agent codex --global
+skl drop ck-how ck-why ck-teach ck-prototype ck-arena ck-architect ck-verify-create ck-verify-maintain deposition confer --agent codex --global
 ```
 
 This removes the deployment links, preserving the skillshelf library and canonical source. Individual skill installation remains available for hosts or projects that use it.

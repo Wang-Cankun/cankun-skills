@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "ckstack",
-  "version": "0.1.0",
-  "description": "Evidence-grounded understanding, decisions, design, and verification for software and analysis workflows.",
+  "version": "0.2.0",
+  "description": "Evidence-grounded understanding, peer consultation, decisions, design, and verification for software and analysis workflows.",
   "author": {
     "name": "Cankun Wang",
     "url": "https://github.com/Wang-Cankun"

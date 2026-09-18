@@ -1,7 +1,7 @@
 {
   "name": "ckstack",
-  "version": "0.1.0",
-  "description": "Evidence-grounded understanding, decisions, design, and verification for software and analysis workflows.",
+  "version": "0.2.0",
+  "description": "Evidence-grounded understanding, peer consultation, decisions, design, and verification for software and analysis workflows.",
   "author": {
     "name": "Cankun Wang",
     "url": "https://github.com/Wang-Cankun"
@@ -12,8 +12,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "CK Stack",
-    "shortDescription": "Understand, design, and verify software and analysis workflows",
-    "longDescription": "Nine complementary skills for implementation tracing, historical rationale, teaching, decision examination, prototypes, independent candidates, architecture, and project verification.",
+    "shortDescription": "Understand, consult, design, and verify project workflows",
+    "longDescription": "Ten complementary skills for implementation tracing, historical rationale, teaching, resumable peer-model consultation, decision examination, prototypes, independent candidates, architecture, and project verification.",
     "developerName": "Cankun Wang",
     "category": "Developer Tools",
     "capabilities": [

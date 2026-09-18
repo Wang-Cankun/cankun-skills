@@ -45,6 +45,11 @@
     "skills/ck-why/references/sources/code-archaeology.md",
     "skills/ck-why/references/sources/incident-postmortem.md",
     "skills/ck-why/references/synthesizer-prompt.md",
+    "skills/confer/SKILL.md",
+    "skills/confer/agents/openai.yaml",
+    "skills/confer/references/providers.md",
+    "skills/confer/scripts/confer-test.mjs",
+    "skills/confer/scripts/confer.mjs",
     "skills/deposition/SKILL.md",
     "skills/deposition/agents/openai.yaml"
   ]
