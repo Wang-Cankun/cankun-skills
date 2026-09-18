@@ -44,7 +44,7 @@ if [[ -n "$FAKE_ORACLE_CALLS" ]]; then
   printf '%q ' "$@" >> "$FAKE_ORACLE_CALLS"
   printf '\\n' >> "$FAKE_ORACLE_CALLS"
 fi
-[[ "$1" == "--version" ]] && { echo "\${FAKE_ORACLE_VERSION:-0.16.2}"; exit 0; }
+[[ "$1" == "--version" ]] && { echo "\${FAKE_ORACLE_VERSION:-0.21.1}"; exit 0; }
 reply=""; followup=""; prev=""
 for a in "$@"; do
   [[ "$prev" == "--write-output" ]] && reply="$a"
@@ -59,6 +59,11 @@ case "\${FAKE_ORACLE_MODE:-ok}" in
                  echo 'Session: oracle-session-root'
                  [[ -n "$reply" ]] && printf 'oracle-fake-reply' > "$reply"
                fi ;;
+  detached)    echo 'Reattach via: oracle session oracle-background-session'
+               [[ -n "$reply" ]] && printf 'oracle-background-reply' > "$reply" ;;
+  mixed)       echo 'Session: oracle-session-root'
+               echo 'Reattach via: oracle session another-session'
+               [[ -n "$reply" ]] && printf 'conflicting-reply' > "$reply" ;;
   fail)        echo 'oracle boom' >&2; exit 1 ;;
   nosession)   [[ -n "$reply" ]] && printf 'reply-without-session' > "$reply" ;;
   nooutput)    echo 'Session: oracle-session-root' ;;
@@ -81,9 +86,10 @@ for a in "$@"; do
   [[ "$prev" == "--model" ]] && model="$a"
   prev="$a"
 done
+provider="\${model%%/*}"; model_id="\${model#*/}"
 case "\${FAKE_PI_MODE:-ok}" in
   ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
-       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-fake-reply\\"}],\\"provider\\":\\"cation\\",\\"model\\":\\"fw-kimi-k3\\",\\"usage\\":{\\"input\\":2345,\\"output\\":67}}}" ;;
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-fake-reply\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":2345,\\"output\\":67}}}" ;;
   badjson) echo 'not-json' ;;
   nosession) echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"reply"}]}}' ;;
   noreply) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}" ;;
@@ -106,7 +112,7 @@ function confer(args, { home, env = {}, timeoutMs = 20000 } = {}) {
   return new Promise((resolve) => {
     const child = spawn("bun", [MJS, ...args], {
       // CODEX_HOME defaults to ROOT (no config.toml) so provenance stays hermetic
-      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, ...env },
+      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, CONFER_PROVIDER: "", CONFER_PI_MODEL: "", ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     const out = [], err = [];
@@ -171,13 +177,13 @@ function check(name, cond, detail = "") {
     home, env: { FAKE_ORACLE_CALLS: calls },
   });
   check("oracle open exits 0", r1.code === 0 && r1.stdout.includes("oracle-fake-reply"), r1.stderr);
-  check("oracle open stores root session", reg(home).pro?.session === "oracle-session-root" && reg(home).pro?.model === "gpt-5.6/pro");
-  check("oracle provenance in ← header", tx(home, "pro").includes("· gpt-5.6/pro ·"), tx(home, "pro"));
+  check("oracle open stores root session", reg(home).pro?.session === "oracle-session-root" && reg(home).pro?.model === "gpt-6/pro");
+  check("oracle provenance in ← header", tx(home, "pro").includes("· gpt-6/pro ·"), tx(home, "pro"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
-  check("oracle pins browser GPT-5.6 Pro", [
+  check("oracle pins browser GPT-6 Pro", [
     "--engine browser",
-    "--model gpt-5.6",
-    "--browser-thinking-time heavy",
+    "--model gpt-6-pro",
+    "--browser-thinking-time pro",
     "--browser-timeout 60m",
     "--wait",
     "--no-notify",
@@ -192,25 +198,37 @@ function check(name, cond, detail = "") {
   check("oracle followup refreshes child session", reg(home).pro?.session === "oracle-session-child" && reg(home).pro?.rounds === 2);
   const followupArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("oracle followup passes parent session", followupArgs.includes("--followup oracle-session-root"), followupArgs);
+
+  const legacy = reg(home);
+  legacy.pro.model = "gpt-5.6/pro";
+  fs.writeFileSync(path.join(home, "threads.json"), JSON.stringify(legacy));
+  const oldReply = await confer(["reply", "pro", "legacy reply"], { home, env: { FAKE_ORACLE_CALLS: calls } });
+  const oldArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("existing Oracle thread keeps its model and truthful provenance", oldReply.code === 0 && reg(home).pro?.model === "gpt-5.6/pro" && oldArgs.includes("--model gpt-5.6 "), oldReply.stderr + oldArgs);
+
+  const background = await confer(["ask", "-t", "background", "q"], { home, env: { FAKE_ORACLE_MODE: "detached" } });
+  check("Oracle background --wait output preserves session id", background.code === 0 && reg(home).background?.session === "oracle-background-session" && background.stdout.includes("oracle-background-reply"), background.stderr);
+  const mixed = await confer(["ask", "-t", "mixed", "q"], { home, env: { FAKE_ORACLE_MODE: "mixed" } });
+  check("Oracle conflicting foreground/background ids fail closed", mixed.code === 1 && mixed.stderr.includes("conflicting session ids"), mixed.stderr);
 }
 
-// 1c-pi. Pi uses the local CATION Kimi model and resumes the same session.
+// 1c-pi. Pi uses the OpenRouter Gemini 3.8 Flash model and resumes the same session.
 {
   const home = freshHome();
   const calls = path.join(home, "pi-calls");
-  const r1 = await confer(["open", "pi", "-t", "kimi", "q"], { home, env: { FAKE_PI_CALLS: calls } });
+  const r1 = await confer(["open", "pi", "-t", "gemini", "q"], { home, env: { FAKE_PI_CALLS: calls } });
   check("pi open exits 0", r1.code === 0 && r1.stdout.includes("pi-fake-reply"), r1.stderr);
-  check("pi stores session and model", reg(home).kimi?.session && reg(home).kimi?.model === "cation/fw-kimi-k3");
-  check("pi provenance in ← header", tx(home, "kimi").includes("· cation/fw-kimi-k3 · 2.3k→67tok"), tx(home, "kimi"));
+  check("pi stores session and model", reg(home).gemini?.session && reg(home).gemini?.model === "openrouter/google/gemini-3.8-flash");
+  check("pi provenance in ← header", tx(home, "gemini").includes("· openrouter/google/gemini-3.8-flash · 2.3k→67tok"), tx(home, "gemini"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
-  check("pi pins read-only Kimi invocation", [
+  check("pi pins read-only Gemini invocation", [
     "--mode json", "--print", "--no-tools", "--no-context-files", "--no-skills",
-    "--no-extensions", "--model cation/fw-kimi-k3", "--session-dir", "--session-id",
+    "--no-extensions", "--model openrouter/google/gemini-3.8-flash", "--session-dir", "--session-id",
   ].every((s) => openArgs.includes(s)), openArgs);
 
-  const session = reg(home).kimi.session;
-  const r2 = await confer(["reply", "kimi", "again"], { home, env: { FAKE_PI_CALLS: calls } });
-  check("pi reply exits 0", r2.code === 0 && reg(home).kimi?.rounds === 2, r2.stderr);
+  const session = reg(home).gemini.session;
+  const r2 = await confer(["reply", "gemini", "again"], { home, env: { FAKE_PI_CALLS: calls } });
+  check("pi reply exits 0", r2.code === 0 && reg(home).gemini?.rounds === 2, r2.stderr);
   const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("pi reply resumes stored session", replyArgs.includes(`--session ${session}`), replyArgs);
 
@@ -221,22 +239,69 @@ function check(name, cond, detail = "") {
   }
 }
 
+// Defaults, saved Pi choices, and thread continuity across preference changes.
+{
+  const home = freshHome();
+  const defaults = await confer(["config"], { home });
+  const config = JSON.parse(defaults.stdout);
+  check("fresh defaults are Oracle and Gemini", defaults.code === 0 && config.provider === "oracle" && config.piModel === "openrouter/google/gemini-3.8-flash");
+  const first = await confer(["ask", "-t", "default", "q"], { home });
+  check("ask without provider selects GPT-6 Pro", first.code === 0 && reg(home).default?.provider === "oracle" && reg(home).default?.model === "gpt-6/pro", first.stderr);
+
+  const saves = await Promise.all([
+    confer(["config", "provider", "pi"], { home }),
+    confer(["config", "pi-model", "glm-5.3"], { home }),
+  ]);
+  check("concurrent preferences are saved", saves.every((r) => r.code === 0), saves.map((r) => r.stderr).join("\n"));
+  const calls = path.join(home, "pi-calls");
+  const glm = await confer(["ask", "-t", "glm", "q"], { home, env: { FAKE_PI_CALLS: calls } });
+  check("saved Pi and GLM defaults reach Pi", glm.code === 0 && reg(home).glm?.provider === "pi" && reg(home).glm?.model === "openrouter/z-ai/glm-5.3", glm.stderr);
+  check("GLM remains advisory", fs.readFileSync(calls, "utf8").includes("--no-tools --no-context-files --no-skills --no-extensions --model openrouter/z-ai/glm-5.3"));
+
+  await confer(["config", "pi-model", "gemini-3.8-flash"], { home });
+  const resumed = await confer(["reply", "glm", "again"], { home, env: { CONFER_PI_MODEL: "gemini-3.8-flash", FAKE_PI_CALLS: calls } });
+  check("Pi reply keeps original GLM after default changes", resumed.code === 0 && reg(home).glm?.rounds === 2 && reg(home).glm?.piModel === "openrouter/z-ai/glm-5.3" && reg(home).glm?.model === "openrouter/z-ai/glm-5.3", resumed.stderr);
+  const fresh = await confer(["ask", "-t", "fresh", "q"], { home });
+  check("new Pi thread uses changed Gemini default", fresh.code === 0 && reg(home).fresh?.piModel === "openrouter/google/gemini-3.8-flash", fresh.stderr);
+  const override = await confer(["ask", "-t", "env", "q"], { home, env: { CONFER_PI_MODEL: "glm-5.3" } });
+  check("Pi environment overrides saved preference", override.code === 0 && reg(home).env?.piModel === "openrouter/z-ai/glm-5.3", override.stderr);
+  const providerOverride = await confer(["ask", "-t", "env-provider", "q"], { home, env: { CONFER_PROVIDER: "codex" } });
+  check("provider environment overrides saved preference", providerOverride.code === 0 && reg(home)["env-provider"]?.provider === "codex", providerOverride.stderr);
+  const explicit = await confer(["ask", "oracle", "-t", "explicit", "q"], { home, env: { CONFER_PROVIDER: "codex" } });
+  check("explicit provider overrides preferences", explicit.code === 0 && reg(home).explicit?.provider === "oracle", explicit.stderr);
+  const escaped = await confer(["ask", "-t", "escaped", "--", "oracle", "is a tool"], { home });
+  check("prompt separator preserves provider-like prompt text", escaped.code === 0 && reg(home).escaped?.provider === "pi" && tx(home, "escaped").includes("oracle is a tool"), escaped.stderr);
+  const legacy = reg(home);
+  delete legacy.glm.piModel;
+  fs.writeFileSync(path.join(home, "threads.json"), JSON.stringify(legacy));
+  const legacyReply = await confer(["reply", "glm", "again"], { home });
+  check("legacy Pi thread reuses recorded model", legacyReply.code === 0 && reg(home).glm?.piModel === "openrouter/z-ai/glm-5.3", legacyReply.stderr);
+
+  const before = fs.readFileSync(path.join(home, "config.json"), "utf8");
+  const invalid = await confer(["config", "pi-model", "glmm-5.3"], { home });
+  check("invalid Pi preset leaves config unchanged", invalid.code === 1 && before === fs.readFileSync(path.join(home, "config.json"), "utf8"), invalid.stderr);
+  const invalidProvider = await confer(["config", "provider", "bogus"], { home });
+  check("invalid provider is rejected", invalidProvider.code === 1, invalidProvider.stderr);
+  const custom = await confer(["open", "pi", "-t", "custom", "q"], { home, env: { CONFER_PI_MODEL: "custom/model-id" } });
+  check("custom Pi identifiers still work", custom.code === 0 && reg(home).custom?.piModel === "custom/model-id" && reg(home).custom?.model === "custom/model-id", custom.stderr);
+}
+
 // 1d. Oracle version and output/session protocol gates fail closed.
 {
   const home = freshHome();
   const calls = path.join(home, "oracle-calls");
   const old = await confer(["open", "oracle", "-t", "old", "q"], {
-    home, env: { FAKE_ORACLE_VERSION: "0.16.1", FAKE_ORACLE_CALLS: calls },
+    home, env: { FAKE_ORACLE_VERSION: "0.21.0", FAKE_ORACLE_CALLS: calls },
   });
   const oldCalls = fs.readFileSync(calls, "utf8").trim().split("\n");
-  check("oracle <0.16.2 is rejected", old.code === 1 && old.stderr.includes("need >= 0.16.2"), old.stderr);
+  check("oracle <0.21.1 is rejected", old.code === 1 && old.stderr.includes("need >= 0.21.1"), old.stderr);
   check("old oracle is rejected before prompt submission", oldCalls.length === 1 && oldCalls[0] === "--version", oldCalls.join(" | "));
 
   const prereleaseHome = freshHome();
   const prerelease = await confer(["open", "oracle", "-t", "prerelease", "q"], {
-    home: prereleaseHome, env: { FAKE_ORACLE_VERSION: "0.16.2-beta.1" },
+    home: prereleaseHome, env: { FAKE_ORACLE_VERSION: "0.21.1-beta.1" },
   });
-  check("oracle 0.16.2 prerelease is below stable minimum", prerelease.code === 1 && prerelease.stderr.includes("need >= 0.16.2"), prerelease.stderr);
+  check("oracle 0.21.1 prerelease is below stable minimum", prerelease.code === 1 && prerelease.stderr.includes("need >= 0.21.1"), prerelease.stderr);
 
   for (const [mode, expected] of [
     ["nosession", "no Session:"],

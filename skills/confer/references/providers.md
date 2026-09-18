@@ -7,14 +7,14 @@ paths, plain-text IO only, and state independent of CWD. It serves Claude Code, 
 future host from one deployment; harness differences are absorbed by SKILL.md (policy) and skl
 (packaging). Any harness-conditional added to confer.mjs is a design regression.
 
-## Session mechanics (verified 2026-08-28)
+## Session mechanics
 
 | Provider | New thread | Resume | Session id source | Version verified |
 |---|---|---|---|---|
 | claude | `claude -p --output-format json -- "<prompt>"` | `claude -p --resume <id> --output-format json -- "<prompt>"` | `.session_id` in the JSON result (refreshed every round) | Claude Code 2.1.218 |
 | codex | `codex exec --sandbox read-only --skip-git-repo-check --json --output-last-message <f> -- "<prompt>"` | `codex exec --sandbox read-only --skip-git-repo-check resume <id> --json --output-last-message <f> -- "<prompt>"` | `thread_id` of the `{"type":"thread.started"}` JSONL event | codex-cli 0.145.0 |
-| pi | `pi --mode json --print --no-tools --no-context-files --no-skills --no-extensions --model cation/fw-kimi-k3 --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.84.2 |
-| oracle | `oracle --engine browser --model gpt-5.6 --browser-thinking-time heavy --browser-timeout 60m --wait --no-notify --browser-archive never --write-output <f> --prompt "<prompt>"` | same flags plus `--followup <id>` | stdout `Session: <id>` (a new child id every round) | Oracle >= 0.16.2 required |
+| pi | `pi --mode json --print --no-tools --no-context-files --no-skills --no-extensions --model openrouter/google/gemini-3.8-flash --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
+| oracle | `oracle --engine browser --model gpt-6-pro --browser-thinking-time pro --browser-timeout 60m --wait --no-notify --browser-archive never --write-output <f> --prompt "<prompt>"` | same flags plus `--followup <id>` | stdout `Session: <id>` or `Reattach via: oracle session <id>` | Oracle >= 0.21.1 required |
 
 Caveats (each verified against the real CLI, not assumed):
 
@@ -28,25 +28,33 @@ Caveats (each verified against the real CLI, not assumed):
   additional input from stdin..." and reads it. The runner spawns every CLI with `stdio: ignore` on stdin.
 - **claude read-only**: print mode cannot interactively approve permissions, so write tools fail
   closed — the intended consultant posture. Do not add `--dangerously-skip-permissions`.
-- **Pi uses local model configuration without local agent behavior**: the default `cation/fw-kimi-k3`
-  resolves through the owner's Pi model catalog and credentials. `CONFER_PI_MODEL` selects another
-  configured Pi model. Tools, context files, skills, and extensions stay disabled so the peer remains
-  advisory and the consultation prompt is the only task context.
-- **Oracle is explicit-only**: route to it only when the user explicitly asks for GPT Pro or Oracle.
-  Bare `all` and bare `doctor --live` remain Claude + Codex; `all --with-oracle` and
-  `doctor --live oracle` are the explicit forms. Do not infer this route from task difficulty.
-- **Oracle's CLI model shape is deliberate**: GPT-5.6 Pro is
-  `--model gpt-5.6 --browser-thinking-time heavy`, not a `gpt-5.6-pro` model id. Require Oracle
-  >= 0.16.2 before submitting any prompt; older versions fail closed because their browser model
-  picker does not reliably select this model.
-- **Oracle followups fork child sessions**: pass the stored id with `--followup`, parse the single
-  `Session: <id>` line, and replace the registry value with that new child id. A missing or
-  conflicting id and a missing/empty `--write-output` file are protocol errors.
-- **Oracle browser state is machine-local**: select the authenticated Chrome profile with
-  `browser.chromeProfile` in `~/.oracle/config.json`. Never hardcode a profile, account, cookies, or
+- **Pi uses local model configuration without local agent behavior**: built-in presets are
+  `gemini-3.8-flash` → `openrouter/google/gemini-3.8-flash` (Pi default) and
+  `glm-5.3` → `openrouter/z-ai/glm-5.3`. `CONFER_PI_MODEL` overrides the saved
+  `config pi-model` preference for new threads; other configured `provider/model` identifiers
+  remain supported. Each Pi thread saves its selected identifier as `piModel`; `reply` reuses it,
+  falling back to the recorded model for older threads. Changing defaults affects new threads.
+  Tools, context files, skills, and extensions stay disabled.
+- **Oracle is the default consultant**: `ask` without a provider uses `CONFER_PROVIDER`, then
+  `config provider`, then `oracle`. Explicit `ask <provider>` and `open <provider>` win over defaults.
+  Use `--` before a prompt beginning with a provider name or option-like text.
+  `all` remains Claude + Codex; `all --with-oracle` adds Oracle. Bare `doctor --live` remains the
+  Claude + Codex diagnostic; `doctor --live oracle` tests the default consultant.
+- **Oracle selects GPT-6 Pro**: use `--model gpt-6-pro --browser-thinking-time pro`.
+  Oracle maps this browser alias to ChatGPT's Latest/GPT-6 Astra model and verifies the Pro tier.
+  The supported minimum is Oracle 0.21.1; reject older versions before submission.
+  `pro` requires verified Pro selection; `heavy` does not reliably select Pro.
+- **Oracle followups fork child sessions**: pass the stored id with `--followup` and save the new child id.
+  Foreground runs print `Session: <id>`; detached Pro runs with `--wait` print
+  `Reattach via: oracle session <id>`. Accept either, rejecting conflicting ids. A missing id
+  or missing/empty `--write-output` file is a protocol error. Existing Oracle conversations
+  retain their recorded model (including older GPT-5.6 Pro threads); new defaults apply to new chats.
+- **Oracle browser state is machine-local**: set `browser.manualLogin: true` in
+  `~/.oracle/config.json` and sign in once in Oracle’s persistent Chrome profile. Merely setting
+  `browser.chromeProfile` does not import a login in current Oracle releases. Never hardcode a profile, account, cookies, or
   credentials in this repository. `--wait`, `--no-notify`, and `--browser-archive never` keep output
   deterministic and avoid retained prompt archives.
-- Extra provider selection: `CONFER_PI_MODEL`; extra flags:
+- Default overrides: `CONFER_PROVIDER`, `CONFER_PI_MODEL`; extra flags:
   `CONFER_CLAUDE_ARGS` / `CONFER_CODEX_ARGS` / `CONFER_ORACLE_ARGS`
   (whitespace-split; **no glob
   expansion**, unlike the old bash — args containing spaces remain unsupported).
@@ -76,13 +84,14 @@ Caveats (each verified against the real CLI, not assumed):
   subscription) + `duration_ms`; codex = `$CODEX_HOME/config.toml` `model`/`model_reasoning_effort`
   (`-m` / `-c model_reasoning_effort=` in `CONFER_CODEX_ARGS` take precedence) + `turn.completed`
   usage tokens — the codex event stream itself names no model; Pi = provider/model and usage from
-  the final assistant `message_end` event; Oracle = pinned `gpt-5.6/pro` +
+  the final assistant `message_end` event; Oracle = selected Pro model label (`gpt-6/pro` for new threads) +
   adapter wall time. Oracle provenance intentionally excludes browser profile, account, and cost.
   Missing fields degrade to a shorter header; rounds written before this feature keep the old format.
 
 ## State
 
-- Registry `~/.confer/threads.json`: `{name: {provider, session, rounds, created, updated}}`
+- Preferences `~/.confer/config.json`: `{provider?, piModel?}`; written atomically under the registry transaction lock. `config` shows effective settings, including environment overrides.
+- Registry `~/.confer/threads.json`: `{name: {provider, session, rounds, model?, piModel?, created, updated}}`
 - Transcripts `~/.confer/threads/<name>.md`: every round, both directions, timestamped. Plaintext —
   the reason for the no-secrets guardrail.
 - Pi sessions `~/.confer/pi-sessions/`: provider-side JSONL context used by `reply`.
@@ -97,13 +106,13 @@ Caveats (each verified against the real CLI, not assumed):
    session id is a protocol error, not a warning** — resumable threads are the core contract. Add a
    capability flag only when a genuinely non-resumable provider actually exists.
 2. Verify: `bun scripts/confer-test.mjs` (extend the fakes if the CLI shape is new), then run the
-   relevant best-effort live probe under a temporary `CONFER_HOME`; use `doctor --live oracle` only
-   when Oracle was explicitly requested. A live probe is diagnostic, not a merge gate.
+   relevant best-effort live probe under a temporary `CONFER_HOME`; `doctor --live oracle` tests
+   GPT-6 Pro, and `CONFER_PI_MODEL=glm-5.3 doctor --live pi` tests the optional Pi model. A live probe is diagnostic, not a merge gate.
 
 ## Tests
 
 `bun scripts/confer-test.mjs` — deterministic, zero live calls: fake Claude, Codex, Pi, and Oracle CLIs
-on a prepended PATH, fresh `CONFER_HOME` per case. Covers explicit Oracle routing, version/output/
+on a prepended PATH, fresh `CONFER_HOME` per case. Covers default Oracle routing, saved provider/Pi preferences, model continuity, version/output/
 session gates, child-session refresh, provider-specific timeout, fan-out isolation, total-failure
 exit, process-tree timeout kill (heartbeat grandchild), malformed output, concurrent same-thread
 reply, duplicate-name opens, name validation, doctor cleanup, and stale-lock stealing. Run it after

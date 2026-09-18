@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// confer — consult a peer AI model (claude / codex / pi / explicit oracle) with resumable threads.
+// confer — consult GPT Pro by default, or a chosen peer, with resumable threads.
 // State: ~/.confer/threads.json (registry) + ~/.confer/threads/<name>.md (transcripts)
 // Locks: ~/.confer/locks/ — per-thread operation lock (held across the provider call)
 //        + short registry transaction lock. See references/providers.md.
@@ -12,6 +12,7 @@ import { spawn } from "node:child_process";
 
 const CONFER_HOME = process.env.CONFER_HOME || path.join(os.homedir(), ".confer");
 const REG = path.join(CONFER_HOME, "threads.json");
+const CONFIG = path.join(CONFER_HOME, "config.json");
 const TDIR = path.join(CONFER_HOME, "threads");
 const LOCKDIR = path.join(CONFER_HOME, "locks");
 const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
@@ -19,10 +20,13 @@ const DEFAULT_ORACLE_TIMEOUT_SECONDS = 65 * 60;
 const TIMEOUT_MS = (parseInt(process.env.CONFER_TIMEOUT, 10) || DEFAULT_TIMEOUT_SECONDS) * 1000;
 const ORACLE_TIMEOUT_MS =
   (parseInt(process.env.CONFER_ORACLE_TIMEOUT, 10) || DEFAULT_ORACLE_TIMEOUT_SECONDS) * 1000;
-const ORACLE_MIN_VERSION = "0.16.2";
-const ORACLE_MODEL = "gpt-5.6";
-const ORACLE_MODEL_LABEL = "gpt-5.6/pro";
-const PI_MODEL = process.env.CONFER_PI_MODEL || "cation/fw-kimi-k3";
+const ORACLE_MIN_VERSION = "0.21.1";
+const ORACLE_MODEL = "gpt-6-pro";
+const ORACLE_MODEL_LABEL = "gpt-6/pro";
+const PI_MODELS = {
+  "gemini-3.8-flash": "openrouter/google/gemini-3.8-flash",
+  "glm-5.3": "openrouter/z-ai/glm-5.3",
+};
 const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
@@ -38,6 +42,34 @@ class ProviderError extends Error {
 }
 
 const die = (msg) => { throw new ConferError(msg); };
+
+function readConfig() {
+  let config;
+  try { config = JSON.parse(fs.readFileSync(CONFIG, "utf8")); }
+  catch (e) {
+    if (e.code === "ENOENT") return {};
+    die(`cannot read ${CONFIG}: ${e.message}`);
+  }
+  if (!config || typeof config !== "object" || Array.isArray(config)) die(`invalid config: ${CONFIG}`);
+  return config;
+}
+
+function resolvePiModel(value) {
+  if (typeof value !== "string" || !value.trim() || /\s/.test(value)) die("pi-model needs a preset or provider/model identifier");
+  if (Object.hasOwn(PI_MODELS, value)) return PI_MODELS[value];
+  if (!value.includes("/")) die(`unknown Pi preset '${value}' (have: ${Object.keys(PI_MODELS).join(", ")}); custom models need provider/model`);
+  return value;
+}
+
+function piModel() {
+  return resolvePiModel(process.env.CONFER_PI_MODEL || readConfig().piModel || "gemini-3.8-flash");
+}
+
+function defaultProvider() {
+  const provider = process.env.CONFER_PROVIDER || readConfig().provider || "oracle";
+  if (!PROVIDERS.includes(provider)) die(`unknown default provider '${provider}'`);
+  return provider;
+}
 
 function now() {
   const d = new Date(), p = (n) => String(n).padStart(2, "0");
@@ -146,9 +178,9 @@ async function withRegistry(mutate) {
   }
 }
 
-function regSet(name, provider, session, rounds, model) {
+function regSet(name, provider, session, rounds, model, piModel) {
   return withRegistry((reg) => {
-    reg[name] = { provider, session, rounds, ...(model ? { model } : {}), updated: now(), created: reg[name]?.created ?? now() };
+    reg[name] = { provider, session, rounds, ...(model ? { model } : {}), ...(piModel ? { piModel } : {}), updated: now(), created: reg[name]?.created ?? now() };
   });
 }
 
@@ -287,7 +319,8 @@ const providers = {
   },
   pi: {
     defaultFanout: false,
-    async ask(prompt, session) {
+    async ask(prompt, session, modelOverride) {
+      const selectedModel = modelOverride ?? piModel();
       fs.mkdirSync(PI_SESSION_DIR, { recursive: true });
       const sessionId = session ?? crypto.randomUUID();
       const args = [
@@ -297,7 +330,7 @@ const providers = {
         "--no-context-files",
         "--no-skills",
         "--no-extensions",
-        "--model", PI_MODEL,
+        "--model", selectedModel,
         "--session-dir", PI_SESSION_DIR,
         ...(session ? ["--session", session] : ["--session-id", sessionId]),
         prompt,
@@ -316,26 +349,29 @@ const providers = {
         throw new ProviderError("pi", `unexpected session id: ${reportedSession ?? "missing"} (expected ${sessionId})`);
       const reply = message?.content?.filter((c) => c.type === "text").map((c) => c.text).join("") ?? "";
       if (!reply.trim()) throw new ProviderError("pi", "no assistant text in response (protocol error)");
-      const model = message.provider && message.model ? `${message.provider}/${message.model}` : PI_MODEL;
+      const model = message.provider && message.model ? `${message.provider}/${message.model}` : selectedModel;
       const usage = message.usage;
       const parts = [
         model,
         usage ? `${fmtTok(usage.input ?? 0)}→${fmtTok(usage.output ?? 0)}tok` : null,
       ].filter(Boolean);
-      return { reply, session: sessionId, meta: { model, parts } };
+      return { reply, session: sessionId, piModel: selectedModel, meta: { model, parts } };
     },
   },
   oracle: {
     defaultFanout: false,
     minVersion: ORACLE_MIN_VERSION,
-    async ask(prompt, session) {
+    async ask(prompt, session, modelOverride) {
+      // Oracle followups keep the conversation's selected model; preserve its provenance.
+      const modelLabel = modelOverride ?? ORACLE_MODEL_LABEL;
+      const selectedModel = modelLabel === ORACLE_MODEL_LABEL ? ORACLE_MODEL : modelLabel.replace(/\/pro$/, "");
       await requireOracleVersion();
       const replyFile = path.join(os.tmpdir(), `confer-oracle-${process.pid}-${crypto.randomBytes(4).toString("hex")}.txt`);
       const args = [
         ...splitArgs(process.env.CONFER_ORACLE_ARGS),
         "--engine", "browser",
-        "--model", ORACLE_MODEL,
-        "--browser-thinking-time", "heavy",
+        "--model", selectedModel,
+        "--browser-thinking-time", "pro",
         "--browser-timeout", "60m",
         "--wait",
         "--no-notify",
@@ -349,14 +385,14 @@ const providers = {
         const r = await runOrThrow("oracle", "oracle", args, { timeoutMs: ORACLE_TIMEOUT_MS });
         let newSession = null;
         for (const line of r.stdout.split("\n")) {
-          const m = line.match(/^Session:\s+(\S+)\s*$/);
+          const m = line.match(/^(?:Session:\s+|Reattach via:\s+oracle session\s+)(\S+)\s*$/);
           if (!m) continue;
           if (newSession && newSession !== m[1])
             throw new ProviderError("oracle", `conflicting session ids: ${newSession} vs ${m[1]}`);
           newSession = m[1];
         }
         if (!newSession)
-          throw new ProviderError("oracle", "no Session: <id> line in output (protocol error)");
+          throw new ProviderError("oracle", "no Session: <id> or Reattach via: oracle session <id> line in output (protocol error)");
         let reply;
         try { reply = fs.readFileSync(replyFile, "utf8"); }
         catch { throw new ProviderError("oracle", "no --write-output file written (protocol error)"); }
@@ -366,7 +402,7 @@ const providers = {
         return {
           reply,
           session: newSession,
-          meta: { model: ORACLE_MODEL_LABEL, parts: [ORACLE_MODEL_LABEL, duration] },
+          meta: { model: modelLabel, parts: [modelLabel, duration] },
         };
       } finally {
         try { fs.unlinkSync(replyFile); } catch {}
@@ -384,18 +420,18 @@ const DEFAULT_FANOUT_PROVIDERS = PROVIDERS.filter((p) => providers[p].defaultFan
 // "←" nor "✗" means we died mid-call: peer context may be one round ahead
 // (documented ambiguity, see providers.md).
 
-async function runRound(name, provider, prompt, session, round) {
+async function runRound(name, provider, prompt, session, round, modelOverride) {
   transcript(name, round, "→", provider, prompt);
   let res;
   try {
-    res = await providers[provider].ask(prompt, session);
+    res = await providers[provider].ask(prompt, session, modelOverride);
   } catch (e) {
     transcript(name, round, "✗", provider, e.message);
     throw e;
   }
   const metaStr = res.meta?.parts?.length ? ` · ${res.meta.parts.join(" · ")}` : "";
   transcript(name, round, "←", provider, res.reply, metaStr);
-  await regSet(name, provider, res.session, round, res.meta?.model);
+  await regSet(name, provider, res.session, round, res.meta?.model, res.piModel);
   return `${res.reply}\n\n[confer] thread=${name} provider=${provider} round=${round} — continue: confer.mjs reply ${name} "..."`;
 }
 
@@ -413,7 +449,7 @@ function autoName(provider) {
 // ---- commands --------------------------------------------------------------
 
 async function openThread(provider, name, prompt, { preamble = true } = {}) {
-  if (!providers[provider]) die(`unknown provider '${provider}' (have: ${PROVIDERS.join(" ")})`);
+  if (!PROVIDERS.includes(provider)) die(`unknown provider '${provider}' (have: ${PROVIDERS.join(" ")})`);
   initHome();
   const release = lockThread(name); // before the existence check: closes the duplicate-open race
   try {
@@ -427,8 +463,39 @@ async function cmdOpen(args) {
   const provider = args.shift() || die("usage: confer.mjs open <provider> [-t name] <prompt|->");
   let name = null;
   if (args[0] === "-t") { args.shift(); name = validName(args.shift() || die("-t needs a name")); }
+  if (args[0] === "--") args.shift();
   const prompt = readPrompt(args);
   console.log(await openThread(provider, name ?? autoName(provider), prompt));
+}
+
+async function cmdAsk(args) {
+  const provider = PROVIDERS.includes(args[0]) ? args.shift() : defaultProvider();
+  await cmdOpen([provider, ...args]);
+}
+
+async function cmdConfig(args) {
+  if (!args.length) {
+    console.log(JSON.stringify({ provider: defaultProvider(), piModel: piModel(), piPresets: PI_MODELS }, null, 2));
+    return;
+  }
+  const [key, value] = args;
+  if (args.length > 2 || !["provider", "pi-model"].includes(key)) die("usage: confer.mjs config [provider|pi-model [value]]");
+  if (value === undefined) {
+    console.log(key === "provider" ? defaultProvider() : piModel());
+    return;
+  }
+  const resolved = key === "pi-model" ? resolvePiModel(value) : value;
+  if (key === "provider" && !PROVIDERS.includes(resolved)) die(`unknown provider '${resolved}'`);
+  initHome();
+  // Share the short transaction lock; concurrent preference writes preserve both keys.
+  await withRegistry(() => {
+    const config = readConfig();
+    config[key === "pi-model" ? "piModel" : "provider"] = resolved;
+    const tmp = `${CONFIG}.tmp.${process.pid}`;
+    fs.writeFileSync(tmp, JSON.stringify(config, null, 2) + "\n");
+    fs.renameSync(tmp, CONFIG);
+  });
+  console.log(`${key}=${resolved} (saved; environment overrides still take precedence)`);
 }
 
 async function cmdReply(args) {
@@ -440,8 +507,13 @@ async function cmdReply(args) {
     const t = readReg()[name]; // fresh read under the lock
     if (!t) die(`no thread '${name}' (see: confer.mjs list)`);
     if (!t.session) die(`thread '${name}' has no session id — not resumable`);
-    console.log(await runRound(name, t.provider, prompt, t.session, t.rounds + 1));
+    console.log(await runRound(name, t.provider, prompt, t.session, t.rounds + 1, resumeModel(t)));
   } finally { release(); }
+}
+
+function resumeModel(thread) {
+  if (thread.provider === "pi") return thread.piModel ?? thread.model;
+  if (thread.provider === "oracle") return thread.model;
 }
 
 async function cmdAll(args) {
@@ -520,7 +592,7 @@ async function cmdDoctor(args) {
           mine.push(name);
           const t = readReg()[name];
           const release = lockThread(name);
-          try { console.log(await runRound(name, p, "Reply with the single word AGAIN.", t.session, t.rounds + 1)); }
+          try { console.log(await runRound(name, p, "Reply with the single word AGAIN.", t.session, t.rounds + 1, resumeModel(t))); }
           finally { release(); }
         } catch (e) {
           console.error(`confer: ${p} live check failed: ${e.message}`);
@@ -541,18 +613,22 @@ async function cmdDoctor(args) {
 
 const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   open <provider> [-t name] <prompt|->   start a thread (${PROVIDERS.join("|")}); '-' reads prompt from stdin
-  ask  <provider> <prompt|->             alias of open (auto thread name)
+  ask [provider] [-t name] <prompt|->    default: GPT-6 Pro via Oracle; '--' ends options
+  config [provider|pi-model [value]]     show/save defaults; Pi presets: ${Object.keys(PI_MODELS).join(", ")}
   reply <thread> <prompt|->              continue a thread (session resumed provider-side)
   all [--with-oracle] <prompt|->         fan out to claude+codex; explicit flag adds GPT Pro
   list | show <thread>                   registry / full transcript
   doctor [--live [provider]]             check CLIs; live defaults to claude+codex
 env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
-     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_PI_MODEL (default ${PI_MODEL}) · CONFER_HOME`;
+     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
+defaults: oracle (GPT-6 Pro); Pi: gemini-3.8-flash. Environment > saved config > built-in defaults.`;
 
 const [cmd, ...rest] = process.argv.slice(2);
 try {
   switch (cmd) {
-    case "open": case "ask": await cmdOpen(rest); break;
+    case "open": await cmdOpen(rest); break;
+    case "ask": await cmdAsk(rest); break;
+    case "config": await cmdConfig(rest); break;
     case "reply": await cmdReply(rest); break;
     case "all": await cmdAll(rest); break;
     case "list": cmdList(); break;
