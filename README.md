@@ -15,10 +15,13 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 | [ck-architect](./skills/ck-architect) | Ground the system, compare independent design sketches, and implement within the requested scope, redesigning when evidence invalidates the shape. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-architect` |
 | [ck-arena](./skills/ck-arena) | Generate independent candidates, compare them against shared criteria, and synthesize a verified artifact with a concise decision record. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-arena` |
 | [ck-how](./skills/ck-how) | Trace implementation, inputs, outputs, and boundaries to build a working mental model. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-how` |
+| [ck-impact](./skills/ck-impact) | Trace changes across contracts and boundaries, then support consequential safety claims with focused executable evidence. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-impact` |
 | [ck-prototype](./skills/ck-prototype) | Build disposable prototypes and small experiments to compare approaches through observable behavior, measurements, and concrete tradeoffs. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-prototype` |
+| [ck-reflect](./skills/ck-reflect) | Turn observed experience into targeted improvements to skills, tools, and workflows. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-reflect` |
+| [ck-skill-creator](./skills/ck-skill-creator) | Write focused, portable skills and improve them through proportionate checks, independent trials, and evidence-grounded comparisons. Optional helpers require Python >=3.10; metadata validation also requires PyYAML. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-skill-creator` |
 | [ck-teach](./skills/ck-teach) | Combine mechanism and rationale into a clear explanation at the reader's pace. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-teach` |
-| [ck-verify-create](./skills/ck-verify-create) | Generate and prove a project verification skill with launch, health checks, executable recipes, observable outcomes, and cleanup that retains evidence. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-create` |
-| [ck-verify-maintain](./skills/ck-verify-maintain) | Keep project verification instructions accurate through source inspection, live recipe coverage, proved repairs, and explicit reporting of gaps. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-maintain` |
+| [ck-verify-create](./skills/ck-verify-create) | Reuse project checks and, where needed, generate and prove verification instructions with observable outcomes and cleanup that retains evidence. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-create` |
+| [ck-verify-maintain](./skills/ck-verify-maintain) | Keep project verification instructions accurate with scoped repairs or a full live audit, identifying reused evidence and remaining coverage gaps. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-verify-maintain` |
 | [ck-why](./skills/ck-why) | Reconstruct rationale from evidence while separating documented intent, inference, and unknowns. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-why` |
 | [confer](./skills/confer) | Resumable cross-model consultation: GPT-6 Pro through Oracle by default, Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi, with saved preferences, per-round provenance, and concurrency-safe state. Requires `bun` and at least one provider CLI; Pi models must be configured locally; Oracle requires version 0.21.1 or newer and a signed-in ChatGPT browser profile. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
 | [deposition](./skills/deposition) | Ground a plan, decision, or idea in evidence, then examine consequential choices through focused question rounds, concrete alternatives, and a visible decision tree. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
@@ -51,17 +54,21 @@ CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/m
 | Explore | `deposition`, `ck-prototype` | Settled decisions and small experiments that distinguish approaches |
 | Design and build | `ck-arena`, `ck-architect` | Independent candidates, a coherent synthesis, and verification within the requested scope |
 | Consult a peer | `confer` | A named model's advisory response and a resumable consultation thread |
-| Verify repeatedly | `ck-verify-create`, `ck-verify-maintain` | A project-owned verification skill, feature map, executable recipes, and retained evidence |
+| Assess impact | `ck-impact` | Downstream failure mechanisms and focused evidence for compatibility assumptions |
+| Learn and improve skills | `ck-reflect`, `ck-skill-creator` | Evidence-grounded repairs and portable skills checked in representative tasks |
+| Verify repeatedly | `ck-verify-create`, `ck-verify-maintain` | Reused checks or a project-owned verification method, maintained within a declared scope |
 
 Use the skills that fit the task; this is not a mandatory sequence. `ck-teach` composes `ck-how` and `ck-why`. `ck-architect` uses `ck-how`, `ck-arena`, and, when historical rationale matters, `ck-why`. Install those companions together when using a composed workflow. `obelisk` can supply historical leads when available; it is optional.
 
 `ck-arena` produces and judges independent candidates for an artifact. `confer` asks a peer model for advice and preserves the dialogue across rounds. A peer's agreement does not replace the arena's comparison or the project's verification.
 
-`ck-verify-create` generates a concrete skill such as `ck-verify-count-summary`. The name `ck-verify-<project>` is a template, not another global skill to install. The generated skill stays with its project and records that project's commands, inputs, expected outputs, and cleanup. Computational checks and scientific validity remain distinct.
+`ck-reflect` finds lessons and the owner of each repair; `ck-skill-creator` handles substantive authoring and evaluation. The creator integrates writing guidance, scoped authoring, independent trials, and blind comparisons without requiring the source skills to be installed. Wording fixes get focused checks, substantive behavior changes get representative trials, and claims of improvement get matched comparisons. Its optional static review viewer retains Anthropic's Apache-2.0 license; see [source and license notes](./skills/ck-skill-creator/NOTICE.md).
+
+`ck-verify-create` first checks whether existing tests and documentation already give an agent a repeatable verification path. When a reusable gap remains, it generates a concrete skill such as `ck-verify-count-summary`. The name `ck-verify-<project>` is a template, not another global skill to install. The generated skill stays with its project and records that project's commands, inputs, expected outputs, and cleanup. `ck-verify-maintain` distinguishes a scoped repair from a full-map audit and reports only the coverage actually established. Computational checks and scientific validity remain distinct.
 
 ### Install and maintain the CK Stack plugin
 
-The [CK Stack plugin](./plugins/ckstack) bundles the eight `ck-*` skills, `deposition`, and `confer` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. `confer` additionally needs Bun and the selected provider CLI and authentication, as described in [its requirements](./skills/confer/SKILL.md). Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
+The [CK Stack plugin](./plugins/ckstack) bundles the eleven `ck-*` skills, `deposition`, and `confer` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. `confer` additionally needs Bun and the selected provider CLI and authentication, as described in [its requirements](./skills/confer/SKILL.md). Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
 
 The package definition in [`packaging/ckstack.json`](./packaging/ckstack.json) owns membership, version, and presentation. Build and check the distributable with:
 
@@ -101,10 +108,10 @@ Use the marketplace's actual name if the existing personal catalog uses another 
 
 The builder refuses unknown files in an existing output directory. When removing or renaming packaged files, inspect and move the obsolete output files before rebuilding; it never deletes them automatically.
 
-After confirming that the installed plugin contains all ten skills and references, remove their individual Codex deployments to avoid loading both forms:
+After confirming that the installed plugin contains all thirteen skills and references, remove their individual Codex deployments to avoid loading both forms:
 
 ```sh
-skl drop ck-how ck-why ck-teach ck-prototype ck-arena ck-architect ck-verify-create ck-verify-maintain deposition confer --agent codex --global
+skl drop ck-how ck-why ck-teach ck-prototype ck-arena ck-architect ck-impact ck-reflect ck-skill-creator ck-verify-create ck-verify-maintain deposition confer --agent codex --global
 ```
 
 This removes the deployment links, preserving the skillshelf library and canonical source. Individual skill installation remains available for hosts or projects that use it.

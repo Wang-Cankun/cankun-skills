@@ -1,7 +1,7 @@
 interface:
   display_name: "CK Verify Create"
-  short_description: "Generate and prove a project verification skill"
-  default_prompt: "Use $ck-verify-create to build a reusable verification skill for this project and prove a representative recipe."
+  short_description: "Reuse checks and close project verification gaps"
+  default_prompt: "Use $ck-verify-create to establish repeatable project verification, reuse existing checks, and create a skill only for a useful gap."
 
 policy:
   allow_implicit_invocation: true

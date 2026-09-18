@@ -1,7 +1,7 @@
 interface:
   display_name: "CK Verify Maintain"
-  short_description: "Audit and repair project verification recipes"
-  default_prompt: "Use $ck-verify-maintain to audit this project's verification skill against source and live behavior, repair proved drift, and report coverage gaps."
+  short_description: "Repair verification recipes or audit their coverage"
+  default_prompt: "Use $ck-verify-maintain to update verification after this change, or audit full coverage when requested, and report the evidence and remaining gaps."
 
 policy:
   allow_implicit_invocation: true
