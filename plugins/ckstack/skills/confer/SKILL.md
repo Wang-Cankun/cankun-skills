@@ -40,6 +40,10 @@ A round can take minutes. When you expect a long consultation and have other wor
 
 3. **Run, then relay faithfully.** Report the peer's position as the peer's — quote the load-bearing sentences, keep disagreements between you and the peer visible instead of silently merging into consensus, and state your own verdict separately when you have one. Always surface the thread name so the dialogue can continue later. Done when: the user has seen the peer's answer, your position, and the thread id.
 
+4. **Resolve feedback and return to the task.** For consequential findings, distinguish accepted findings and their fix or check, rejected findings and the evidence for rejection, and unresolved evidence gaps with the next useful check. Keep this in the task's existing record or conversation; a separate review report is not required. Apply supported changes within the original authorization, then verify them through the project's own method.
+
+   Continue the consultation only when another answer could change a still-unresolved substantive decision and existing evidence or a simpler direct check cannot settle it, or when the user explicitly requests another round. A new commit, revised wording, additional evidence, or the absence of an “APPROVE” verdict alone does not justify asking again. State what the next round must resolve before sending it. Otherwise close the consultation and resume the original task. An unresolved product or verification gap remains open even when no further model round is useful.
+
 ## Guardrails
 
 - The peer is **advisory and read-only**: it must never be asked to edit files or run state-changing commands. Codex opens sandboxed, Claude print mode cannot approve writes, and Pi runs with tools, context files, skills, and extensions disabled. If the peer proposes changes, you apply them under your own judgment.

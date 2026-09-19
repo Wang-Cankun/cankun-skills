@@ -1,6 +1,6 @@
 {
   "name": "ckstack",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Evidence-grounded understanding, design, impact review, reflection, skill authoring, and verification for software and analysis workflows.",
   "author": {
     "name": "Cankun Wang",
@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "CK Stack",
     "shortDescription": "Understand, build, reflect, and improve reusable workflows",
-    "longDescription": "Thirteen complementary skills for implementation tracing, rationale, teaching, peer consultation, decisions, prototypes, independent candidates, architecture, impact analysis, reflection, skill authoring, and proportionate project verification.",
+    "longDescription": "Fourteen complementary skills for task coordination, implementation tracing, rationale, teaching, peer consultation, decisions, prototypes, independent candidates, architecture, impact analysis, reflection, skill authoring, and proportionate project verification.",
     "developerName": "Cankun Wang",
     "category": "Developer Tools",
     "capabilities": [
@@ -21,7 +21,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Explain this workflow using CK Teach.",
+      "Use CK Work to start or resume this task through CK Stack.",
       "Compare implementation candidates using CK Arena.",
       "Improve this skill and check its behavior using CK Skill Creator."
     ]

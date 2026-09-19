@@ -55,6 +55,8 @@ Edit the canonical source rather than an installed cache. Make a narrow instruct
 
 Route tool or configuration fixes to their actual owner rather than accumulating workarounds in skill prose. If the required repair exceeds the current request, describe the mechanism and the evidence needed to finish it. Creating tracker items, posting messages, or publishing changes requires the corresponding user instruction.
 
+Deliver reflection findings in the conversation by default. Durable learning belongs in the existing owner of the repaired behavior: a tool, test, skill, configuration, or project record. Create a standalone reflection report only when a named reader, later decision, or handoff needs it; its purpose and continued ownership must be clear. Keep useful evidence at its existing location and link to it instead of copying transcripts or repeating the same lesson in several documents.
+
 ## Check and report
 
 Match validation to the change. For a wording or placement repair, inspect the resulting instructions and relevant references. For a behavioral change, try an independent representative task when available; compare with the previous version when claiming improvement. Exercise changed scripts through the relevant entry point. Review the actual output or behavior, not just a clean validator result.

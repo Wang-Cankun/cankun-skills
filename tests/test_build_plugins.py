@@ -26,7 +26,7 @@ class PluginBuildTests(unittest.TestCase):
         names = {path.name for path in (self.output / "skills").iterdir()}
         self.assertEqual(names, {"ck-architect", "ck-arena", "ck-how", "ck-impact", "ck-prototype",
                                  "ck-reflect", "ck-skill-creator", "ck-teach",
-                                 "ck-verify-create", "ck-verify-maintain", "ck-why", "confer", "deposition"})
+                                 "ck-verify-create", "ck-verify-maintain", "ck-why", "ck-work", "confer", "deposition"})
         for name in names:
             for original in (ROOT / "skills" / name).rglob("*"):
                 if any(part in builder.IGNORED_NAMES for part in original.relative_to(ROOT / "skills" / name).parts):

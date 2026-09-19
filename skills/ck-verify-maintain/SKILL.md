@@ -25,6 +25,10 @@ Choose the scope from the request before running checks:
 
 When the request only names a concrete repair, use scoped maintenance. If it requests maintenance without identifying a scope, inspect recent changes to bound a useful pass; clarify only when choosing full or scoped would materially change the requested verdict or resource cost.
 
+New or changed user capabilities need scoped maintenance even when the existing verification commands are unchanged. Discover their source entry points as well as checking current map rows; an unlisted feature cannot reveal itself through a stale recipe alone.
+
+Reconsider the scope when shared setup, authentication, build configuration, or helper changes affect many paths; when several recipes have drifted; or when source inspection cannot bound the affected surface. Expand a scoped pass to the affected consumers when that resolves the uncertainty. Use a full-map audit when the requested confidence requires it and the work is authorized; otherwise report the wider gap and the work needed. A calendar interval or a small diff alone does not determine the scope.
+
 Report the chosen scope with one outcome:
 
 - **clean** — the declared scope needs no correction and its required checks passed. A **full-map clean** verdict requires current source and live coverage of every mapped recipe, with no material coverage gap. A **scoped clean** verdict names the covered paths and makes no claim about the rest.
