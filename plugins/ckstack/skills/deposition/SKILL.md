@@ -3,10 +3,9 @@ name: deposition
 metadata:
   group: general
   summary: >-
-    Ground a plan, decision, or idea in evidence, then examine consequential
-    choices through focused question rounds, concrete alternatives, and a
-    visible decision tree.
-description: Depose a plan, decision, or idea before commitment. Build a shared understanding of the problem, investigate uncertainties, and examine consequential choices through focused question rounds. Use when the user asks to stress-test their thinking, says "depose this", or asks to be grilled about a plan.
+    Examine consequential assumptions, tradeoffs, and result quality through
+    evidence, concrete use cases, and focused questioning.
+description: Examine assumptions, tradeoffs, and result quality. Use when the user asks to stress-test a plan, examine consequential choices, or investigate why a concrete result falls short. Routine execution does not need this workflow.
 ---
 
 # Deposition
@@ -15,9 +14,11 @@ Reach a shared understanding that supports a real decision. Be relentless about 
 
 ## Ground the problem
 
-Read the supplied material and inspect relevant evidence before proposing choices. For continuing work, retrieve relevant past decisions when available. Separate what is happening, what the user wants to achieve, and actual constraints from any proposed solution. Treat explanations of the cause as hypotheses until supported.
+Read the supplied material and inspect relevant evidence before proposing choices. Recover settled goals, constraints, and current authorization from the request and relevant project records. Retrieve past decisions when useful; history explains earlier choices but does not establish current facts or new authorization. Separate what is happening, what the user wants to achieve, and actual constraints from any proposed solution. Treat explanations of the cause as hypotheses until supported.
 
 Restate the underlying problem in your own words and plain language: explain the mechanism as far as the evidence supports it, what a successful outcome would look like, and the uncertainty that matters next. Use a concrete example from the material where possible. Make assumptions and missing evidence visible.
+
+When success criteria have a consequential gap, propose provisional criteria from the intended use and available material, distinguishing existing requirements from your suggestions. Clarify only gaps that could change the purpose, quality judgment, evidence needed, decision boundaries, or completion and rework conditions. These are optional perspectives, not a questionnaire.
 
 If different interpretations would change the next step, resolve the most consequential ambiguity first. Otherwise proceed from the stated understanding. When the user corrects the framing, update it and reconsider dependent branches before continuing.
 
@@ -30,15 +31,19 @@ Choose the next move by the kind of uncertainty:
 - **Human judgment:** ask about goals, priorities, lived experience, acceptable costs, or commitments the evidence cannot decide.
 - **Routine implementation detail:** infer it from settled constraints and explain it only when it affects the user's decision. Bring material consequences back to the user.
 
+Synthesize the available evidence yourself rather than asking the user to do it. State the supported judgment, material contradictions, and what would change the explanation or recommendation. Distinguish inference from facts, observations, and preferences, and recommendations from user decisions. If evidence is insufficient, state the limits and next discriminating check.
+
 Work backwards from a concrete use case or desired result. A usage sketch, sample output, or small experiment can expose a mistaken premise before an abstract design debate grows around it. Investigate enough to distinguish the live alternatives; keep exploration proportional to the decision.
 
-For an empirical check, define the observable result that would support or challenge the explanation. Reuse available tools and verification procedures to exercise a representative real scenario. Record the setup, action, and observed result sufficiently for someone else to repeat the check. Preserve material evidence when disposing of scratch work. Keep observed results distinct from predictions and untested sketches.
+When existing checks may miss the intended use, examine a concrete case from the material, or an explicitly hypothetical example, where checks pass but the result still cannot support the intended judgment or action. Use relevant references, representative examples, or user review for subjective quality; avoid uncalibrated scores and invented requirements.
+
+For an empirical check, define the observable result that would support or challenge the explanation. Reuse available tools and verification procedures to exercise a representative real scenario. For conclusion-relevant checks, retain enough setup, action, and observed result for verification, even when discarding scratch work. Existing logs or conversation may suffice; create a separate record only when useful. Keep observations distinct from predictions and untested sketches.
 
 ## Ask focused questions
 
 Organize each round around a coherent decision or information gap. Group a few related, independently answerable questions when the user can address them together. Ask dependent or demanding questions separately, letting each answer shape what follows. Wait for the user's response before advancing decisions that depend on it; continue independent investigation where useful.
 
-Prioritize unresolved dependencies whose answers could change the direction, scope, or next investigation. Before asking, identify how different plausible answers would change what follows; if they would not, resolve or set aside that branch yourself. Incorporate partial answers and keep unanswered material questions visible.
+Prioritize unresolved dependencies whose answers could change a conclusion's validity, intended use, consequential tradeoff, or next action. Before asking, identify how different plausible answers would change what follows; if they would not, resolve or set aside that branch yourself. Incorporate partial answers and keep unanswered material questions visible.
 
 Frame the question briefly: what is at stake, why it matters now, and how it appears in a concrete case. For missing experience or intent, ask an open question without supplying a preferred account of the user's experience. A recommendation belongs to a decision with enough context to support one.
 
@@ -50,24 +55,20 @@ Offer selections only when the decision space is understood:
 
 ## Keep the record in view
 
-Before each question round, show a compact indented tree in a code fence, headed by `✓n · ?k · ~m`:
+When decisions have interacting dependencies, the conversation is long, or the user needs to recover state, show a concise decision record. Distinguish evidence-supported conclusions, user decisions or explicit delegations, your recommendations, and unresolved or deferred matters.
 
-- `✓` settled conclusions or decisions, one phrase each. Ground factual conclusions in evidence; reserve user decisions for their answers or explicit delegation.
-- `?` a pending question, under the branch that owns it. For grouped questions, use matching short labels in the tree and the questions; `k` counts all pending questions, including unanswered ones from earlier rounds.
-- `~` relevant branches still to investigate, nested under their dependencies in likely walk order.
-
-Collapse a fully settled branch into its parent's one-line conclusion. Count the visible markers; use `?0` when no question is pending. Keep explicitly deferred items visible as `deferred`, with their consequence and revisit condition. Deferred items are not settled.
-
-Build the tree as understanding develops. Add branches when evidence or a concrete failure mechanism shows they could change the decision. Retire branches made irrelevant by an answer, with a brief reason; reopen settled conclusions when their supporting premise changes. Keep the tree focused on dependencies and material uncertainty.
+Use a tree when dependencies make it useful; neither a tree nor counts are required each round. A deferred matter retains its consequence and revisit condition. A proposed tradeoff remains a proposal until accepted or delegated. Reopen affected conclusions when their supporting premise changes.
 
 ## Close on a usable understanding
 
-When no material branch remains open or unwalked, summarize the problem, agreed outcome, consequential decisions and their basis, plus any explicit deferrals. Distinguish what has been verified from what still needs checking, with an observable success criterion for the chosen direction. “Nothing further” means nothing material remains for this decision within its scope.
+Before closing, address material contradictions, credible failure cases, and unsupported consequential claims already exposed by the evidence. Further investigation or questioning should identify the important conclusion, use, or tradeoff it could change; exhaustive exploration of speculative branches is unnecessary.
 
-Then ask whether this captures the shared understanding. The final confirmation is the sole pending question; do not add it while other unresolved branches remain. An instruction to proceed from the settled summary counts as confirmation.
+Close when the evidence supports a decision or next action within the current scope, or when a decisive gap cannot be resolved within that scope. Give the synthesized judgment and its basis, applicable success and rework criteria, and consequential uncertainties with revisit conditions. Identify a blocking gap and the evidence needed to resolve it rather than presenting it as settled. Verification supports particular claims; acceptance determines whether the current deliverable is complete, needs rework, or remains blocked.
 
-Implementation or commitments under examination wait for that confirmation. Evidence gathering and disposable experiments within the authorized scope can happen throughout the deposition; they do not authorize deploying changes or making external commitments.
+Inherit current authorization and honor explicit checkpoints; add no blanket confirmation gate. Pause only actions dependent on unresolved user decisions; continue independent work already authorized.
+
+For discussion, questioning, or review only, deliver judgment without implementation. Summary agreement and reversibility do not grant new execution authority; evidence gathering and experiments stay within scope. Closing the discussion does not complete authorized implementation: continue through applicable verification and necessary repairs.
 
 ---
 
-*Forked from [mattpocock/skills](https://github.com/mattpocock/skills) `grilling`; the record and the closing gate are the fork. Grounding and verification informed by Lauren (@poteto), “The Complete Guide to pstack,” Parts 1–2, and [pstack's verification workflow](https://github.com/cursor/plugins/blob/main/pstack/skills/create-verification-skill/SKILL.md).*
+For provenance and adaptation history, read [sources.md](references/sources.md).

@@ -24,9 +24,9 @@ class PluginBuildTests(unittest.TestCase):
     def test_real_bundle_contains_companions_references_and_licenses(self):
         builder.build(ROOT, self.output)
         names = {path.name for path in (self.output / "skills").iterdir()}
-        self.assertEqual(names, {"ck-architect", "ck-arena", "ck-how", "ck-impact", "ck-prototype",
-                                 "ck-reflect", "ck-skill-creator", "ck-teach",
-                                 "ck-verify-create", "ck-verify-maintain", "ck-why", "ck-work", "confer", "deposition"})
+        self.assertEqual(names, {"ck-how", "ck-impact", "ck-prototype", "ck-reflect",
+                                 "ck-skill-creator", "ck-verify-create", "ck-verify-maintain",
+                                 "ck-why", "confer", "deposition"})
         for name in names:
             for original in (ROOT / "skills" / name).rglob("*"):
                 if any(part in builder.IGNORED_NAMES for part in original.relative_to(ROOT / "skills" / name).parts):
@@ -36,7 +36,7 @@ class PluginBuildTests(unittest.TestCase):
                 if original.is_file():
                     copied = self.output / original.relative_to(ROOT)
                     self.assertEqual(copied.read_bytes(), original.read_bytes(), str(original))
-        self.assertTrue((self.output / "skills/ck-architect/references/runner-prompt.md").is_file())
+        self.assertTrue((self.output / "skills/ck-how/references/explorer-prompt.md").is_file())
         self.assertTrue((self.output / "skills/ck-how/SKILL.md").is_file())
         self.assertTrue((self.output / "skills/ck-why/SKILL.md").is_file())
         for relative in ("scripts/confer.mjs", "scripts/confer-test.mjs", "references/providers.md", "agents/openai.yaml"):
@@ -58,13 +58,13 @@ class PluginBuildTests(unittest.TestCase):
 
     def test_check_reports_drift_without_writing_and_build_repairs_it(self):
         builder.build(ROOT, self.output)
-        entrypoint = self.output / "skills/ck-teach/SKILL.md"
+        entrypoint = self.output / "skills/ck-how/SKILL.md"
         entrypoint.write_text("local drift\n")
         missing = self.output / "skills/ck-how/LICENSE"
         missing.unlink()
         before = entrypoint.stat().st_mtime_ns
         changes = builder.build(ROOT, self.output, check=True)
-        self.assertIn("skills/ck-teach/SKILL.md", changes)
+        self.assertIn("skills/ck-how/SKILL.md", changes)
         self.assertIn("skills/ck-how/LICENSE", changes)
         self.assertEqual(entrypoint.read_text(), "local drift\n")
         self.assertEqual(entrypoint.stat().st_mtime_ns, before)
@@ -76,7 +76,7 @@ class PluginBuildTests(unittest.TestCase):
         builder.build(ROOT, self.output)
         user_file = self.output / "notes.txt"
         user_file.write_text("keep me")
-        entrypoint = self.output / "skills/ck-teach/SKILL.md"
+        entrypoint = self.output / "skills/ck-how/SKILL.md"
         entrypoint.write_text("do not overwrite before preflight")
         with self.assertRaisesRegex(builder.BuildError, "Unknown output files"):
             builder.build(ROOT, self.output)

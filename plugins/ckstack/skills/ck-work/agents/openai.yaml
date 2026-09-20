@@ -1,6 +1,0 @@
-interface:
-  display_name: "CK Work"
-  short_description: "Start or resume work through CK Stack"
-  default_prompt: "Use $ck-work to carry this task through the relevant CK Stack methods and project verification."
-policy:
-  allow_implicit_invocation: true
