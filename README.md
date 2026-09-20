@@ -6,7 +6,7 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 ## Collection
 
-Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then design, then internal workflow.
+This is the full source catalog, grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then design, then internal workflow. It is broader than the ten-skill [CK Stack plugin](#ck-stack). In particular, `ck-work`, `ck-teach`, `ck-architect`, and `ck-arena` are available individually but are not bundled in that plugin.
 
 ### General use
 
@@ -52,13 +52,18 @@ CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/m
 | Need | Skills | Result |
 | ---- | ------ | ------ |
 | Understand | `ck-how`, `ck-why` | Traced mechanics and evidence for historical choices |
-| Explore | `deposition`, `ck-prototype` | Shared intent, supported decisions, and experiments that distinguish approaches |
+| Shape the task or examine a plan | `deposition` | Shared intent, consequential choices, and useful acceptance criteria |
+| Resolve a behavioral uncertainty | `ck-prototype` | Observed results from a disposable experiment, with limits on what they establish |
 | Consult a peer | `confer` | A named model's advisory response and a resumable consultation thread |
 | Assess impact | `ck-impact` | Downstream failure mechanisms and focused evidence for compatibility assumptions |
 | Learn and improve skills | `ck-reflect`, `ck-skill-creator` | Evidence-grounded repairs and portable skills checked in representative tasks |
 | Verify repeatedly | `ck-verify-create`, `ck-verify-maintain` | Reused checks or a project-owned verification method, maintained within a declared scope |
 
 Invoke the skill that addresses the current need; the stack has no mandatory entry point or sequence. `obelisk` can supply historical leads when available; it is optional. `ck-work`, `ck-teach`, `ck-architect`, and `ck-arena` remain in the source catalog for optional standalone use but are excluded from the plugin.
+
+`deposition` can start with an incomplete idea, an existing plan, or an unsatisfactory result. It develops purpose and criteria through investigation, examples, and dialogue; the user need not arrive with a finished specification. Goals, acceptance, verification, and decision boundaries are useful perspectives where consequential gaps remain, not a checklist for every task. Once material choices are settled, authorized execution continues.
+
+For a worked introduction, read [Cankun Stack](https://cankun.me/writing/cankun-stack); the [Deposition essay](https://cankun.me/writing/deposition-for-frontier-models) explains how shared understanding supports delegation.
 
 `confer` asks a peer model for advice and preserves the dialogue across rounds. A peer's agreement does not replace the project's verification.
 
