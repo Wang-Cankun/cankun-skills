@@ -3,71 +3,63 @@ name: deposition
 metadata:
   group: general
   summary: >-
-    Examine consequential assumptions, tradeoffs, and result quality through
-    evidence, concrete use cases, and focused questioning.
-description: Examine assumptions, tradeoffs, and result quality. Use when the user asks to stress-test a plan, examine consequential choices, or investigate why a concrete result falls short. Routine execution does not need this workflow.
+    Develop shared intent, consequential choices, and criteria for useful work
+    through investigation, concrete examples, and dialogue.
+description: Develop shared understanding through investigation and dialogue. Use when shaping an unclear task, stress-testing a plan, or examining a result that misses its purpose. Routine execution with settled intent does not need this workflow.
 ---
 
 # Deposition
 
-Reach a shared understanding that supports a real decision. Be relentless about consequential uncertainty; let the evidence and the user's answers determine the branches to explore.
+Develop a shared understanding that supports a real decision and gives execution room to proceed. The user may bring an incomplete intention, an existing plan, or an unsatisfactory result. Help discover and articulate what matters; a fully specified goal is not a prerequisite.
 
-## Ground the problem
+## Ground the problem and develop shared intent
 
-Read the supplied material and inspect relevant evidence before proposing choices. Recover settled goals, constraints, and current authorization from the request and relevant project records. Retrieve past decisions when useful; history explains earlier choices but does not establish current facts or new authorization. Separate what is happening, what the user wants to achieve, and actual constraints from any proposed solution. Treat explanations of the cause as hypotheses until supported.
+Read the supplied material and inspect relevant evidence. Recover established goals, constraints, and authorization from the request and project records. History explains earlier choices but does not establish current facts, present intent, or new authorization. Separate the situation, intended use, actual constraints, and proposed solution. Treat causal explanations as hypotheses until supported.
 
-Restate the underlying problem in your own words and plain language: explain the mechanism as far as the evidence supports it, what a successful outcome would look like, and the uncertainty that matters next. Use a concrete example from the material where possible. Make assumptions and missing evidence visible.
+Explain your provisional understanding in plain language, using a concrete case where possible. Distinguish what the user has established from what you infer or propose. Material gathered during the conversation is input to the task; its prominence does not determine the purpose or perspective of the deliverable. Consider who will use the result and what they need from it.
 
-When success criteria have a consequential gap, propose provisional criteria from the intended use and available material, distinguishing existing requirements from your suggestions. Clarify only gaps that could change the purpose, quality judgment, evidence needed, decision boundaries, or completion and rework conditions. These are optional perspectives, not a questionnaire.
+When plausible interpretations would materially change the deliverable, expose the consequential difference through a brief framing, example, outline, or usage sketch. Work through it with the user before substantial work dependent on that interpretation. Make the discussion about the purpose and consequences, rather than a generic request for permission. Continue independent investigation; a small provisional sketch can help discover intent without committing to a full solution.
 
-If different interpretations would change the next step, resolve the most consequential ambiguity first. Otherwise proceed from the stated understanding. When the user corrects the framing, update it and reconsider dependent branches before continuing.
+Goals and quality criteria may emerge through dialogue. Propose provisional criteria from intended use and evidence, labeling suggestions separately from established requirements. Explore consequential gaps in purpose, acceptance, verification, decision boundaries, or completion and rework. These are perspectives to use where needed, not fields the user must fill or approve on every task.
 
-## Resolve uncertainty before asking for a choice
+Carry the framing into execution when the material choices are supported by the user's answers, existing requirements, or explicit delegation. Keep consequential gaps visible; leave routine methods to the agent. If a correction changes the purpose or premise, revisit affected choices before continuing.
 
-Choose the next move by the kind of uncertainty:
+## Resolve uncertainty with the appropriate work
 
-- **Discoverable fact:** inspect the files, tools, sources, or history yourself. Report the relevant evidence.
-- **Empirical question:** use the smallest useful check, worked example, or disposable prototype within the authorized scope. Show what it established and what remains untested. If evidence is unavailable, retain the uncertainty and identify the check that would resolve it.
-- **Human judgment:** ask about goals, priorities, lived experience, acceptable costs, or commitments the evidence cannot decide.
-- **Routine implementation detail:** infer it from settled constraints and explain it only when it affects the user's decision. Bring material consequences back to the user.
+- **Discoverable fact:** inspect files, tools, sources, or history yourself.
+- **Empirical question:** use the smallest useful check or experiment within scope. Report what it establishes and what remains untested; if evidence is unavailable, identify the check needed.
+- **Intent or human judgment:** help the user articulate purposes, experience, priorities, acceptable costs, and commitments. Their understanding may develop through the exchange.
+- **Routine implementation detail:** infer it from settled constraints. Discuss it only when consequences affect the decision.
 
-Synthesize the available evidence yourself rather than asking the user to do it. State the supported judgment, material contradictions, and what would change the explanation or recommendation. Distinguish inference from facts, observations, and preferences, and recommendations from user decisions. If evidence is insufficient, state the limits and next discriminating check.
+Synthesize available evidence yourself. State the supported judgment, material contradictions, and what would change your explanation or recommendation. Distinguish facts, observations, inference, preferences, and recommendations. Evidence can inform a purpose or tradeoff without deciding it for the user; missing intent and missing evidence require different next moves.
 
-Work backwards from a concrete use case or desired result. A usage sketch, sample output, or small experiment can expose a mistaken premise before an abstract design debate grows around it. Investigate enough to distinguish the live alternatives; keep exploration proportional to the decision.
+Work backwards from a concrete use or desired result. A sketch, sample output, or small experiment can expose a mistaken premise. Investigate enough to distinguish the live alternatives, proportional to the decision. When checks may miss intended use, examine a concrete case, or a labeled hypothetical, where they pass but the result still cannot support the intended action. For subjective quality, use relevant references, representative examples, or user review instead of uncalibrated scores or invented requirements.
 
-When existing checks may miss the intended use, examine a concrete case from the material, or an explicitly hypothetical example, where checks pass but the result still cannot support the intended judgment or action. Use relevant references, representative examples, or user review for subjective quality; avoid uncalibrated scores and invented requirements.
+For empirical checks, define the observable result that would support or challenge the explanation. Reuse available verification procedures on a representative scenario. Retain enough setup, action, and observed result to verify conclusion-relevant checks, even when discarding scratch work. Existing logs or conversation may suffice. Keep observations distinct from predictions and untested sketches.
 
-For an empirical check, define the observable result that would support or challenge the explanation. Reuse available tools and verification procedures to exercise a representative real scenario. For conclusion-relevant checks, retain enough setup, action, and observed result for verification, even when discarding scratch work. Existing logs or conversation may suffice; create a separate record only when useful. Keep observations distinct from predictions and untested sketches.
+## Ask questions that change the understanding
 
-## Ask focused questions
+Organize a round around a coherent gap. Group related, independently answerable questions when manageable; ask dependent or demanding questions separately. Before asking, identify how different plausible answers would change the conclusion, use, tradeoff, or next action. Resolve or set aside questions that make no consequential difference. Wait on dependent decisions while continuing independent work.
 
-Organize each round around a coherent decision or information gap. Group a few related, independently answerable questions when the user can address them together. Ask dependent or demanding questions separately, letting each answer shape what follows. Wait for the user's response before advancing decisions that depend on it; continue independent investigation where useful.
+Briefly explain what is at stake and how it appears in a concrete case. For intent or experience, invite the user's account without supplying a recommended personal preference. If the user finds it hard to articulate, help with a small example or contrasting outcomes; do not require a polished brief or keep repeating the same abstract question. Let their response reshape the framing and subsequent questions.
 
-Prioritize unresolved dependencies whose answers could change a conclusion's validity, intended use, consequential tradeoff, or next action. Before asking, identify how different plausible answers would change what follows; if they would not, resolve or set aside that branch yourself. Incorporate partial answers and keep unanswered material questions visible.
+Offer choices when the decision space is understood. Derive viable alternatives from the problem, constraints, and evidence; compatible ideas can combine. Compare them through the same concrete scenario, including important costs. Recommend when there is a basis, stating the condition that would change the recommendation. When evidence is insufficient, recommend the next investigation.
 
-Frame the question briefly: what is at stake, why it matters now, and how it appears in a concrete case. For missing experience or intent, ask an open question without supplying a preferred account of the user's experience. A recommendation belongs to a decision with enough context to support one.
-
-Offer selections only when the decision space is understood:
-
-- Derive alternatives from the problem, constraints, and evidence. Let their number and presentation follow the actual decision space. Explain the distinct viable approaches and why each deserves consideration. If only one is viable, recommend it with its basis. Use prose when a selection widget would distort the decision.
-- Compare alternatives through the same concrete scenario, making their different outcomes and costs clear. Explain when each is attractive. Compatible ideas may be combined; separate independent decisions instead of forcing them into opposing packages.
-- Give your recommendation with its basis and the condition that would change it. When evidence is insufficient, recommend the next investigation rather than inventing certainty.
+Accept agreement or delegation for the specific choice presented. A series of accepted recommendations does not establish an unstated overall goal. When a foundational assumption remains uncertain, make its effect visible in the proposed outcome and discuss that assumption. Do not require disagreement, quizzes, or repeated confirmation of settled choices.
 
 ## Keep the record in view
 
-When decisions have interacting dependencies, the conversation is long, or the user needs to recover state, show a concise decision record. Distinguish evidence-supported conclusions, user decisions or explicit delegations, your recommendations, and unresolved or deferred matters.
+When dependencies interact, discussion is long, or context needs recovery, show a concise record separating evidence-supported conclusions, user decisions or delegations, model proposals, and unresolved or deferred matters. Use a tree when it clarifies dependencies; neither a tree nor counts are required each round. A deferred matter retains its consequence and revisit condition. Reopen conclusions when their supporting premise changes.
 
-Use a tree when dependencies make it useful; neither a tree nor counts are required each round. A deferred matter retains its consequence and revisit condition. A proposed tradeoff remains a proposal until accepted or delegated. Reopen affected conclusions when their supporting premise changes.
+## Close on usable understanding and follow through
 
-## Close on a usable understanding
+Address material contradictions, credible failure cases, and unsupported consequential claims already exposed. Further exploration should identify the important conclusion, use, or tradeoff it could change; speculative exhaustiveness is unnecessary.
 
-Before closing, address material contradictions, credible failure cases, and unsupported consequential claims already exposed by the evidence. Further investigation or questioning should identify the important conclusion, use, or tradeoff it could change; exhaustive exploration of speculative branches is unnecessary.
+Close when shared intent and evidence support a decision or next action within scope, or when a decisive gap cannot be resolved there. State the judgment and basis, applicable success and rework criteria, and consequential uncertainties with revisit conditions. Identify blocking gaps and the evidence or user judgment needed. Verification supports particular claims; acceptance determines whether the deliverable is complete, needs rework, or remains blocked.
 
-Close when the evidence supports a decision or next action within the current scope, or when a decisive gap cannot be resolved within that scope. Give the synthesized judgment and its basis, applicable success and rework criteria, and consequential uncertainties with revisit conditions. Identify a blocking gap and the evidence needed to resolve it rather than presenting it as settled. Verification supports particular claims; acceptance determines whether the current deliverable is complete, needs rework, or remains blocked.
+Inherit authorization and honor explicit checkpoints without adding a blanket confirmation gate. Authorization to execute or publish does not by itself settle an unresolved purpose or quality criterion. Pause only dependent actions; continue independent work already authorized.
 
-Inherit current authorization and honor explicit checkpoints; add no blanket confirmation gate. Pause only actions dependent on unresolved user decisions; continue independent work already authorized.
-
-For discussion, questioning, or review only, deliver judgment without implementation. Summary agreement and reversibility do not grant new execution authority; evidence gathering and experiments stay within scope. Closing the discussion does not complete authorized implementation: continue through applicable verification and necessary repairs.
+For discussion or review only, deliver judgment without implementation. Summary agreement and reversibility do not grant new execution authority; investigation and experiments stay within scope. If implementation is authorized, closing the discussion does not complete the task: continue through applicable verification and necessary repairs.
 
 ---
 

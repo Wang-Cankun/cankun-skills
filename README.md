@@ -25,7 +25,7 @@ Grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then de
 | [ck-why](./skills/ck-why) | Reconstruct rationale from evidence while separating documented intent, inference, and unknowns. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-why` |
 | [ck-work](./skills/ck-work) | Start or resume a task through CK Stack, selecting useful methods and carrying authorized work to an evidenced outcome. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ck-work` |
 | [confer](./skills/confer) | Resumable cross-model consultation: GPT-6 Pro through Oracle by default, Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi, with saved preferences, per-round provenance, and concurrency-safe state. Requires `bun` and at least one provider CLI; Pi models must be configured locally; Oracle requires version 0.21.1 or newer and a signed-in ChatGPT browser profile. | `npx skills@latest add Wang-Cankun/cankun-skills --skill confer` |
-| [deposition](./skills/deposition) | Examine consequential assumptions, tradeoffs, and result quality through evidence, concrete use cases, and focused questioning. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
+| [deposition](./skills/deposition) | Develop shared intent, consequential choices, and criteria for useful work through investigation, concrete examples, and dialogue. | `npx skills@latest add Wang-Cankun/cankun-skills --skill deposition` |
 | [known-unknowns](./skills/known-unknowns) | Guided deliberations on the Rumsfeld matrix: helps articulate tacit judgments, surfaces unrecognized patterns, tours unseen options, and ends with a paste-ready brief. | `npx skills@latest add Wang-Cankun/cankun-skills --skill known-unknowns` |
 | [meeting-audio-report](./skills/meeting-audio-report) | Turns a meeting recording into a verbatim transcript plus an evidence-graded DOCX/PDF report, gated on block-level coverage so dropped audio surfaces instead of vanishing. Requires `ffmpeg`, `pandoc`, LibreOffice, Python 3.10+ with `requests` and `python-docx`, and an `OPENROUTER_API_KEY`. | `npx skills@latest add Wang-Cankun/cankun-skills --skill meeting-audio-report` |
 | [travel-dossier](./skills/travel-dossier) | Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every number in the booklet traces to a source. (中文) Requires headless Chrome + Python (`pypdf`). | `npx skills@latest add Wang-Cankun/cankun-skills --skill travel-dossier` |
@@ -52,7 +52,7 @@ CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/m
 | Need | Skills | Result |
 | ---- | ------ | ------ |
 | Understand | `ck-how`, `ck-why` | Traced mechanics and evidence for historical choices |
-| Explore | `deposition`, `ck-prototype` | Settled decisions and small experiments that distinguish approaches |
+| Explore | `deposition`, `ck-prototype` | Shared intent, supported decisions, and experiments that distinguish approaches |
 | Consult a peer | `confer` | A named model's advisory response and a resumable consultation thread |
 | Assess impact | `ck-impact` | Downstream failure mechanisms and focused evidence for compatibility assumptions |
 | Learn and improve skills | `ck-reflect`, `ck-skill-creator` | Evidence-grounded repairs and portable skills checked in representative tasks |
