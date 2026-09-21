@@ -6,7 +6,7 @@ metadata:
     Designs or repairs a repository's documentation system: project identity,
     document ownership rules, task-to-authority routes, and the smallest justified
     file set for a new or existing project.
-description: Design, bootstrap, audit, or repair repository documentation systems by assigning every document an owning question and tracing real tasks to code-owned authority. Use when the user wants to establish documentation rules for a new project; organize or create README, AGENTS.md, architecture, decisions, roadmap, measurements, runbook, or contract documents; audit scattered, stale, duplicated, or mixed-role docs; or apply an accepted documentation-topology repair.
+description: "Design or repair a repository’s documentation structure, ownership, and navigation. Use when establishing documentation conventions or resolving scattered, stale, or conflicting guidance, not for routine edits to an individual document."
 ---
 
 # Repo Wayfinder

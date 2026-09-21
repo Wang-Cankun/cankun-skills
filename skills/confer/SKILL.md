@@ -7,7 +7,7 @@ metadata:
     Resumable cross-model consultation: GPT-6 Pro through Oracle by default,
     Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi,
     with saved preferences, per-round provenance, and concurrency-safe state.
-description: Consult GPT Pro by default, or a chosen Claude, Codex, or Pi model, and keep the dialogue resumable. Use for a second opinion from another model, named model consultations (including Gemini or GLM), multi-round peer reviews, or resuming an earlier consultation.
+description: "Consult another model for an independent opinion or review, and resume prior consultations. Use when the user requests a second model or continued peer discussion."
 ---
 
 # Confer — cross-model consultation with resumable threads
