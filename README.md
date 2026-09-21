@@ -6,7 +6,7 @@ A skill is a `SKILL.md` playbook that an AI agent loads to follow a specific pro
 
 ## Collection
 
-This is the full source catalog, grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then design, then internal workflow. It is broader than the ten-skill [CK Stack plugin](#ck-stack). In particular, `ck-work`, `ck-teach`, `ck-architect`, and `ck-arena` are available individually but are not bundled in that plugin.
+This is the full source catalog, grouped as on [cankun.me/skills](https://cankun.me/skills): general use, then design, then internal workflow. It is broader than the eight-skill [CK Stack plugin](#ck-stack). In particular, `ck-work`, `ck-teach`, `ck-architect`, and `ck-arena` are available individually but are not bundled in that plugin.
 
 ### General use
 
@@ -47,7 +47,7 @@ This is the full source catalog, grouped as on [cankun.me/skills](https://cankun
 
 ## CK Stack
 
-CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/main/pstack) into portable workflows for software and analysis projects, alongside `deposition` and `confer`. Adapted skills retain their upstream MIT license and attribution. The instructions use the tools and agent capabilities available in the current environment; project paths, environments, reference data, and acceptance criteria belong in the consuming project.
+CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/main/pstack) into portable workflows for software and analysis projects. Adapted skills retain their upstream MIT license and attribution. The instructions use the tools and agent capabilities available in the current environment; project paths, environments, reference data, and acceptance criteria belong in the consuming project.
 
 | Need | Skills | Result |
 | ---- | ------ | ------ |
@@ -61,9 +61,13 @@ CK Stack adapts [Lauren Tan’s pstack](https://github.com/cursor/plugins/tree/m
 
 Invoke the skill that addresses the current need; the stack has no mandatory entry point or sequence. `obelisk` can supply historical leads when available; it is optional. `ck-work`, `ck-teach`, `ck-architect`, and `ck-arena` remain in the source catalog for optional standalone use but are excluded from the plugin.
 
+`deposition` is managed separately with skillshelf and is not bundled in CK Stack. Globally activate it with `skl use deposition --agent codex --global` and `skl use deposition --agent pi --global`.
+
 `deposition` can start with an incomplete idea, an existing plan, or an unsatisfactory result. It develops purpose and criteria through investigation, examples, and dialogue; the user need not arrive with a finished specification. Goals, acceptance, verification, and decision boundaries are useful perspectives where consequential gaps remain, not a checklist for every task. Once material choices are settled, authorized execution continues.
 
 For a worked introduction, read [Cankun Stack](https://cankun.me/writing/cankun-stack); the [Deposition essay](https://cankun.me/writing/deposition-for-frontier-models) explains how shared understanding supports delegation.
+
+`confer` is managed separately with skillshelf and is not bundled in CK Stack. Globally activate it with `skl use confer --agent codex --global` and `skl use confer --agent pi --global`.
 
 `confer` asks a peer model for advice and preserves the dialogue across rounds. A peer's agreement does not replace the project's verification.
 
@@ -73,7 +77,7 @@ For a worked introduction, read [Cankun Stack](https://cankun.me/writing/cankun-
 
 ### Install and maintain the CK Stack plugin
 
-The [CK Stack plugin](./plugins/ckstack) bundles eight `ck-*` skills, `deposition`, and `confer` into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. `confer` additionally needs Bun and the selected provider CLI and authentication, as described in [its requirements](./skills/confer/SKILL.md). Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
+The [CK Stack plugin](./plugins/ckstack) bundles eight `ck-*` skills into one installable package. It includes a portable `plugin.json` and a Codex compatibility manifest; no MCP server or hooks are required. Keep editing the canonical files under `skills/`. The plugin directory is generated and contains real files so it remains complete when installed outside this checkout.
 
 The package definition in [`packaging/ckstack.json`](./packaging/ckstack.json) owns membership, version, and presentation. Build and check the distributable with:
 
@@ -113,10 +117,10 @@ Use the marketplace's actual name if the existing personal catalog uses another 
 
 The builder refuses unknown files in an existing output directory. When removing or renaming packaged files, inspect and move the obsolete output files before rebuilding; it never deletes them automatically.
 
-After confirming that the installed plugin contains all ten skills and their references, remove their individual Codex deployments to avoid loading both forms:
+After confirming that the installed plugin contains all eight skills and their references, remove their individual Codex deployments to avoid loading both forms:
 
 ```sh
-skl drop ck-how ck-why ck-prototype ck-impact ck-reflect ck-skill-creator ck-verify-create ck-verify-maintain deposition confer --agent codex --global
+skl drop ck-how ck-why ck-prototype ck-impact ck-reflect ck-skill-creator ck-verify-create ck-verify-maintain --agent codex --global
 ```
 
 This removes the deployment links, preserving the skillshelf library and canonical source. Individual skill installation remains available for hosts or projects that use it.

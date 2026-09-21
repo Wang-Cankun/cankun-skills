@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "CK Stack",
     "shortDescription": "Understand, build, reflect, and improve reusable workflows",
-    "longDescription": "Ten complementary skills for implementation tracing, historical rationale, peer consultation, decisions, prototypes, impact analysis, reflection, skill authoring, and proportionate project verification.",
+    "longDescription": "Eight complementary skills for implementation tracing, historical rationale, prototypes, impact analysis, reflection, skill authoring, and proportionate project verification.",
     "developerName": "Cankun Wang",
     "category": "Developer Tools",
     "capabilities": [
@@ -21,7 +21,6 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Develop a shared understanding of this task and its consequential choices using Deposition.",
       "Trace this implementation and explain how it works using CK How.",
       "Improve this skill and check its behavior using CK Skill Creator."
     ]

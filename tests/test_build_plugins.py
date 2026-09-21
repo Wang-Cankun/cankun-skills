@@ -26,7 +26,7 @@ class PluginBuildTests(unittest.TestCase):
         names = {path.name for path in (self.output / "skills").iterdir()}
         self.assertEqual(names, {"ck-how", "ck-impact", "ck-prototype", "ck-reflect",
                                  "ck-skill-creator", "ck-verify-create", "ck-verify-maintain",
-                                 "ck-why", "confer", "deposition"})
+                                 "ck-why"})
         for name in names:
             for original in (ROOT / "skills" / name).rglob("*"):
                 if any(part in builder.IGNORED_NAMES for part in original.relative_to(ROOT / "skills" / name).parts):
@@ -39,10 +39,6 @@ class PluginBuildTests(unittest.TestCase):
         self.assertTrue((self.output / "skills/ck-how/references/explorer-prompt.md").is_file())
         self.assertTrue((self.output / "skills/ck-how/SKILL.md").is_file())
         self.assertTrue((self.output / "skills/ck-why/SKILL.md").is_file())
-        for relative in ("scripts/confer.mjs", "scripts/confer-test.mjs", "references/providers.md", "agents/openai.yaml"):
-            self.assertTrue((self.output / "skills/confer" / relative).is_file(), relative)
-        self.assertTrue((self.output / "skills/confer/scripts/confer.mjs").stat().st_mode & 0o111,
-                        "The installed confer CLI must remain executable")
         creator = self.output / "skills/ck-skill-creator"
         for relative in ("scripts/validate_skill.py", "eval-viewer/generate_review.py",
                          "eval-viewer/viewer.html", "references/evaluation.md", "LICENSE-APACHE-2.0"):
