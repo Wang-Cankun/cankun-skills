@@ -1,3 +1,7 @@
 # Sources and attribution
 
 *Forked from [mattpocock/skills](https://github.com/mattpocock/skills) `grilling`; adapted for evidence-grounded questioning, synthesis, and decision records. Grounding and verification informed by Lauren (@poteto), “The Complete Guide to pstack,” Parts 1–2, and [pstack's verification workflow](https://github.com/cursor/plugins/blob/main/pstack/skills/create-verification-skill/SKILL.md). Scope, disclosure, and completion guidance also informed by [OpenAI's Astra skills guidance](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).*
+
+The supplied excerpt from “The art of supervising someone smarter than you,” especially “In your own words,” informed the shared-mental-model approach: elicit the agent's interpretation so the user can examine and reshape it while leaving room for the agent's expertise. The connection to known-unknowns and tacit knowledge informed surfacing judgments that have not yet been articulated and exploring alternative framings. Fitness for purpose connects that understanding to actual use; intellectual initiative remains distinct from execution authority.
+
+Checking each requested outcome before declaring readiness was informed by [oh-my-claudecode's deep-interview skill](https://github.com/Yeachan-Heo/oh-my-claudecode/blob/main/skills/deep-interview/SKILL.md). This adaptation uses consequential gaps and existing decisions rather than numerical ambiguity scores or fixed interview rounds.

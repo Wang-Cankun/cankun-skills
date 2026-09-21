@@ -2,65 +2,44 @@
 name: deposition
 metadata:
   group: general
-  summary: >-
-    Develop shared intent, consequential choices, and criteria for useful work
-    through investigation, concrete examples, and dialogue.
-description: Develop shared understanding through investigation and dialogue. Use when shaping an unclear task, stress-testing a plan, or examining a result that misses its purpose. Routine execution with settled intent does not need this workflow.
+  summary: Build a shared mental model through independent judgment and dialogue.
+description: "Build a shared mental model through collaborative sensemaking. Use proactively when emerging intent, unspoken assumptions, or a result missing its purpose calls for exploration; not for routine execution of agreed work."
 ---
 
 # Deposition
 
-Develop a shared understanding that supports a real decision and gives execution room to proceed. The user may bring an incomplete intention, an existing plan, or an unsatisfactory result. Help discover and articulate what matters; a fully specified goal is not a prerequisite.
+Practice collaborative sensemaking: help the user discover what matters and develop an understanding worth acting on. Contribute your expertise while making your interpretation visible and correctable. The purpose itself may develop through the conversation.
 
-## Ground the problem and develop shared intent
+## Build a shared mental model
 
-Read the supplied material and inspect relevant evidence. Recover established goals, constraints, and authorization from the request and project records. History explains earlier choices but does not establish current facts, present intent, or new authorization. Separate the situation, intended use, actual constraints, and proposed solution. Treat causal explanations as hypotheses until supported.
+Investigate the relevant context and explain the situation in your own words. Connect the intended use to the constraints, choices, consequences, and evidence that would establish success. Show how those relationships shape your judgment, so the user can assess your understanding without having to specify the solution themselves.
 
-Explain your provisional understanding in plain language, using a concrete case where possible. Distinguish what the user has established from what you infer or propose. Material gathered during the conversation is input to the task; its prominence does not determine the purpose or perspective of the deliverable. Consider who will use the result and what they need from it.
+Take intellectual initiative. Surface assumptions and tacit judgments that affect the task; bring relevant knowledge, alternatives, or a better framing when they change what is worth doing. Explain the consequence of the insight. Ground inferences in available evidence and distinguish them from user decisions. Treat references as resources for judgment, choosing methods for their fit to the problem.
 
-When plausible interpretations would materially change the deliverable, expose the consequential difference through a brief framing, example, outline, or usage sketch. Work through it with the user before substantial work dependent on that interpretation. Make the discussion about the purpose and consequences, rather than a generic request for permission. Continue independent investigation; a small provisional sketch can help discover intent without committing to a full solution.
+Make tacit knowledge discussable. When a reaction is easier to recognize than explain, offer a contrasting example, short sketch, or candidate interpretation that the user can accept, reject, or refine. Invite their own account of what matters. Let both their response and new evidence reshape the mental model, including its framing.
 
-Goals and quality criteria may emerge through dialogue. Propose provisional criteria from intended use and evidence, labeling suggestions separately from established requirements. Explore consequential gaps in purpose, acceptance, verification, decision boundaries, or completion and rework. These are perspectives to use where needed, not fields the user must fill or approve on every task.
+For sustained exploration of a consequential blind spot, use [known-unknowns](../known-unknowns/SKILL.md) and bring the insight back into the shared mental model.
 
-Carry the framing into execution when the material choices are supported by the user's answers, existing requirements, or explicit delegation. Keep consequential gaps visible; leave routine methods to the agent. If a correction changes the purpose or premise, revisit affected choices before continuing.
+Preserve settled decisions and revisit choices whose premises change. In long discussions, maintain a compact account of the current understanding and consequential uncertainties. Spend attention where another answer could change the result or the user's judgment; handle discoverable facts yourself and leave routine methods to execution.
 
-## Resolve uncertainty with the appropriate work
+## Test for fitness for purpose
 
-- **Discoverable fact:** inspect files, tools, sources, or history yourself.
-- **Empirical question:** use the smallest useful check or experiment within scope. Report what it establishes and what remains untested; if evidence is unavailable, identify the check needed.
-- **Intent or human judgment:** help the user articulate purposes, experience, priorities, acceptable costs, and commitments. Their understanding may develop through the exchange.
-- **Routine implementation detail:** infer it from settled constraints. Discuss it only when consequences affect the decision.
+Walk through a plausible use of the proposed result, especially its least-understood part. Could the work satisfy the stated requirements yet fail the person using it? Use that mismatch to refine the shared mental model. Inspect existing artifacts when the interpretation depends on what they actually contain or do.
 
-Synthesize available evidence yourself. State the supported judgment, material contradictions, and what would change your explanation or recommendation. Distinguish facts, observations, inference, preferences, and recommendations. Evidence can inform a purpose or tradeoff without deciding it for the user; missing intent and missing evidence require different next moves.
+Connect enabling work to the final deliverable. Make the proposed content or behavior concrete enough to assess, including how the recipient would recognize success. Technical checks support particular claims; fitness for purpose also depends on the intended experience and use.
 
-Work backwards from a concrete use or desired result. A sketch, sample output, or small experiment can expose a mistaken premise. Investigate enough to distinguish the live alternatives, proportional to the decision. When checks may miss intended use, examine a concrete case, or a labeled hypothetical, where they pass but the result still cannot support the intended action. For subjective quality, use relevant references, representative examples, or user review instead of uncalibrated scores or invented requirements.
+Close when the shared understanding supports a useful next action and remaining uncertainty is resolved, delegated, or explicitly bounded. For exploratory work, agree on the question to investigate and a review point. If a consequential gap blocks progress, name the evidence or judgment needed. Summarize the resulting understanding and its implications for the next action.
 
-For empirical checks, define the observable result that would support or challenge the explanation. Reuse available verification procedures on a representative scenario. Retain enough setup, action, and observed result to verify conclusion-relevant checks, even when discarding scratch work. Existing logs or conversation may suffice. Keep observations distinct from predictions and untested sketches.
+## Carry the understanding forward
 
-## Ask questions that change the understanding
+An explicit invocation requests discussion and confirmation before dependent implementation unless the user has delegated that transition. Investigate and use brief conversational sketches within that scope; substantial prototypes or deliverables require applicable authorization.
 
-Organize a round around a coherent gap. Group related, independently answerable questions when manageable; ask dependent or demanding questions separately. Before asking, identify how different plausible answers would change the conclusion, use, tradeoff, or next action. Resolve or set aside questions that make no consequential difference. Wait on dependent decisions while continuing independent work.
+Make clear whether you are checking an interpretation or proposing an action. Interpret assent against that proposal and the task's existing authorization. Approval of a concrete change proposal within an authorized task is sufficient to proceed; ask when the approved action or scope remains unclear. Honor explicit checkpoints. Implicit use adds no approval gate to settled work.
 
-Briefly explain what is at stake and how it appears in a concrete case. For intent or experience, invite the user's account without supplying a recommended personal preference. If the user finds it hard to articulate, help with a small example or contrasting outcomes; do not require a polished brief or keep repeating the same abstract question. Let their response reshape the framing and subsequent questions.
+Optional control signals: a standalone `agree` confirms the understanding without initiating dependent implementation; `proceed` authorizes the settled next action. They are shortcuts, not required stages: the user may proceed directly or authorize in ordinary language, such as “yes, make those changes.” Existing authorization remains in force unless changed, and `proceed` does not resolve an unclear scope or authorize additional work.
 
-Offer choices when the decision space is understood. Derive viable alternatives from the problem, constraints, and evidence; compatible ideas can combine. Compare them through the same concrete scenario, including important costs. Recommend when there is a basis, stating the condition that would change the recommendation. When evidence is insufficient, recommend the next investigation.
-
-Accept agreement or delegation for the specific choice presented. A series of accepted recommendations does not establish an unstated overall goal. When a foundational assumption remains uncertain, make its effect visible in the proposed outcome and discuss that assumption. Do not require disagreement, quizzes, or repeated confirmation of settled choices.
-
-## Keep the record in view
-
-When dependencies interact, discussion is long, or context needs recovery, show a concise record separating evidence-supported conclusions, user decisions or delegations, model proposals, and unresolved or deferred matters. Use a tree when it clarifies dependencies; neither a tree nor counts are required each round. A deferred matter retains its consequence and revisit condition. Reopen conclusions when their supporting premise changes.
-
-## Close on usable understanding and follow through
-
-Address material contradictions, credible failure cases, and unsupported consequential claims already exposed. Further exploration should identify the important conclusion, use, or tradeoff it could change; speculative exhaustiveness is unnecessary.
-
-Close when shared intent and evidence support a decision or next action within scope, or when a decisive gap cannot be resolved there. State the judgment and basis, applicable success and rework criteria, and consequential uncertainties with revisit conditions. Identify blocking gaps and the evidence or user judgment needed. Verification supports particular claims; acceptance determines whether the deliverable is complete, needs rework, or remains blocked.
-
-Inherit authorization and honor explicit checkpoints without adding a blanket confirmation gate. Authorization to execute or publish does not by itself settle an unresolved purpose or quality criterion. Pause only dependent actions; continue independent work already authorized.
-
-For discussion or review only, deliver judgment without implementation. Summary agreement and reversibility do not grant new execution authority; investigation and experiments stay within scope. If implementation is authorized, closing the discussion does not complete the task: continue through applicable verification and necessary repairs.
+During authorized execution, use the shared mental model to guide choices and carry the outcome through completion. Reopen discussion when evidence changes a consequential premise. A discussion-only task ends with the supported judgment and its limits.
 
 ---
 
-For provenance and adaptation history, read [sources.md](references/sources.md).
+For provenance and adaptation history, see [sources.md](references/sources.md).

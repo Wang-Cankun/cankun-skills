@@ -2,53 +2,41 @@
 name: known-unknowns
 metadata:
   group: general
-  summary: >-
-    Guided deliberations on the Rumsfeld matrix: helps articulate tacit
-    judgments, surfaces unrecognized patterns, tours unseen options, and ends
-    with a paste-ready brief.
-description: Orient a multi-turn “help me think this through” deliberation with a Rumsfeld matrix. Use when the user owns an open decision or judgment and wants a thinking partner — articulating a tacit judgment, surfacing an unrecognized assumption or pattern, or touring options around the choice they are weighing. A question seeking a direct answer (factual lookup, how-to, debugging) gets the answer, not this skill.
+  summary: Use the Rumsfeld matrix to articulate tacit judgment, connect dormant knowledge, and explore blind spots.
+description: "Explore blind spots when a judgment is hard to express, familiar knowledge may illuminate the situation, or unfamiliar possibilities deserve investigation. Use for sustained discovery, not routine clarification or a direct factual answer."
 ---
 
-# Orientation through the Rumsfeld Matrix
+# Known Unknowns
 
-Conduct the deliberation in the user's language.
+Help the user see something they could not yet express or had not connected to the present situation. Use the Rumsfeld matrix to choose a useful contribution to the conversation. Progress is a change in what can be understood, expressed, or tested.
 
-Use the matrix to orient a multi-turn deliberation. The topic starts mostly dark; each turn enables one **aspect-seeing** by making one relevant part more nameable, visible, or testable.
+## Orient with the Rumsfeld matrix
 
-|                   | they know it                        | they don't know it                          |
-| ----------------- | ----------------------------------- | ------------------------------------------- |
-| **aware of it**   | known knowns — stated and confirmed | known unknowns — named gaps                 |
-| **unaware of it** | unknown knowns — operative but unrecognized | unknown unknowns — options they'd never ask about |
+| | Known | Not known |
+| --- | --- | --- |
+| **In awareness** | **Known knowns:** established understanding to build on | **Known unknowns:** a recognized gap to investigate |
+| **Outside awareness** | **Unknown knowns:** experience or judgment not yet brought to bear | **Unknown unknowns:** possibilities or assumptions outside the current frame |
 
-The matrix tracks awareness; tacitness tracks articulability. Classify each entry by awareness, and treat difficulty articulating an already-recognized judgment as a separate named gap. Split descriptions whose parts belong in different cells.
+Apply this distinction to the shared understanding. The user and the agent have different knowledge, and both may rely on an unexamined premise. Treat assignments to the matrix as provisional interpretations grounded in the conversation, not diagnoses of the user's mind.
 
-Use the marks as lifecycle shorthand: `✓` settled · `?` named question · `!` recognition candidate · `~` unexplored frontier. The map always renders as this 2×2 table — every entry sits in its cell with its mark inline; a flat mark list is not a map.
+Awareness and articulation differ. Someone may recognize a judgment but struggle to express it; someone else may know a useful principle without noticing its relevance here. Choose the conversational move for the actual gap. Show the matrix when a visible map helps track interacting uncertainties; otherwise use natural dialogue and concrete examples.
 
-Choose the move by cell:
+## Articulation and connection
 
-- **Known knowns → confirm and compress.** Restate what is settled, preserve only what matters downstream, and reopen it only when later evidence conflicts.
-- **Known unknowns → investigate.** Name the gap and what would resolve it. When the gap is articulation, **externalize**: propose `!` candidate representations that another person or model could act on, then test them against the user's already-recognized judgment. Otherwise use evidence, reasoning, or experiment. Run whatever probe you can run yourself before asking the user.
-- **Unknown knowns → surface for recognition.** Reflect patterns, assumptions, commitments, or practiced judgment already present in the user's words, behavior, or artifacts. Present grounded hypotheses as `!` candidates so the user can recognize, reject, or refine them. Recognition beats recall.
-- **Unknown unknowns → give a tour.** Introduce an unmentioned region of the option space: what exists, when it fits, what it costs, and your own read.
+**Articulation** gives form to a judgment the user is trying to express. Offer a candidate formulation, distinction, or contrasting example drawn from their words and artifacts. Give them something to recognize, reject, or refine. Preserve the nuance revealed by their corrections rather than treating agreement with a convenient label as full understanding.
 
-Keep the move open-ended: the four cell moves are defaults, not a closed set. A turn may instead run a concrete probe such as a premortem or inversion, draw a distinction, offer a counterexample, or change scale — whatever best advances the chosen entry.
+**Connection** brings existing knowledge into the present situation. Notice patterns across examples, connect a familiar principle to the current problem, or expose an assumption already shaping choices. Explain the connection and what it changes. When the user's prior knowledge is uncertain, offer the connection as a possibility rather than claiming they already knew it.
 
-## Opening
+Recognition is often easier than recall. Contribute a grounded interpretation before asking the user to articulate what they have not yet found words for. Invite their own account and let it challenge your framing. Your interpretation is a hypothesis; the user's response determines whether it captures their experience or intent.
 
-Draft the full map from the topic and your domain knowledge, tagging every inference as `!`. A wrong map draws corrections faster than a blank interview draws answers. Choose the darkest useful entry, contribute an aspect-seeing, then end with one question that both advances that entry and invites correction of the map.
+## Investigation and discovery
 
-The opening is done when the full map is visible, every inference is marked, one cell received substantive contribution, and exactly one question is on the table.
+For a recognized knowledge gap, seek relevant evidence and explain what would settle it. For an unfamiliar possibility, provide enough orientation to judge its relevance: how it works, when it helps, and the tradeoffs. Bring expertise rather than only returning questions to the user, while making the limits of your own knowledge visible.
 
-## Each turn
+Use counterexamples, alternative framings, or changes of perspective when they could reveal a consequential omission. Follow the insight far enough to understand its implications. Let the topic determine the number and form of questions; pursue a thread while it could change the understanding, not to populate the matrix.
 
-1. **Redraw the full map**, compact enough to stay a card: keep the four-cell table skeleton and one phrase per entry. Promote whatever the user just recognized, answered, or corrected.
-2. **Enable one aspect-seeing.** Choose one cell and contribute before asking. Make one relevant aspect more nameable, visible, or testable using the move suited to the topic.
-3. **Ask exactly one question.** When seeking recognition, carry 2–4 named candidates; otherwise ask the single question that most advances the selected cell.
+## Carry the insight forward
 
-The turn is done when the map reflects the last answer, the contribution changed what can be named, seen, or tested, and exactly one new question is on the table.
+Keep the evolving understanding legible: what became clearer, what the user recognized or corrected, and what remains uncertain. Close when the useful discovery has been articulated, further exploration offers no material gain within scope, or the user chooses to stop. Understanding can be a worthwhile outcome without an immediate decision or action plan.
 
-## Closing
-
-When the user calls it, close without another dig. Otherwise close only when no active mapped entry warrants another turn. Audit the map first: each `?` is answered or deferred; each `!` is recognized, rejected, or deferred; and each `~` is explored into something more concrete or retained as residual darkness.
-
-Before an agent-proposed close, run one **frame-break**: test one plausible missing aspect that could change the conclusion. Continue if it matters. Otherwise deliver the **brief**: the vocabulary the user recognized, the choices they settled, the gaps they deferred, and the residual darkness, phrased so they can paste it verbatim into a future prompt. The map is the receipt; the brief is the asset they leave with.
+Leave the user with language and connections they can reuse, distinguishing their judgments from your proposals and open hypotheses. When used within Deposition, return these insights to the existing shared mental model rather than restarting alignment. Exploration preserves the task's existing action boundaries.

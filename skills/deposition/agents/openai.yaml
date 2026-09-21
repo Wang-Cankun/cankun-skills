@@ -1,7 +1,7 @@
 interface:
   display_name: "Deposition"
-  short_description: "Shape shared intent, decisions, and acceptance criteria"
-  default_prompt: "Use $deposition to help me think this task through: investigate the available context, develop a shared understanding of the purpose and consequential choices with me, and establish useful acceptance criteria, verification, and decision boundaries. If I bring a plan or result, examine it against that understanding."
+  short_description: "Build a shared mental model and test its fitness for purpose"
+  default_prompt: "Use $deposition to build a shared mental model with me. Explain your interpretation in your own words, contribute independent judgment, and help surface what matters but remains unspoken. Test that understanding against the intended use before settling the next action."
 
 policy:
   allow_implicit_invocation: true
