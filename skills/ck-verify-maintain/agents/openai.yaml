@@ -1,7 +1,0 @@
-interface:
-  display_name: "CK Verify Maintain"
-  short_description: "Repair verification recipes or audit their coverage"
-  default_prompt: "Use $ck-verify-maintain to update verification after this change, or audit full coverage when requested, and report the evidence and remaining gaps."
-
-policy:
-  allow_implicit_invocation: true

@@ -1,7 +1,0 @@
-interface:
-  display_name: "CK Verify Create"
-  short_description: "Reuse checks and close project verification gaps"
-  default_prompt: "Use $ck-verify-create to establish repeatable project verification, reuse existing checks, and create a skill only for a useful gap."
-
-policy:
-  allow_implicit_invocation: true

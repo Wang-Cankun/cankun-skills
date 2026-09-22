@@ -1,6 +1,0 @@
-interface:
-  display_name: "CK Why"
-  short_description: "Investigate rationale with calibrated evidence"
-  default_prompt: "Use $ck-why to investigate why this design or analysis choice was made."
-policy:
-  allow_implicit_invocation: true

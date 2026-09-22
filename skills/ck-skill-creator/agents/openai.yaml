@@ -1,4 +1,0 @@
-interface:
-  display_name: "CK Skill Creator"
-  short_description: "Create skills and evaluate meaningful behavior changes"
-  default_prompt: "Use $ck-skill-creator to create or improve this skill and check the intended behavior with proportionate evidence."

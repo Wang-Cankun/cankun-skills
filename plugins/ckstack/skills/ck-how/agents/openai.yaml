@@ -1,6 +1,0 @@
-interface:
-  display_name: "CK How"
-  short_description: "Trace how systems and workflows operate"
-  default_prompt: "Use $ck-how to explain how this system or analysis workflow operates."
-policy:
-  allow_implicit_invocation: true

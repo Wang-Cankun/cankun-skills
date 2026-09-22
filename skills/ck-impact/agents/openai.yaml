@@ -1,4 +1,0 @@
-interface:
-  display_name: "CK Impact"
-  short_description: "Trace change impact and test compatibility assumptions"
-  default_prompt: "Use $ck-impact to trace what this change could break and test its consequential compatibility assumptions."

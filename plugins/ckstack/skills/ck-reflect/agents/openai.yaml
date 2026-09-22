@@ -1,6 +1,0 @@
-interface:
-  display_name: "CK Reflect"
-  short_description: "Turn observed experience into targeted improvements"
-  default_prompt: "Use $ck-reflect to identify useful lessons from this work and where they belong."
-policy:
-  allow_implicit_invocation: true
