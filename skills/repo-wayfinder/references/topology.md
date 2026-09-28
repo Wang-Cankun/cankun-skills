@@ -1,88 +1,72 @@
 # Topology guide
 
-Read this before recommending a new document topology or another `AGENTS.md`
-layer. Skip it when the task only classifies an existing, already declared
-authority structure. The templates below are shapes to re-derive from the
-target repository, never to paste blind.
+Read this before measuring an instruction chain, or before recommending a new document
+topology or instruction layer. The section shapes for each file, `AGENTS.md` included, are in
+[`document-templates.md`](document-templates.md).
 
 ## Where context lives
 
 ```text
 one task -> prompt
-durable repo-specific constraint or route -> applicable AGENTS.md
+durable repo-wide constraint or route -> root AGENTS.md
+procedure or rule one kind of task needs -> repository skill, path-scoped rule, or the doc that task opens
+rule that must always hold -> lint, test, hook, or CI check
 reusable cross-repository procedure -> skill
 current executable behavior -> owning code, type, schema, config, or contract
 conformance -> test or driven probe
 ```
 
-The first three lines follow the official Codex boundary: a task prompt carries
-the current goal and completion condition; `AGENTS.md` carries durable
-repository guidance, discovered from the repository root toward the working
-directory with local precedence, kept short and grounded in repeated friction;
-a skill packages a reusable workflow through progressive disclosure and must
-not become another copy of repository facts. Sources:
-[best practices](https://learn.chatgpt.com/guides/best-practices) ·
-[`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) ·
-[skills](https://learn.chatgpt.com/docs/build-skills). The last two lines are
-this skill's own design judgment.
+Grounding: a task prompt carries the current goal and completion condition; `AGENTS.md`
+carries durable repository guidance, discovered from the root toward the working directory
+with local precedence and kept short; a skill packages a workflow through progressive
+disclosure; formatting and lint checks belong to CI; instructions are context, so a rule that
+must hold regardless belongs in a hook. Sources:
+[Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) ·
+[Codex skills](https://learn.chatgpt.com/docs/build-skills) ·
+[Claude Code memory](https://code.claude.com/docs/en/memory) ·
+[rethinking skills and prompts](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
+
+## Loading limits
+
+The instruction chain loads on every task, so it is the one layer with hard budgets. As
+documented in September 2026 — recheck the sources before relying on a number:
+
+- Claude Code targets under 200 lines per `CLAUDE.md`; longer files reduce adherence.
+- Codex stops adding instruction files once the combined chain reaches 32 KiB by default.
+
+Repository overviews and directory tours in an instruction file raise cost without raising
+task success ([Gloaguen et al., 2026](https://arxiv.org/abs/2602.11988)); route to a map
+instead.
 
 ## The AGENTS.md layer
 
-Root `AGENTS.md` shape:
-
-```text
-# <repo> — agent guide
-
-Constraints — repo-wide, non-inferable rules only (safety walls, build/tool
-choices, style decisions a reader cannot recover from the code).
-
-Routing — a "touching X, read Y first" table naming the owner of each
-question, never copying its answer:
-| touching            | read first              |
-| ------------------- | ----------------------- |
-| <area>              | <owning doc or source>  |
-
-Verification — the exact commands that prove a change (build, test, lint,
-driven probe).
-```
-
-- Name distinct owners for architecture, development, environment, and release
-  questions instead of answering them inline; they update on different
+- **Name owners.** Each routing row names the owner of a question instead of answering it
+  inline; architecture, development, environment and release answers update on different
   triggers, so they live in different documents.
-- Add a nested `AGENTS.md` only where a package's hazards or ownership
-  boundaries materially differ from the root; local guidance takes precedence.
-- Make co-change a review concern (a pull-request template asking whether the
-  behavior change requires a documentation change). It reduces drift; it does
-  not prove that prose matches code.
+- **Keep the layer a router.** When a row grows an explanation, the explanation belongs in
+  the document the row points to.
+- **Nested layers** only where a package's hazards or ownership boundaries materially differ
+  from the root; local guidance takes precedence.
+- **One owner across tools.** Content every agent needs lives in `AGENTS.md`. A tool-specific
+  file (`.claude/rules/`, `.cursor/rules/`, `.github/instructions/`) is invisible to the other
+  tools, so it holds only what that tool alone needs, or a pointer.
+- **Co-change as review.** A pull-request template asking whether a behavior change needs a
+  documentation change reduces drift; it does not prove that prose matches code.
 
-## CLAUDE.md as a thin re-export
+## CLAUDE.md
 
-When a repository serves Claude Code alongside other agents, `AGENTS.md` stays
-the single owner of agent instruction at every level; each `CLAUDE.md` is only a
-thin re-export of its sibling, never a second home for content. General shape:
+Claude Code reads `AGENTS.md` directly when no `CLAUDE.md`, `.claude/CLAUDE.md` or
+`CLAUDE.local.md` sits in the working directory or above it; any of them switches that off by
+default. Choose one layout per repository:
 
-```text
-@AGENTS.md
+- **`AGENTS.md` only** — no `CLAUDE.md` anywhere on the path. The default when every agent
+  shares the same instructions.
+- **Thin re-export** — each `CLAUDE.md` imports its sibling with `@AGENTS.md`, adding only
+  Claude-specific loading mechanics. Use it where some sessions cannot read `AGENTS.md`
+  directly, or where Claude needs something the other tools do not.
 
-Claude Code
-Always keep these instructions — this file and the imported AGENTS.md — in
-context; never compact them.
-
-Extra conventions load automatically by scope: per-directory CLAUDE.md files
-(each a thin @AGENTS.md re-export of its sibling) and path-scoped rules under
-.claude/rules/*.md. These are Claude Code mechanisms; other tools read the
-AGENTS.md files and the referenced rules directly.
-```
-
-- The `@AGENTS.md` import line does the routing; prose below it may only name
-  Claude-specific loading mechanics, never repository facts.
-- Mirror the layering: wherever a nested `AGENTS.md` exists and Claude Code is
-  in use, its sibling `CLAUDE.md` is the same re-export.
-- A `CLAUDE.md` that has grown its own constraints is a drift finding: move the
-  content into the owning `AGENTS.md` and restore the re-export.
-
-## Anti-patterns
-
-- A routing layer that grows into a second architecture and tooling manual.
-- A file created to complete a taxonomy. Prefer a pointer when the fact already
-  has an owner, and no file when no distinct owning question exists.
+A `CLAUDE.md` holding only `@AGENTS.md` becomes removable once every Claude Code session in
+use reads `AGENTS.md` directly; recommend removing it, stating that condition.
+A `CLAUDE.md` that has grown its own repository constraints is a drift finding: move the
+content into the owning `AGENTS.md` and restore the layout. The project-root `CLAUDE.md` is
+re-read after compaction, so an instruction asking Claude to keep it in context is a no-op.
