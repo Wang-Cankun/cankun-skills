@@ -39,4 +39,4 @@ Use counterexamples, alternative framings, or changes of perspective when they c
 
 Keep the evolving understanding legible: what became clearer, what the user recognized or corrected, and what remains uncertain. Close when the useful discovery has been articulated, further exploration offers no material gain within scope, or the user chooses to stop. Understanding can be a worthwhile outcome without an immediate decision or action plan.
 
-Leave the user with language and connections they can reuse, distinguishing their judgments from your proposals and open hypotheses. When used within Deposition, return these insights to the existing shared mental model rather than restarting alignment. Exploration preserves the task's existing action boundaries.
+Leave the user with language and connections they can reuse, distinguishing their judgments from your proposals and open hypotheses. When used within Common Ground, return these insights to the existing shared mental model rather than restarting alignment. Exploration preserves the task's existing action boundaries.

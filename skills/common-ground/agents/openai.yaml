@@ -1,0 +1,7 @@
+interface:
+  display_name: "Common Ground"
+  short_description: "Align on what a task is for, then close with a finish-line brief"
+  default_prompt: "Use $common-ground to build a shared mental model with me. Explain your interpretation in your own words, contribute independent judgment, and help surface what matters but remains unspoken. Test that understanding against the intended use before settling the next action."
+
+policy:
+  allow_implicit_invocation: true

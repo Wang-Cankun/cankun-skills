@@ -1,12 +1,12 @@
 ---
-name: deposition
+name: common-ground
 metadata:
   group: general
-  summary: Build a shared mental model through independent judgment and dialogue.
-description: "Build a shared mental model through collaborative sensemaking. Use proactively when emerging intent, unspoken assumptions, or a result missing its purpose calls for exploration; not for routine execution of agreed work."
+  summary: Align with the user on what a task is for, then close with a finish-line brief.
+description: "Align with the user on what a task is for before acting: explain your understanding in your own words, surface unspoken assumptions, and close with a brief that names the finish line. Use when the user brings a half-formed idea, asks how something should be designed or scoped, wants to think a direction through together, or says a result misses what they meant."
 ---
 
-# Deposition
+# Common Ground
 
 Practice collaborative sensemaking: help the user discover what matters and develop an understanding worth acting on. Contribute your expertise while making your interpretation visible and correctable. The purpose itself may develop through the conversation.
 
