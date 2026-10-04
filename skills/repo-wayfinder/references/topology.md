@@ -1,26 +1,6 @@
 # Topology guide
 
-Read this before measuring an instruction chain, or before recommending a new document
-topology or instruction layer. The section shapes for each file, `AGENTS.md` included, are in
-[`document-templates.md`](document-templates.md).
-
-## Where context lives
-
-```text
-one task -> prompt
-durable repo-wide constraint or route -> root AGENTS.md
-procedure or rule one kind of task needs -> repository skill, path-scoped rule, or the doc that task opens
-rule that must always hold -> lint, test, hook, or CI check
-reusable cross-repository procedure -> skill
-current executable behavior -> owning code, type, schema, config, or contract
-conformance -> test or driven probe
-```
-
-Grounding: a task prompt carries the current goal and completion condition; `AGENTS.md`
-carries durable repository guidance, discovered from the root toward the working directory
-with local precedence and kept short; a skill packages a workflow through progressive
-disclosure; formatting and lint checks belong to CI; instructions are context, so a rule that
-must hold regardless belongs in a hook. Sources:
+Sources for the layering below:
 [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) ·
 [Codex skills](https://learn.chatgpt.com/docs/build-skills) ·
 [Claude Code memory](https://code.claude.com/docs/en/memory) ·
@@ -40,11 +20,6 @@ instead.
 
 ## The AGENTS.md layer
 
-- **Name owners.** Each routing row names the owner of a question instead of answering it
-  inline; architecture, development, environment and release answers update on different
-  triggers, so they live in different documents.
-- **Keep the layer a router.** When a row grows an explanation, the explanation belongs in
-  the document the row points to.
 - **Nested layers** only where a package's hazards or ownership boundaries materially differ
   from the root; local guidance takes precedence.
 - **One owner across tools.** Content every agent needs lives in `AGENTS.md`. A tool-specific

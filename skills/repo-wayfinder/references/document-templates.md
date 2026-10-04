@@ -1,13 +1,10 @@
 # Document templates
 
-Use these as **section menus, not forms**: select the smallest shape that answers the
-document's owning question. Each section passes the admission test, and each document's
-ownership comes from its card, both in [`archetypes.md`](archetypes.md); this file holds only
-shapes.
+Section menus, not forms: pick the smallest shape that answers the document's owning
+question. Each document's role is in [`roles.md`](roles.md).
 
 ## Contents
 
-- Document rules table
 - README / on-ramp
 - Root AGENTS.md / agent rules
 - Architecture map
@@ -18,24 +15,6 @@ shapes.
 - Current contract
 - Runbook
 - Retirement line
-
-## Document rules table
-
-Set the rules before writing prose:
-
-| path | observed role | declared role | owning question / audience | owns | must not own | update trigger | proof boundary | lifecycle |
-|---|---|---|---|---|---|---|---|---|
-| `README.md` | on-ramp | on-ramp | What is this and where do I start? / newcomer | identity, entry, routes | status, rules, architecture detail | identity or entry changes | quickstart runs | current |
-| `AGENTS.md` | agent rules | agent rules | How do I work here safely? / contributor or agent | repo-wide non-inferable constraints, grants, verification, routing, repo-wide hazards, maintenance rules | state, implementation behavior, design essays, single-task procedures and hazards | a rule, grant, command, or hazard changes | commands and observed friction | current |
-| `docs/architecture.md` | map | map | Where does anything live and connect? / contributor | system shape, stable structure, boundaries, formats, system terms | reasons, roadmap, copied commands | a directory purpose or boundary changes | current code and live paths | current |
-| `docs/decisions.md` | rationale | rationale | Why is it shaped this way? / future maintainer | current direction, decisions in force, open choices, refutations | rules, measurements, repair steps | a decision changes or assumption resolves | links to rules and evidence | current |
-| `docs/roadmap.md` | plan | plan | What next, in what order? / person choosing work | current state, next items, ordered phases, exit proofs | architecture, rationale, benchmark detail | an item completes or blocks, or order changes | command or observable exit | current |
-| `docs/measurements.md` | evidence | evidence | What was measured, and what does it bear on? / challenger | decision-bearing results and reproduction | current guarantees, the decisions themselves, general logs | a new measurement or a dated correction | dated environment, subject, method | current; entries historical |
-| `docs/<records>/` | record family | record family | What was asked, found, or advised then? / anyone tracing a decision | dated records and their index | current decisions, task order, standing rules | a new record or a dated correction | the record itself | historical |
-| `<scope>/AGENTS.md` | local agent rules | local agent rules | What differs in this subtree? / contributor in scope | materially different local rules and hazards | root rules, general architecture | a local rule or hazard changes | local commands and observed friction | current |
-
-These rows are examples in which observed and declared roles agree; derive the real rows
-from the target repository.
 
 ## README / on-ramp
 
@@ -79,7 +58,7 @@ Candidate shape:
  workflows the agent may carry through without asking>
 
 ## Routing
-| touching | read first |
+| touching | owner |
 |---|---|
 | <the task that fires the route> | <owning source> |
 
@@ -87,7 +66,8 @@ Candidate shape:
 <repo-wide hazards that have bitten or are independently established>
 
 ## Document maintenance
-<only when agents keep adding to the documents: a few rules, with the lead bounds>
+<only when agents keep adding to the documents: a few rules, with the word and item limits
+ this repository sets for documents that open with state>
 ```
 
 A grant reads like: "The local tests use disposable fixtures and have no production
@@ -100,7 +80,7 @@ Maintenance rules, a menu to re-derive rather than copy:
 - **Replace the slot, append the record** — the same question and scope revises the
   current entry in place, and version control keeps the old wording; a distinct result,
   decision or record is a new entry; a verbatim record gets a dated correction attached.
-- **Short leads** — the bounds this repository's lead documents keep, in words and items.
+- **Short openings** — the word and item limits for documents that open with state.
 - **Finish the update** — when work completes or direction changes, update each owner whose
   question changed (the plan's state, a decision's status) and repair anchors that moved;
   a pointer elsewhere needs no edit.
@@ -108,7 +88,7 @@ Maintenance rules, a menu to re-derive rather than copy:
 
 ## Architecture map
 
-Write one only when the map archetype admits it. Choose sections from: system shape or live
+Write one only when the map role earns its place. Choose sections from: system shape or live
 call path (`entry → modules → output`, or `input → stage → artifact → consumer` for a
 pipeline) · stable directories and file groups, each with one responsibility · components and
 boundaries (`component | responsibility | interface | must not know`) · data stores and
