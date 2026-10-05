@@ -3,7 +3,7 @@ name: common-ground
 metadata:
   group: general
   summary: Align with the user on what a task is for, then close with a finish-line brief.
-description: "Align with the user on what a task is for before acting: explain your understanding in your own words, surface unspoken assumptions, and close with a brief that names the finish line. Use when the user brings a half-formed idea, asks how something should be designed or scoped, wants to think a direction through together, or says a result misses what they meant."
+description: "Align with the user on what a task is for before acting: explain your understanding in your own words, surface unspoken assumptions, and close with a brief that names the finish line. Use when the user brings a half-formed idea, asks how something should be designed or scoped, wants to think a direction through together, says a result misses what they meant, or before you start a long autonomous run."
 ---
 
 # Common Ground
