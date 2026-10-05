@@ -42,7 +42,7 @@ Caveats (each verified against the real CLI, not assumed):
   Claude + Codex diagnostic; `doctor --live oracle` tests the default consultant.
 - **Oracle selects GPT-6 Pro**: use `--model gpt-6-pro --browser-thinking-time pro`.
   Oracle maps this browser alias to ChatGPT's Latest/GPT-6 Astra model and verifies the Pro tier.
-  The supported minimum is Oracle 0.21.1; reject older versions before submission.
+  The supported minimum is Oracle 0.21.4 (earlier releases miss ChatGPT's "Select ChatGPT model" button); reject older versions before submission.
   `pro` requires verified Pro selection; `heavy` does not reliably select Pro.
 - **Oracle followups fork child sessions**: pass the stored id with `--followup` and save the new child id.
   Foreground runs print `Session: <id>`; detached Pro runs with `--wait` print
@@ -52,7 +52,13 @@ Caveats (each verified against the real CLI, not assumed):
 - **Oracle browser state is machine-local**: set `browser.manualLogin: true` in
   `~/.oracle/config.json` and sign in once in Oracle’s persistent Chrome profile. Merely setting
   `browser.chromeProfile` does not import a login in current Oracle releases. Never hardcode a profile, account, cookies, or
-  credentials in this repository. `--wait`, `--no-notify`, and `--browser-archive never` keep output
+  credentials in this repository.
+- **Oracle's account follows Chrome's last-used profile**: Oracle starts its persistent Chrome
+  without `--profile-directory`, so a profile switched by hand in that window changes the account
+  for every later run. With `config oracle-profile <dir>` saved, each Oracle round first makes that
+  directory `last_used` in the profile root's `Local State` (`CONFER_ORACLE_PROFILE_ROOT`, default
+  `~/.oracle/browser-profile`). It refuses, before submission, when the directory is unknown or when
+  that Chrome is running on another profile (`SingletonLock` names a live pid): quit it and retry. `--wait`, `--no-notify`, and `--browser-archive never` keep output
   deterministic and avoid retained prompt archives.
 - Default overrides: `CONFER_PROVIDER`, `CONFER_PI_MODEL`; extra flags:
   `CONFER_CLAUDE_ARGS` / `CONFER_CODEX_ARGS` / `CONFER_ORACLE_ARGS`

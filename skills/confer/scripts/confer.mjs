@@ -20,7 +20,9 @@ const DEFAULT_ORACLE_TIMEOUT_SECONDS = 65 * 60;
 const TIMEOUT_MS = (parseInt(process.env.CONFER_TIMEOUT, 10) || DEFAULT_TIMEOUT_SECONDS) * 1000;
 const ORACLE_TIMEOUT_MS =
   (parseInt(process.env.CONFER_ORACLE_TIMEOUT, 10) || DEFAULT_ORACLE_TIMEOUT_SECONDS) * 1000;
-const ORACLE_MIN_VERSION = "0.21.1";
+const ORACLE_MIN_VERSION = "0.21.4";
+const ORACLE_PROFILE_ROOT =
+  process.env.CONFER_ORACLE_PROFILE_ROOT || path.join(os.homedir(), ".oracle", "browser-profile");
 const ORACLE_MODEL = "gpt-6-pro";
 const ORACLE_MODEL_LABEL = "gpt-6/pro";
 const PI_MODELS = {
@@ -116,6 +118,43 @@ async function requireOracleVersion() {
   if (!versionAtLeast(version.raw, ORACLE_MIN_VERSION))
     throw new ProviderError("oracle", `version ${version.raw} is too old (need >= ${ORACLE_MIN_VERSION})`);
   return version.raw;
+}
+
+// Oracle launches its persistent Chrome without --profile-directory, so Chrome opens the
+// profile it last used: switching profiles by hand in that window silently changes the
+// ChatGPT account of every later consultation. Local State is only safe to edit while
+// that Chrome is not running (it rewrites the file on exit).
+function pidAlive(pid) {
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return e.code === "EPERM"; }
+}
+
+function oracleChromeRunning() {
+  let target;
+  try { target = fs.readlinkSync(path.join(ORACLE_PROFILE_ROOT, "SingletonLock")); }
+  catch { return false; }
+  const pid = parseInt(target.slice(target.lastIndexOf("-") + 1), 10);
+  return Number.isInteger(pid) && pidAlive(pid);
+}
+
+function pinOracleProfile() {
+  const want = readConfig().oracleProfile;
+  if (!want) return;
+  const file = path.join(ORACLE_PROFILE_ROOT, "Local State");
+  let state;
+  try { state = JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch (e) { throw new ProviderError("oracle", `cannot read ${file}: ${e.message}`); }
+  const profiles = state?.profile?.info_cache ?? {};
+  if (!Object.hasOwn(profiles, want))
+    throw new ProviderError("oracle", `oracle-profile '${want}' is not a profile in ${ORACLE_PROFILE_ROOT} (have: ${Object.keys(profiles).join(", ") || "none"})`);
+  if (state.profile.last_used === want) return;
+  if (oracleChromeRunning())
+    throw new ProviderError("oracle", `Oracle's Chrome is open on profile '${state.profile.last_used}'; quit it so confer can switch to '${want}'`);
+  state.profile.last_used = want;
+  state.profile.last_active_profiles = [want];
+  const tmp = `${file}.confer-${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(state));
+  fs.renameSync(tmp, file);
 }
 
 // ---- locks -----------------------------------------------------------------
@@ -366,6 +405,7 @@ const providers = {
       const modelLabel = modelOverride ?? ORACLE_MODEL_LABEL;
       const selectedModel = modelLabel === ORACLE_MODEL_LABEL ? ORACLE_MODEL : modelLabel.replace(/\/pro$/, "");
       await requireOracleVersion();
+      pinOracleProfile();
       const replyFile = path.join(os.tmpdir(), `confer-oracle-${process.pid}-${crypto.randomBytes(4).toString("hex")}.txt`);
       const args = [
         ...splitArgs(process.env.CONFER_ORACLE_ARGS),
@@ -475,22 +515,26 @@ async function cmdAsk(args) {
 
 async function cmdConfig(args) {
   if (!args.length) {
-    console.log(JSON.stringify({ provider: defaultProvider(), piModel: piModel(), piPresets: PI_MODELS }, null, 2));
+    const oracleProfile = readConfig().oracleProfile ?? null;
+    console.log(JSON.stringify({ provider: defaultProvider(), piModel: piModel(), piPresets: PI_MODELS, oracleProfile }, null, 2));
     return;
   }
   const [key, value] = args;
-  if (args.length > 2 || !["provider", "pi-model"].includes(key)) die("usage: confer.mjs config [provider|pi-model [value]]");
+  const fields = { provider: "provider", "pi-model": "piModel", "oracle-profile": "oracleProfile" };
+  if (args.length > 2 || !Object.hasOwn(fields, key)) die("usage: confer.mjs config [provider|pi-model|oracle-profile [value]]");
   if (value === undefined) {
-    console.log(key === "provider" ? defaultProvider() : piModel());
+    console.log(key === "provider" ? defaultProvider() : key === "pi-model" ? piModel() : readConfig().oracleProfile ?? "");
     return;
   }
   const resolved = key === "pi-model" ? resolvePiModel(value) : value;
   if (key === "provider" && !PROVIDERS.includes(resolved)) die(`unknown provider '${resolved}'`);
+  if (key === "oracle-profile" && (!resolved.trim() || /[\\/]/.test(resolved)))
+    die("oracle-profile needs a Chrome profile directory name such as Default or 'Profile 1'");
   initHome();
   // Share the short transaction lock; concurrent preference writes preserve both keys.
   await withRegistry(() => {
     const config = readConfig();
-    config[key === "pi-model" ? "piModel" : "provider"] = resolved;
+    config[fields[key]] = resolved;
     const tmp = `${CONFIG}.tmp.${process.pid}`;
     fs.writeFileSync(tmp, JSON.stringify(config, null, 2) + "\n");
     fs.renameSync(tmp, CONFIG);
@@ -614,7 +658,7 @@ async function cmdDoctor(args) {
 const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   open <provider> [-t name] <prompt|->   start a thread (${PROVIDERS.join("|")}); '-' reads prompt from stdin
   ask [provider] [-t name] <prompt|->    default: GPT-6 Pro via Oracle; '--' ends options
-  config [provider|pi-model [value]]     show/save defaults; Pi presets: ${Object.keys(PI_MODELS).join(", ")}
+  config [provider|pi-model|oracle-profile [value]]  show/save defaults; Pi presets: ${Object.keys(PI_MODELS).join(", ")}
   reply <thread> <prompt|->              continue a thread (session resumed provider-side)
   all [--with-oracle] <prompt|->         fan out to claude+codex; explicit flag adds GPT Pro
   list | show <thread>                   registry / full transcript

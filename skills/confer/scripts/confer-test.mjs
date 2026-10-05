@@ -44,7 +44,7 @@ if [[ -n "$FAKE_ORACLE_CALLS" ]]; then
   printf '%q ' "$@" >> "$FAKE_ORACLE_CALLS"
   printf '\\n' >> "$FAKE_ORACLE_CALLS"
 fi
-[[ "$1" == "--version" ]] && { echo "\${FAKE_ORACLE_VERSION:-0.21.1}"; exit 0; }
+[[ "$1" == "--version" ]] && { echo "\${FAKE_ORACLE_VERSION:-0.21.4}"; exit 0; }
 reply=""; followup=""; prev=""
 for a in "$@"; do
   [[ "$prev" == "--write-output" ]] && reply="$a"
@@ -291,17 +291,17 @@ function check(name, cond, detail = "") {
   const home = freshHome();
   const calls = path.join(home, "oracle-calls");
   const old = await confer(["open", "oracle", "-t", "old", "q"], {
-    home, env: { FAKE_ORACLE_VERSION: "0.21.0", FAKE_ORACLE_CALLS: calls },
+    home, env: { FAKE_ORACLE_VERSION: "0.21.3", FAKE_ORACLE_CALLS: calls },
   });
   const oldCalls = fs.readFileSync(calls, "utf8").trim().split("\n");
-  check("oracle <0.21.1 is rejected", old.code === 1 && old.stderr.includes("need >= 0.21.1"), old.stderr);
+  check("oracle <0.21.4 is rejected", old.code === 1 && old.stderr.includes("need >= 0.21.4"), old.stderr);
   check("old oracle is rejected before prompt submission", oldCalls.length === 1 && oldCalls[0] === "--version", oldCalls.join(" | "));
 
   const prereleaseHome = freshHome();
   const prerelease = await confer(["open", "oracle", "-t", "prerelease", "q"], {
-    home: prereleaseHome, env: { FAKE_ORACLE_VERSION: "0.21.1-beta.1" },
+    home: prereleaseHome, env: { FAKE_ORACLE_VERSION: "0.21.4-beta.1" },
   });
-  check("oracle 0.21.1 prerelease is below stable minimum", prerelease.code === 1 && prerelease.stderr.includes("need >= 0.21.1"), prerelease.stderr);
+  check("oracle 0.21.4 prerelease is below stable minimum", prerelease.code === 1 && prerelease.stderr.includes("need >= 0.21.4"), prerelease.stderr);
 
   for (const [mode, expected] of [
     ["nosession", "no Session:"],
@@ -315,6 +315,41 @@ function check(name, cond, detail = "") {
     });
     check(`oracle ${mode} is a protocol error`, r.code === 1 && r.stderr.includes(expected), r.stderr);
   }
+}
+
+// 1d'. A saved oracle-profile is made Chrome's last-used profile before submission.
+{
+  const profileRoot = fs.mkdtempSync(path.join(ROOT, "oracle-profile-"));
+  const localState = path.join(profileRoot, "Local State");
+  const writeState = (lastUsed) => fs.writeFileSync(localState, JSON.stringify({
+    profile: { last_used: lastUsed, last_active_profiles: [lastUsed], info_cache: { Default: {}, "Profile 1": {} } },
+  }));
+  const lastUsed = () => JSON.parse(fs.readFileSync(localState, "utf8")).profile.last_used;
+  const env = { CONFER_ORACLE_PROFILE_ROOT: profileRoot };
+
+  const unset = freshHome();
+  writeState("Profile 1");
+  const r0 = await confer(["open", "oracle", "-t", "noprofile", "q"], { home: unset, env });
+  check("no oracle-profile leaves Local State alone", r0.code === 0 && lastUsed() === "Profile 1", r0.stderr);
+
+  const home = freshHome();
+  const saved = await confer(["config", "oracle-profile", "Default"], { home });
+  check("oracle-profile is saved", saved.code === 0 && JSON.parse(fs.readFileSync(path.join(home, "config.json"), "utf8")).oracleProfile === "Default", saved.stderr);
+  const r1 = await confer(["open", "oracle", "-t", "pinned", "q"], { home, env });
+  check("oracle-profile becomes Chrome's last-used profile", r1.code === 0 && lastUsed() === "Default", r1.stderr);
+
+  writeState("Profile 1");
+  fs.symlinkSync(`host-${process.pid}`, path.join(profileRoot, "SingletonLock"));
+  const calls = path.join(home, "oracle-calls-running");
+  const r2 = await confer(["open", "oracle", "-t", "running", "q"], { home, env: { ...env, FAKE_ORACLE_CALLS: calls } });
+  const runningCalls = fs.readFileSync(calls, "utf8").trim().split("\n");
+  check("a running Oracle Chrome on another profile refuses before submission", r2.code === 1 && r2.stderr.includes("quit it") && runningCalls.length === 1 && lastUsed() === "Profile 1", r2.stderr);
+  fs.unlinkSync(path.join(profileRoot, "SingletonLock"));
+
+  const bad = freshHome();
+  await confer(["config", "oracle-profile", "Profile 9"], { home: bad });
+  const r3 = await confer(["open", "oracle", "-t", "unknown", "q"], { home: bad, env });
+  check("an unknown oracle-profile is an error", r3.code === 1 && r3.stderr.includes("is not a profile"), r3.stderr);
 }
 
 // 1e. Oracle keeps its own 65-minute budget and honors the test override.
