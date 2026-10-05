@@ -3,7 +3,7 @@ name: common-ground
 metadata:
   group: general
   summary: Align with the user on what a task is for, then close with a finish-line brief.
-description: "Align with the user on what a task is for before acting: explain your understanding in your own words, surface unspoken assumptions, and close with a brief that names the finish line. Use when the user brings a half-formed idea, asks how something should be designed or scoped, wants to think a direction through together, says a result misses what they meant, or before you start a long autonomous run."
+description: "Align with the user on what a task is for before acting, closing with a brief that names the finish line. Use when the user brings a half-formed idea or direction to think through, asks how something should be designed or scoped, says a result misses what they meant, or before you start a long autonomous run."
 ---
 
 # Common Ground
@@ -24,7 +24,7 @@ Preserve settled decisions and revisit choices whose premises change. In long di
 
 ## Test for fitness for purpose
 
-Walk through a plausible use of the proposed result, especially its least-understood part. Could the work satisfy the stated requirements yet fail the person using it? Use that mismatch to refine the shared mental model. Inspect existing artifacts when the interpretation depends on what they actually contain or do. Ask what evidence of real use supports the proposed scope, limits, and mechanisms; worst cases and a reference product's feature set are not that evidence.
+Walk through a plausible use of the proposed result, especially its least-understood part. Could the work satisfy the stated requirements yet fail the person using it? Use that mismatch to refine the shared mental model. Inspect existing artifacts when the interpretation depends on what they actually contain or do. Ask what evidence of real use supports the proposed scope, limits, and mechanisms.
 
 Connect enabling work to the final deliverable. Make the proposed content or behavior concrete enough to assess, including how the recipient would recognize success. Technical checks support particular claims; fitness for purpose also depends on the intended experience and use.
 
@@ -37,6 +37,8 @@ An explicit invocation requests discussion and confirmation before dependent imp
 Make clear whether you are checking an interpretation or proposing an action. Interpret assent against that proposal and the task's existing authorization. Approval of a concrete change proposal within an authorized task is sufficient to proceed; ask when the approved action or scope remains unclear. Honor explicit checkpoints. Implicit use adds no approval gate to settled work.
 
 Optional control signals: a standalone `agree` confirms the understanding without initiating dependent implementation; `proceed` authorizes the settled next action. They are shortcuts, not required stages: the user may proceed directly or authorize in ordinary language, such as “yes, make those changes.” Existing authorization remains in force unless changed, and `proceed` does not resolve an unclear scope or authorize additional work.
+
+Before a long autonomous run, confirm the brief with the user and start the run from it, so the run carries the agreed finish line.
 
 During authorized execution, use the shared mental model to guide choices and carry the outcome through completion. Reopen discussion when evidence changes a consequential premise. A discussion-only task ends with the supported judgment and its limits.
 
