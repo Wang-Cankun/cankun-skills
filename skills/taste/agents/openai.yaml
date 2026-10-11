@@ -1,0 +1,7 @@
+interface:
+  display_name: "Taste"
+  short_description: "Improve work that is correct but unsatisfying, with Graham's principles of taste"
+  default_prompt: "Use $taste on this work. Say specifically what is unsatisfying and why, name who uses it and when, find the idea it hangs on, propose a concrete revision, and test it against the principles that apply."
+
+policy:
+  allow_implicit_invocation: true
