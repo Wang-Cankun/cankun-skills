@@ -16,6 +16,19 @@ Things that went wrong in real GPT workflow runs, each with what worked instead.
 - **`/code-review` after the workflow still finds bugs**, mostly in failure and abort paths
   (an exception outside `try`, a commit that blocks a result's receipt, a hook restored
   unconditionally).
+- **GPT over-builds in a recognisable shape**: restrictions, enums, config and "governance"
+  nobody asked for; `try`/`except` with fallback defaults and `getattr`/`isinstance` checks on
+  data it produced itself; the old path kept beside the new one; tests that mirror the
+  implementation; new files no caller uses. Ponytail cuts most of it; the acceptance still looks
+  for it, and the fix is deletion.
+- **Its own tests can encode the drift.** A context-assembly change passed about 800 tests
+  while breaking the project's stable prompt-cache prefix, because GPT wrote the contract and
+  the tests asserted the new behaviour. Accept against the project's invariants and design
+  records, not against the diff's own tests.
+- **Look before trusting the checks.** A slice that passed 800 tests was unusable at first
+  sight of its screen. Before reading test results, look at one realistic result as its user
+  would see it. Process grows into its own goal (checksums, smoke test plus dry run plus matrix
+  around a small reversible change); each check should name the real failure it prevents.
 - **Prompts set the size.** Ponytail cuts what nobody asked for, never what the card or the fix
   prompt requires; "a test for each fix" and long must-fix lists grew one diff by half.
 - **Measurement code fails silently**: a wrong count gives a wrong number, not an error.
