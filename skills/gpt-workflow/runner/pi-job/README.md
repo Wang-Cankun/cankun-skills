@@ -30,8 +30,10 @@ Statuses: `completed`, `no_result` (schema given but nothing submitted), `failed
 `timeout` (`max_minutes`, default 60).
 
 Tool presets: `readonly` (read, grep, find, ls), `research` (plus `web_search`,
-`fetch_content`, `get_search_content` from pi-web-access), `write` (plus edit, write),
-`full` (plus bash). Tools are an allowlist, not a sandbox: `bash` can write anywhere, so
+`fetch_content`, `get_search_content` from pi-web-access, `agent_browser`, `codemode`, and
+`subagent`, `subagent_supervisor`, `bg_wait` from pi-subagents), `write` (plus edit, write),
+`full` (write plus bash and everything `research` adds). A tool an extension registers is
+available only when the preset or list names it. Tools are an allowlist, not a sandbox: `bash` can write anywhere, so
 give write-capable jobs a worktree as `cwd`. Installed Pi packages load normally.
 `--model` is optional: without it Pi uses its configured default, and `result` reports the
 model that actually answered. Use Pi workers for non-Claude models; run Claude models as

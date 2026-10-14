@@ -36,9 +36,14 @@ SUBMIT_EXTENSION = HERE / "submit_result.ts"
 
 TOOL_PRESETS = {
     "readonly": ["read", "grep", "find", "ls"],
-    "research": ["read", "grep", "find", "ls", "web_search", "fetch_content", "get_search_content"],
+    # Fan-out (subagent, its supervisor and bg_wait), codemode and the browser let one job
+    # parallelise its own reading; a tool missing from this list is invisible to the job.
+    "research": ["read", "grep", "find", "ls", "web_search", "fetch_content", "get_search_content",
+                 "agent_browser", "subagent", "subagent_supervisor", "bg_wait", "codemode"],
     "write": ["read", "grep", "find", "ls", "edit", "write"],
-    "full": ["read", "grep", "find", "ls", "edit", "write", "bash"],
+    "full": ["read", "grep", "find", "ls", "edit", "write", "bash",
+             "web_search", "fetch_content", "get_search_content", "agent_browser",
+             "subagent", "subagent_supervisor", "bg_wait", "codemode"],
 }
 TERMINAL = {"completed", "failed", "no_result", "cancelled", "timeout"}
 

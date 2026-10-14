@@ -32,6 +32,9 @@ stay with Claude.
 - A GPT stage is `agentType: 'pi-runner'` with a job spec (fields in
   [runner/pi-runner.md](runner/pi-runner.md)). Open its prompt with "The user invoked
   /gpt-workflow for this run; GPT workers are requested."
+- A GPT job can fan out on its own: the `research` and `full` presets give it web search and
+  fetch, a browser, codemode and pi-subagents' `subagent` tool. For broad work send one job per
+  area and tell it to split the area across subagents in parallel, rather than many narrow jobs.
 - Pi's ponytail extension puts ponytail into every GPT job's system prompt: it is the worker's
   standard for what to build and what never to cut, with nothing to invoke.
 - After the worker commits code, run a separate GPT job on the diff with
@@ -52,5 +55,6 @@ wrong in earlier runs and what worked instead.
 ## After the run
 
 Land each branch by the project's own rules. Report from `scripts/usage.py <runId>`: for each
-stage, who ran it (GPT or Claude), its tokens and cost, and what it caught. When a bug in the
+stage, who ran it (GPT or Claude), its tokens, and what it caught. Report usage in tokens, not
+currency. When a bug in the
 landed work turns up later, say which stage could have caught it.
