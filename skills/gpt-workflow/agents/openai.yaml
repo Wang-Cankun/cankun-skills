@@ -1,0 +1,7 @@
+interface:
+  display_name: "GPT Workflow"
+  short_description: "GPT produces through Pi; Claude accepts each result"
+  default_prompt: "Use $gpt-workflow to run this task as a Workflow where GPT does the producing stages and Claude accepts each result."
+
+policy:
+  allow_implicit_invocation: true
