@@ -46,6 +46,9 @@ stay with Claude.
 - One git worktree per issue, from a freshly fetched `origin/main`. GPT stages write notes and
   status to `.work/` in the worktree (add it to `.git/info/exclude`).
 
+Before writing the script, read [references/lessons.md](references/lessons.md): what went
+wrong in earlier runs and what worked instead.
+
 ## After the run
 
 Land each branch by the project's own rules. Report from `scripts/usage.py <runId>`: for each
