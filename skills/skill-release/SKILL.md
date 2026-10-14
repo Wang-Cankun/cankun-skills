@@ -2,7 +2,8 @@
 name: skill-release
 compatibility: Requires `bun` + `curl` + the `skl` CLI.
 metadata:
-  group: internal
+  group: repos
+  personal: true
   summary: "Publishes and syncs this collection: derives the index README and the cankun.me skills page from each skill's own metadata, checks publish hygiene, and guides flagship promotion."
 description: Release and sync skills in the cankun-skills collection. Use when the user wants to publish or release a skill, add a new skill to the index, sync or fix a drifted skills README or the cankun.me skills page, run publish-hygiene checks, or promote a skill to its own flagship repo (or fold one back).
 ---
@@ -52,11 +53,21 @@ classification, shown to the user as a one-line-each table.
 
 ## 2. Converge the index
 
-Collection rows are grouped by the frontmatter `metadata.group` key (`general`
-| `design` | `internal`, default `general`) into three subsections — **General
-use**, then **Design**, then **Internal workflow** — the same categories as
-cankun.me; the cankun-blog `group` field derives from this same key. Within a group, regenerate rows
-alphabetically by skill name:
+Collection rows are grouped by the frontmatter `metadata.group` key, which
+every skill sets. Groups answer "what is the reader trying to do", in this
+order:
+
+| key | subsection | holds |
+|-----|------------|-------|
+| `thinking` | **Thinking** | aligning, judging, articulating before or while working |
+| `models` | **Working with models** | consulting or delegating to other models and agents |
+| `making` | **Making things** | producing a finished artifact: images, posters, booklets, reports |
+| `repos` | **Repos & publishing** | repository docs, releases, site upkeep |
+
+These are the same categories as cankun.me; the cankun-blog `group` field
+derives from this same key. Audience is not a group: a skill useful only to
+Cankun sets `metadata.personal: true`, which the site shows as a tag. Within a
+group, regenerate rows alphabetically by skill name:
 
 | cell | derivation |
 |------|------------|
@@ -77,7 +88,7 @@ Per skill being released:
 
 - frontmatter passes the Agent Skills spec (agentskills.io): top-level keys
   limited to `name`, `description`, `license`, `compatibility`, `metadata`,
-  `allowed-tools` — custom keys (`group`, `summary`) live under `metadata:`;
+  `allowed-tools` — custom keys (`group`, `summary`, `personal`) live under `metadata:`;
   Claude Code runtime keys (e.g. `disable-model-invocation`) are a known,
   accepted deviation;
 - `agents/openai.yaml` present with `display_name`, `short_description`,
@@ -88,8 +99,9 @@ Per skill being released:
 - examples are free of secrets and machine-local paths;
 - a model-invoked `description` carries trigger branches (or the skill sets
   `disable-model-invocation: true` and keeps a one-line human description);
-- a `design`-group skill's name follows the `art-<medium>-<style>` family, the
-  filterable prefix convention;
+- `metadata.group` is one of the four keys in step 2;
+- an art-style skill (images in a named visual style) is named
+  `art-<medium>-<style>`, the filterable prefix convention;
 - the skill has been dogfooded: `skl where <name>` shows at least one
   deployment — zero deployments flags "unused", non-blocking like every flag.
 

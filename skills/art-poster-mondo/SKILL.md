@@ -1,7 +1,7 @@
 ---
 name: art-poster-mondo
 metadata:
-  group: design
+  group: making
   summary: >-
     Researches, art-directs, creates, and critiques alternate pop-culture
     posters in the Mondo screen-print tradition: source-grounded concepts,

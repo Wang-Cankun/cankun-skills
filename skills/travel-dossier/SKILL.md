@@ -2,7 +2,7 @@
 name: travel-dossier
 compatibility: Requires headless Chrome + Python (`pypdf`).
 metadata:
-  group: general
+  group: making
   summary: >-
     Turns a tour-agency itinerary PDF plus tickets into a phone-first A5 travel
     dossier (Swiss-minimal HTML→PDF), with a truth-sourcing discipline: every

@@ -2,7 +2,7 @@
 name: meeting-audio-report
 compatibility: Requires `ffmpeg`, `pandoc`, LibreOffice, Python 3.10+ with `requests` and `python-docx`, and an `OPENROUTER_API_KEY`.
 metadata:
-  group: general
+  group: making
   summary: >-
     Turns a meeting recording into a verbatim transcript plus an evidence-graded
     DOCX/PDF report, gated on block-level coverage so dropped audio surfaces

@@ -1,7 +1,7 @@
 ---
 name: art-photo-quiet-light
 metadata:
-  group: design
+  group: making
   summary: >-
     Plans, directs, generates, and edits slow-travel and lifestyle photography
     in the quiet-light visual language associated with Roberta Mazzone:

@@ -2,7 +2,7 @@
 name: confer
 compatibility: Requires `bun` and at least one provider CLI; Pi models must be configured locally; Oracle requires version 0.21.4 or newer and a signed-in ChatGPT browser profile.
 metadata:
-  group: general
+  group: models
   summary: >-
     Resumable cross-model consultation: GPT-6 Pro through Oracle by default,
     Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi,

@@ -1,7 +1,7 @@
 ---
 name: known-unknowns
 metadata:
-  group: general
+  group: thinking
   summary: Use the Rumsfeld matrix to articulate tacit judgment, connect dormant knowledge, and explore blind spots.
 description: "Explore blind spots when a judgment is hard to express, familiar knowledge may illuminate the situation, or unfamiliar possibilities deserve investigation. Use for sustained discovery, not routine clarification or a direct factual answer."
 ---

@@ -2,7 +2,8 @@
 name: cankun-blog-preview
 compatibility: Requires `bun` + a local cankun-blog checkout.
 metadata:
-  group: internal
+  group: repos
+  personal: true
   summary: >-
     Generates and integrates exactly one Franklin Booth-inspired, white-background
     preview image for a Cankun blog article, then validates its optimized WebP and

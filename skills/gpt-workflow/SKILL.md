@@ -2,7 +2,7 @@
 name: gpt-workflow
 compatibility: Requires Claude Code's Workflow tool, Pi with a default model and its ponytail package, and the bundled pi-runner subagent and pi-job tool (install with `scripts/install-runner.sh`).
 metadata:
-  group: general
+  group: models
   summary: >-
     GPT through Pi does the producing stages of Claude Code Workflows that
     Claude writes per task (implementing, fixing, researching, reviewing

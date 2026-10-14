@@ -9,8 +9,8 @@ The `/skills` page is fully data-driven. For a list update the ONLY file to
 edit is `app/data.ts`: the `skills` array at the bottom (type `Skill`).
 Add / edit / remove entries there; order within a group = display order.
 
-Rendering lives in `app/components/SkillsList.tsx` (two groups + EN/中文
-toggle); styles in the `/* ---- skills ---- */` block of `app/globals.css`.
+Rendering lives in `app/components/SkillsList.tsx` (the four
+groups, their EN/中文 labels, the `personal` tag, and the EN/中文 toggle); styles in the `/* ---- skills ---- */` block of `app/globals.css`.
 Do not touch either unless the layout itself is changing.
 
 ## Source of truth for the list
@@ -29,7 +29,8 @@ what changed.
   descZh: "...",               // 简体中文, written for mainland readers,
                                // not a word-for-word translation
   href: "<the skill's SKILL.md on GitHub>",
-  group: "general" | "design" | "internal",
+  group: "thinking" | "models" | "making" | "repos",
+  personal?: true,             // only when metadata.personal is set
 }
 ```
 
@@ -46,10 +47,9 @@ Rules:
   returns HTTP 200 with curl BEFORE shipping:
   - hosted in cankun-skills: `https://github.com/Wang-Cankun/cankun-skills/blob/main/skills/<slug>/SKILL.md`
   - has its own repo: `https://github.com/Wang-Cankun/<slug>/blob/main/skills/<slug>/SKILL.md`
-- `group`: `"general"` = useful to anyone; `"design"` = design and image
-  skills (the `art-*` family); `"internal"` = tooling for Cankun's own
-  workflow (e.g. cankun-blog-preview). Derives from the skill's frontmatter
-  `metadata.group`.
+- `group` and `personal` derive from the skill's frontmatter
+  `metadata.group` and `metadata.personal`; the four groups are defined in
+  SKILL.md step 2.
 
 ## Verify, deploy, commit
 

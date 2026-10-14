@@ -1,7 +1,7 @@
 ---
 name: repo-wayfinder
 metadata:
-  group: internal
+  group: repos
   summary: >-
     Checks or designs a repository's documentation system: which document owns each
     question, how agents reach it, and how it stays current.

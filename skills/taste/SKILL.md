@@ -1,7 +1,7 @@
 ---
 name: taste
 metadata:
-  group: general
+  group: thinking
   summary: "Improves work that is correct but unsatisfying, using the principles of Paul Graham's \"Taste for Makers\": diagnose, find the organising idea, revise, test."
 description: Taste in made things. Use when improving a design, UI, diagram, document or code structure that works but is unsatisfying, when choosing between design alternatives, or when reviewing a design.
 ---

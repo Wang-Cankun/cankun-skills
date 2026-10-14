@@ -1,7 +1,7 @@
 ---
 name: common-ground
 metadata:
-  group: general
+  group: thinking
   summary: Align with the user on what a task is for, then close with a finish-line brief.
 description: "Align with the user on what a task is for before acting, closing with a brief that names the finish line. Use when the user brings a half-formed idea or direction to think through, asks how something should be designed or scoped, says a result misses what they meant, or before you start a long autonomous run."
 ---
