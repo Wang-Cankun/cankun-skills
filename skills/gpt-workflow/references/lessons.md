@@ -10,6 +10,10 @@ Things that went wrong in real GPT workflow runs, each with what worked instead.
   exotic environments) and adds hardening nobody needs. Told to keep only realistic inputs, a
   review filed real failure paths as rare notes, and no fix round saw them. Point the review at
   what the change must survive in real use, including its failure and abort paths.
+- **Read the review's notes between rounds.** In a replay with a known answer key, the two
+  failure-path bugs `/code-review` later fixed sat in a review's notes the whole time, and a
+  memory leak noted in one round became a must-fix the next. Notes reach no fix round unless
+  the main loop promotes them.
 - **Accept the failure path too.** A harness accepted on a clean faux run deleted all its
   evidence the first time a live run timed out. When accepting a script or harness, run one
   failure and look at what it leaves behind.
