@@ -53,6 +53,10 @@ Caveats (each verified against the real CLI, not assumed):
   `~/.oracle/config.json` and sign in once in Oracle’s persistent Chrome profile. Merely setting
   `browser.chromeProfile` does not import a login in current Oracle releases. Never hardcode a profile, account, cookies, or
   credentials in this repository.
+- **`--copy-profile` conflicts with the signed-in profile**: Oracle exits 1 when it receives both.
+  confer drops `--copy-profile` from `CONFER_ORACLE_ARGS` with a warning, because a shell or
+  multiplexer started before a dotfile change keeps exporting the old value. A failed round
+  records the provider's last stderr lines (or stdout, when stderr is empty) after the `✗` header.
 - **Oracle's account follows Chrome's last-used profile**: Oracle starts its persistent Chrome
   without `--profile-directory`, so a profile switched by hand in that window changes the account
   for every later run. With `config oracle-profile <dir>` saved, each Oracle round first makes that

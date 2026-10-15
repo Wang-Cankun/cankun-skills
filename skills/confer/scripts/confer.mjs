@@ -43,6 +43,12 @@ class ProviderError extends Error {
   }
 }
 
+// A bare "exited 1" is undiagnosable after the fact; the provider's own last words are kept.
+function errorDetail(e) {
+  const tail = (e.stderr || "").split("\n").filter((l) => l.trim()).slice(-20).join("\n");
+  return tail ? `${e.message}\n${tail}` : e.message;
+}
+
 const die = (msg) => { throw new ConferError(msg); };
 
 function readConfig() {
@@ -94,6 +100,23 @@ function validName(name) {
 }
 
 function splitArgs(v) { return (v || "").split(/\s+/).filter(Boolean); }
+
+// confer drives Oracle's persistent signed-in profile; --copy-profile makes Oracle refuse that
+// profile and exit 1. Long-lived shells and multiplexers can keep exporting it after a dotfile
+// removes it, so it is dropped here rather than trusted to the environment.
+function oracleExtraArgs() {
+  const raw = splitArgs(process.env.CONFER_ORACLE_ARGS);
+  const kept = [];
+  let dropped = false;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === "--copy-profile") { dropped = true; i++; continue; }
+    if (raw[i].startsWith("--copy-profile=")) { dropped = true; continue; }
+    kept.push(raw[i]);
+  }
+  if (dropped)
+    console.error("confer: ignoring --copy-profile in CONFER_ORACLE_ARGS (it conflicts with the signed-in Oracle profile); unset it in this shell");
+  return kept;
+}
 
 function parseVersion(text) {
   const m = text.match(/\b(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?\b/);
@@ -272,7 +295,7 @@ async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS } = {}) 
   if (r.timedOut)
     throw new ProviderError(provider, `timed out after ${timeoutMs / 1000}s`, { stderr: r.stderr.trim(), timedOut: true });
   if (r.code !== 0)
-    throw new ProviderError(provider, `exited ${r.code}`, { exitCode: r.code, stderr: r.stderr.trim() });
+    throw new ProviderError(provider, `exited ${r.code}`, { exitCode: r.code, stderr: (r.stderr.trim() || r.stdout.trim()) });
   return r;
 }
 
@@ -408,7 +431,7 @@ const providers = {
       pinOracleProfile();
       const replyFile = path.join(os.tmpdir(), `confer-oracle-${process.pid}-${crypto.randomBytes(4).toString("hex")}.txt`);
       const args = [
-        ...splitArgs(process.env.CONFER_ORACLE_ARGS),
+        ...oracleExtraArgs(),
         "--engine", "browser",
         "--model", selectedModel,
         "--browser-thinking-time", "pro",
@@ -466,7 +489,7 @@ async function runRound(name, provider, prompt, session, round, modelOverride) {
   try {
     res = await providers[provider].ask(prompt, session, modelOverride);
   } catch (e) {
-    transcript(name, round, "✗", provider, e.message);
+    transcript(name, round, "✗", provider, errorDetail(e));
     throw e;
   }
   const metaStr = res.meta?.parts?.length ? ` · ${res.meta.parts.join(" · ")}` : "";
@@ -639,7 +662,7 @@ async function cmdDoctor(args) {
           try { console.log(await runRound(name, p, "Reply with the single word AGAIN.", t.session, t.rounds + 1, resumeModel(t))); }
           finally { release(); }
         } catch (e) {
-          console.error(`confer: ${p} live check failed: ${e.message}`);
+          console.error(`confer: ${p} live check failed: ${errorDetail(e)}`);
           ok = false;
           if (readReg()[name]) mine.push(name);
         }
@@ -682,7 +705,7 @@ try {
   }
 } catch (e) {
   if (e instanceof ConferError || e instanceof ProviderError) {
-    console.error(`confer: ${e.message}`);
+    console.error(`confer: ${errorDetail(e)}`);
     process.exit(1);
   }
   throw e;

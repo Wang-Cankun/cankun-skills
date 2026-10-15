@@ -391,6 +391,27 @@ function check(name, cond, detail = "") {
   check("explicit fan-out isolates oracle failure", partial.code === 0 && partial.stderr.includes("oracle failed") && partial.stdout.includes("codex-fake-reply"), partial.stderr);
 }
 
+// 1f2. A stale --copy-profile in CONFER_ORACLE_ARGS is dropped; other extra args pass through.
+{
+  const home = freshHome();
+  const calls = path.join(home, "oracle-calls");
+  const r = await confer(["open", "oracle", "-t", "stale", "q"], {
+    home, env: { FAKE_ORACLE_CALLS: calls, CONFER_ORACLE_ARGS: "--copy-profile /tmp/src --keep-me --copy-profile=/tmp/b" },
+  });
+  const sent = fs.readFileSync(calls, "utf8").split("\n").filter((l) => l.includes("--prompt")).join("\n");
+  check("stale --copy-profile is not passed to oracle", r.code === 0 && !sent.includes("copy-profile"), sent);
+  check("other CONFER_ORACLE_ARGS pass through", sent.includes("--keep-me"), sent);
+  check("dropping --copy-profile is reported", r.stderr.includes("ignoring --copy-profile"), r.stderr);
+}
+
+// 1f3. A failed round keeps the provider's own error text in the transcript and on stderr.
+{
+  const home = freshHome();
+  const r = await confer(["open", "oracle", "-t", "boom", "q"], { home, env: { FAKE_ORACLE_MODE: "fail" } });
+  check("failure transcript keeps provider stderr", tx(home, "boom").includes("oracle boom"), tx(home, "boom"));
+  check("failure message keeps provider stderr", r.code !== 0 && r.stderr.includes("oracle boom"), r.stderr);
+}
+
 // 1g. Doctor only exercises Oracle live when the provider is named explicitly.
 {
   const home = freshHome();
