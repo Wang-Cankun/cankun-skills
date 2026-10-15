@@ -35,7 +35,7 @@ After exploration or execution, whether yours, a subagent's or a crew's, the use
 1. **Bottom line**: what is now true that was not known when the work started.
 2. **What changed**: the premises, plans or judgments this overturns or confirms, measured against the brief the work ran from.
 3. **Evidence, inference, confidence**: verified facts with where to check them, your inferences, and your confidence, kept visibly apart.
-4. **Decisions**: the one to three choices that are the user's, each with options and a recommendation, or "none".
+4. **Decisions**: the choices that are the user's, each with options and a recommendation, or "none".
 5. **Defaults taken**: choices made on the user's behalf that they may override.
 
 Cut what would not change the user's next decision and link to detail instead. Send it at a decision point or the finish line, not after every step. The debrief works when the user can decide without a follow-up question.

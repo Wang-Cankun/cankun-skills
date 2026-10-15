@@ -131,11 +131,9 @@ stop fitting the coordinator's available attention and context.
    (roles keep scratch files in a subdirectory), a role is `blocked`, or
    every role has been idle for 30 minutes. Re-arm it after handling each event. Read a pane
    only to diagnose a stall. Done when every unit is accepted and integrated, or escalated.
-5. **Debrief the user** only at an escalation and at the finish line, never as per-unit progress
-   reports: one message in the format of `common-ground`'s "Hand the understanding back" (bottom
-   line; what changed against the brief; evidence, inference and confidence apart; the user's
-   decisions; defaults taken), linking the card and files for detail. Done when the user can
-   decide without a follow-up question.
+5. **Debrief the user** only at an escalation and at the finish line, using
+   [common-ground's "Hand the understanding back"](../common-ground/SKILL.md#hand-the-understanding-back).
+   Link the card and unit files for detail. Done when the user can decide from that message.
 6. **Wind down.** Tell each role there is no further work and ask for a last handoff with a
    Lessons section. Close the panes and worktrees this run created once their work is
    integrated or recorded; never close panes the run did not create. Done when the card records
