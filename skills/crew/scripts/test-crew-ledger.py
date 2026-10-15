@@ -51,6 +51,8 @@ class LedgerTest(unittest.TestCase):
             dict(type="assistant", timestamp=t(4), message=dict(id="fake", model="<synthetic>",
                  usage=dict(input_tokens=0, output_tokens=0))),
             claude("e", 10, 1, [dict(type="tool_use", name="Write", input=dict(file_path="later"))]),
+            dict(type="api-request-blob", message=dict(content=[dict(type="tool_use", name="Write",
+                 input=dict(file_path="replayed-later"))])),
         ])
         os.utime(parent_log, (1, 1))
         self.log('.claude/projects/project/c1/subagents/workflows/w/agent-child.jsonl', [

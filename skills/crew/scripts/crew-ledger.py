@@ -122,7 +122,7 @@ def parse_log(tool, path, session, warnings, until):
             )) and not event.get("isMeta"):
                 turn += 1
             for block in content if isinstance(content, list) else []:
-                if isinstance(block, dict) and block.get("type") == "tool_use":
+                if kind == "assistant" and isinstance(block, dict) and block.get("type") == "tool_use":
                     if mutates(block.get("name", ""), block.get("input", {})):
                         productive.add(turn)
             usage = message.get("usage") if kind == "assistant" else None
