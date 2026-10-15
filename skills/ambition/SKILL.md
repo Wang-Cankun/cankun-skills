@@ -8,7 +8,7 @@ description: "Offer more ambitious versions of a task that is clear but may be a
 
 # Ambition
 
-Adapted from Felix Rieseberg's ["How to be more ambitious: a tutorial for humans with models"](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/).
+Inspired by [Felix Rieseberg's discussion of using models for more ambitious work](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/).
 
 Ambition here is about the target and the depth of evidence, not the size of the build. A more
 ambitious version still takes the simplest mechanism that meets it.
@@ -17,8 +17,8 @@ ambitious version still takes the simplest mechanism that meets it.
 
 1. **State the task as given** and the version that would be done by default. Done when the
    default is concrete enough to compare against.
-2. **Turn the noun into a verb.** Rewrite the deliverable as what it must do to whom: a quarterly
-   review becomes getting busy people to believe a cause-and-effect story. Done when the sentence
+2. **Describe the intended change.** Rewrite the deliverable as what it must do to whom: an incident
+   report becomes helping an operations team choose a prevention measure. Done when the sentence
    names the person, the change in them (believe, decide, understand, reproduce), and the original
    format is no longer the only answer.
 3. **Build the versions** that differ materially from the default; skip any that would not:
@@ -56,15 +56,16 @@ ambitious version still takes the simplest mechanism that meets it.
 
 ## Carry it forward
 
-Hand the chosen version to [common-ground](../common-ground/SKILL.md) as the task to align on,
-or straight to execution when the user says so. This skill proposes; it does not start the larger
-version without the user's choice.
+Before implementation, settle the chosen outcome, the behavior or evidence that marks completion,
+and any unresolved access or constraint. Use decisions already settled in the conversation and
+proceed within existing authorization once the choice is clear. Proposing a larger version does
+not authorize starting it.
 
-## Use a different skill when
+## Scope
 
-- The purpose itself is unclear, or the finish line needs agreeing: `common-ground`. Ambition
-  starts from a task that is already clear.
-- The version is chosen and the question is who runs it in Herdr panes: `crew`.
-- One judgement needs a second model's opinion: `confer`.
-- The work is writing or revising a skill: the skill-authoring skill. Ambition can still pick
-  which version of that skill is worth building.
+- If the purpose itself is unclear, settle that first. Ambition compares versions of a clear task.
+- Once the version is chosen, staffing and execution are separate work; reopen the target when
+  new evidence changes its value or feasibility.
+- If only an independent opinion is needed, seek that opinion within the existing scope.
+- For specialized artifacts, ambition can choose the target; authoring and validation still
+  follow the artifact's requirements.
