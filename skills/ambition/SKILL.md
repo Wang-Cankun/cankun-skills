@@ -2,100 +2,81 @@
 name: ambition
 metadata:
   group: thinking
-  summary: Rewrite a clear task into one more ambitious assignment, combining the altitude, depth and range that fit, with access needs and evidence of success.
-description: "Rewrite a clear task into one more ambitious assignment using every applicable lens: altitude, depth and range. Use when a task may be aimed too low, when the user asks to think bigger or go deeper, or before committing to substantial work."
+  summary: Rethink a clear task through speed, altitude, depth and range, and recommend the version worth doing.
+description: "Rethink a clear task through four kinds of ambition (speed, altitude, depth, range) and recommend the version worth doing. Use when a task may be aimed too low, when the user asks to think bigger or go deeper, or before committing to substantial work."
 ---
 
 # Ambition
 
-Inspired by [Felix Rieseberg's discussion of using models for more ambitious work](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/).
+Based on Felix Rieseberg's [How to be more ambitious: a tutorial for humans with models](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/).
+It sorts ambition into four kinds:
 
-Start with a clear task; settle its purpose first if needed. Use the lenses below to build one
-rewritten assignment. Apply every lens that improves the task, and stack useful techniques
-within each. Preserve the user's purpose and constraints.
+- **Speed**: the same work in less time.
+- **Altitude**: aim at the outcome beyond the task.
+- **Depth**: do the task the way a field-leading expert would, down to the raw data and tools.
+- **Range**: draw on fields the task does not obviously need.
 
-## Speed
+They are lenses on one task, not a menu: the recommendation combines whichever earn their place.
 
-Briefly state what completing the original task faster would produce. Use that as a reference
-for explaining what the rewrite adds; speed needs no separate creative treatment or proposal.
+## Think it through
 
-## Altitude
+Start from a task whose purpose is clear; if it is not, settle the purpose first. Write the
+reply as a short argument applied to this task, in this order.
 
-Altitude fits work aimed at an outcome, especially a deliverable used in a meeting or decision.
-It is less useful when the creative artifact itself is the goal. An abstract wish such as
-"grow revenue" still needs an actionable objective.
+1. **Turn the noun into a verb.** The deliverable is a noun: a deck, a pipeline, release notes.
+   Say what it must do, to whom: a quarterly review is getting busy people to believe a
+   cause-and-effect story and decide under uncertainty. Done when the sentence names the person
+   and the change in them, and the original format is no longer the only answer. When the verb
+   shows the real problem is elsewhere, open the reply with that reframe in one sentence.
+2. **Speed as the reference.** One line: what doing the task as given, faster, would produce,
+   and what it leaves unsolved. The other three lenses are measured against it.
+3. **Altitude, depth, range.** A short paragraph each, concrete to this task: name the data,
+   tool, field or step. When a lens adds nothing worth its cost, say why in one line.
+   - **Altitude.** Ask what should happen after the deliverable, then what that serves. Climb
+     to an outcome the agent can act on and check. It fits work headed for a meeting or a
+     decision, and fits creative work less. A recurring task can become a standing
+     responsibility once the agent can observe the problem and verify its own fixes.
+   - **Depth.** Say what a top practitioner would do here that the task does not ask for: the
+     rawest material they would start from, the methods and instruments they would use (new
+     vocabulary is not a new method), the belief they would try to reproduce from raw data, and
+     what other than the model would show the result is right. A demanding target is fair;
+     treat difficulty as a reason to keep going.
+   - **Range.** From the verb, find the fields that do that action well, beyond the obvious one.
+     For each, name what its people would actually do here (a forensic accountant traces each
+     number to its record; an editor cuts what does not change the decision), including one
+     field that attacks the result. Ask for their work, not their voices.
+4. **Recommend one version.** Combine the lenses that earned their place and say why the result
+   beats the reference. Prefer the smallest version that captures the gain, with cheap,
+   reversible steps first. If a bigger version is tempting but premature, name it and the
+   evidence that would justify it later. Name the data and tool access it needs that is not
+   already at hand.
+5. **Say how you will know.** Match the check to the stakes: one line on what the user will see
+   for a light task; for work where a wrong result is costly, a first proof point, what would
+   falsify the version, and an outside judge, ideally a check the agent can run itself.
 
-Ask what the deliverable enables, then what that next step serves. Climb toward an outcome the
-agent can act on and verify. The rungs build on one another:
-
-- explain the findings and recommend action alongside the requested artifact;
-- identify the decisions those findings call for, with the case for and against possible actions;
-- design a better way to achieve the underlying purpose, check it against past records, and
-  trial it beside the existing process before proposing replacement.
-
-For recurring requests, consider an ongoing responsibility, such as maintaining an app's
-reliability, with the access needed to observe problems and verify fixes.
-
-## Depth
-
-Depth fits an assignment whose value comes from exceptional execution. Work further into its
-foundations, with a standard high enough to teach a leading practitioner something:
-
-- Use professional instruments: name the methods, tools and least-processed source material
-  an expert would actually use. A change of vocabulary does not improve the method.
-- Set a demanding concrete target beyond the initial request; treat apparent difficulty as a
-  reason to investigate how to reach it.
-- Reconstruct assumptions from source data and actively seek contradictory evidence.
-- Extend that investigation into discovery: look for an unrecognized pattern, then test its
-  predictions on observations excluded from developing it.
-- Choose an independent judge, preferably an executable check that gives prompt feedback.
-
-## Range
-
-Range fits work where another discipline can improve the result. Describe the actions and
-beliefs the artifact should enable, for whom and under which constraints. Use those verbs to
-find useful disciplines beyond the obvious one. Name each discipline's method and contribution,
-including an adversarial examination of the result. Specify real work, such as tracing numerical
-claims to original records, rather than asking for a performance of an expert persona. Separate
-specialists can do this work when the execution environment supports them.
-
-## Deliver one rewritten task
-
-Give a short line for each lens: speed as the reference, and why altitude, depth and range are
-each used or skipped. Combine all applicable lenses into one prompt the user can approve, cut
-or edit. The prompt should name the work to do, not merely describe how ambitious it sounds.
-If no lens adds value, keep the original scope and explain why.
-
-For every rewrite, specify the computer access needed to install software and reach relevant
-data. Name the sources, tools and reproduction environments concretely, and distinguish
-available access from access still needed. State what observable evidence would demonstrate
-success, including the independent checks the proposed work will use.
-
-End with the proposal for the user's approval. Proposing the rewritten task grants no permission
-to begin it; wait for the user to approve the revised scope before execution.
+End by offering the cheapest first step that tests the recommendation, and wait for the user's
+yes before starting.
 
 ## Example
 
 Task: write release notes for version 2.4 of a library.
 
-- **Speed reference:** drafting from merged pull-request titles would produce notes quickly.
-- **Altitude used:** users need an upgrade decision and migration steps from those notes.
-- **Depth used:** diffs and executable comparisons can reveal changes that titles miss.
-- **Range used:** users must decide whether to upgrade and migrate under time pressure →
-  support engineering maps issues to affected APIs; software testing tries to break the
-  migration guide with adversarial trials.
-
-**Rewritten task:** Prepare the 2.4 release notes so users can decide whether to upgrade and
-carry out the migration. Inspect the diffs, map relevant support issues to affected usage, and
-compare the previous release with 2.4 on representative sample projects. Attempt migrations
-that challenge the proposed guidance. Use the results to explain compatibility, required edits
-and remaining uncertainties, with links from each claim to its source or reproduction.
-
-**Access needed:** a computer with repository and issue access, both library versions, sample
-projects, and permission to install their dependencies in an isolated test environment. Confirm
-which of these are available before executing the approved task.
-
-**Success evidence:** saved comparison results demonstrate the compatibility claims, the sample
-migrations pass with the documented edits, and unresolved failures are visible in the notes.
-
-**Approval:** Ask the user to approve, trim or edit this combined task before starting.
+> **Reframe:** the notes are for people deciding whether to upgrade, so the risk lies in
+> breaking changes that the PR titles hide.
+>
+> **Verb:** let users decide in a few minutes whether to upgrade, and migrate without surprises.
+>
+> **Speed:** a draft from merged PR titles in minutes; vague titles hide breaking changes.
+>
+> **Altitude, deferred:** a codemod that performs the migration. Worth it only if the trial
+> migrations below repeat the same mechanical edit across projects.
+>
+> **Depth:** diff the public API between 2.3 and 2.4 instead of reading titles, and run two
+> sample projects' test suites against 2.4.
+>
+> **Range:** a support engineer maps open issues to the changed APIs; a tester follows the
+> migration guide literally on the sample projects and records where it breaks.
+>
+> **Recommendation:** depth and range together: notes built from the API diff, with a
+> migration guide proven on the two samples. **Check:** both samples upgrade by following the
+> notes alone. **First step:** the API diff, read-only and minutes long. Start there?
