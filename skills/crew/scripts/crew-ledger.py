@@ -324,8 +324,9 @@ def markdown(report):
                   f'{row["idle_share_estimate"]:.1%}' if row["idle_share_estimate"] is not None else "n/a"]
         print("| " + " | ".join(str(v) if v is not None else "n/a" for v in values) + " |")
     total = report["total"]
+    per_unit = total["equivalent_per_accepted_unit_estimate"]
     print(f'\nWindow [since, until): {report["window"]}')
-    print(f'\nAccepted units: {total["accepted_units"]}; equivalent per accepted unit (estimate): {total["equivalent_per_accepted_unit_estimate"] or "n/a"}. Review timestamps use current file mtimes; latest verdict per unit wins.')
+    print(f'\nAccepted units: {total["accepted_units"]}; equivalent per accepted unit (estimate): {per_unit if per_unit is not None else "n/a"}. Review timestamps use current file mtimes; latest verdict per unit wins.')
     print("\n" + report["equivalent_definition"] + "\n\n" + report["context_definition"])
     print("\nIdle definition: " + report["idle_definition"])
     for source in report["top_idle_sources"]:
