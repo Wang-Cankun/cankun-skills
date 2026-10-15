@@ -7,7 +7,7 @@ metadata:
     Resumable cross-model consultation: GPT-6 Pro through Oracle by default,
     Claude or Codex directly, and Gemini 3.8 Flash or GLM 5.3 through Pi,
     with saved preferences, per-round provenance, and concurrency-safe state.
-description: "Consult another model for an independent opinion or review, and resume prior consultations. Use when the user requests a second model or continued peer discussion."
+description: "Consult another model (GPT Pro, Claude, Codex, Gemini or GLM) for an independent opinion or review, and resume earlier consultation threads. Use when the user asks for a second model's view or to continue a peer discussion; not when another model should do the work itself."
 ---
 
 # Confer — cross-model consultation with resumable threads
@@ -56,6 +56,8 @@ Adding a provider, CLI/session mechanics, and known version caveats: `references
 
 ## Use a different skill when
 
-- A peer should work on the task, not only advise (edit, run, review over many rounds in a
-  Herdr pane): `crew`, which calls confer for its GPT Pro consultant role.
-- The question is which version of a task is worth doing: `ambition`.
+- Another model should do the work rather than advise (edit, run, or review over many rounds):
+  a persistent agent setup such as `crew`, which uses confer for its one-off GPT Pro consultant,
+  or GPT stages inside a workflow such as `gpt-workflow`.
+- The question is which version of a task is worth doing: `ambition`. A peer's opinion on one
+  of its versions is still a confer round.
