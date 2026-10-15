@@ -2,86 +2,99 @@
 name: ambition
 metadata:
   group: thinking
-  summary: Propose more ambitious versions of a clear task (altitude, depth, range) against the speed baseline, and recommend one.
-description: "Propose more ambitious versions of a clear task (altitude, depth, range) against the speed baseline, and recommend one. Use when a clear task may be aimed too low, when the user asks to think bigger or go deeper, or before committing to a plan for substantial work."
+  summary: Rewrite a clear task into one more ambitious assignment, combining the altitude, depth and range that fit, with access needs and evidence of success.
+description: "Rewrite a clear task into one more ambitious assignment using every applicable lens: altitude, depth and range. Use when a task may be aimed too low, when the user asks to think bigger or go deeper, or before committing to substantial work."
 ---
 
 # Ambition
 
 Inspired by [Felix Rieseberg's discussion of using models for more ambitious work](https://felixrieseberg.com/how-to-be-more-ambitious-a-tutorial-for-humans-with-models/).
 
-Start with a clear task; if its purpose is unclear, settle that first. Compare the kinds below
-where they change the work. They can combine; they are not a quota of versions to produce. Each
-section describes what a proposed version would ask for.
+Start with a clear task; settle its purpose first if needed. Use the lenses below to build one
+rewritten assignment. Apply every lens that improves the task, and stack useful techniques
+within each. Preserve the user's purpose and constraints.
 
 ## Speed
 
-The familiar task done faster: the baseline every other version must beat.
+Briefly state what completing the original task faster would produce. Use that as a reference
+for explaining what the rewrite adds; speed needs no separate creative treatment or proposal.
 
 ## Altitude
 
-Altitude fits outcome-driven work and suits creative work poorly. A tell: the deliverable will be
-discussed in a meeting or used for a decision. An open-ended wish ("grow revenue") is not yet an
-objective anyone can act on.
+Altitude fits work aimed at an outcome, especially a deliverable used in a meeting or decision.
+It is less useful when the creative artifact itself is the goal. An abstract wish such as
+"grow revenue" still needs an actionable objective.
 
-Ask what should happen after the deliverable, and what that in turn serves. Climb one rung at a
-time, and stop at the highest rung where the agent can still act and verify the result:
+Ask what the deliverable enables, then what that next step serves. Climb toward an outcome the
+agent can act on and verify. The rungs build on one another:
 
-- the deliverable together with the explanation and recommendation it implies;
-- the decisions it feeds: the most pressing ones, each with options argued for and against;
-- the purpose the deliverable exists for: a better mechanism than the deliverable itself, tested
-  against the user's own history and run alongside the current process before it replaces it.
+- explain the findings and recommend action alongside the requested artifact;
+- identify the decisions those findings call for, with the case for and against possible actions;
+- design a better way to achieve the underlying purpose, check it against past records, and
+  trial it beside the existing process before proposing replacement.
 
-When the same request keeps coming back, propose a standing responsibility the agent owns
-("keep X healthy") in place of one task per occurrence.
+For recurring requests, consider an ongoing responsibility, such as maintaining an app's
+reliability, with the access needed to observe problems and verify fixes.
 
 ## Depth
 
-Use depth when the task should be done exceptionally well. Go deeper into the same assignment
-rather than making it bigger, and set the bar where the field's best practitioners would learn
-something from the result:
+Depth fits an assignment whose value comes from exceptional execution. Work further into its
+foundations, with a standard high enough to teach a leading practitioner something:
 
-- Instruments: the tools, methods and least-processed inputs a leading practitioner would use.
-  Switching to expert vocabulary is not switching method.
-- An unreasonable goal, far past what was asked, stated as reasonable. When the work looks
-  impossible, the version says it is solvable and the agent continues.
-- Challenge assumptions: rebuild the working beliefs behind the task from the underlying data,
-  and look for evidence against them.
-- New knowledge: once inside that data, look for what nobody has noticed, and show that the
-  finding predicts data held out from building it.
-- An outside judge, ideally a check the agent can run for fast feedback, so the producing model
-  never grades its own work.
+- Use professional instruments: name the methods, tools and least-processed source material
+  an expert would actually use. A change of vocabulary does not improve the method.
+- Set a demanding concrete target beyond the initial request; treat apparent difficulty as a
+  reason to investigate how to reach it.
+- Reconstruct assumptions from source data and actively seek contradictory evidence.
+- Extend that investigation into discovery: look for an unrecognized pattern, then test its
+  predictions on observations excluded from developing it.
+- Choose an independent judge, preferably an executable check that gives prompt feedback.
 
 ## Range
 
-Turn nouns into verbs: say what the deliverable must get which people to believe or do, and under
-what constraints. Use those verbs to pick fields beyond the task's own, more of them than would
-once have been worth the cost. For each specialty, name the method it brings and what it adds,
-and include a red team that attacks the result. Each specialty does its actual work (a
-fact-checker traces every figure to a source) instead of role-play. Where the agent can run
-subagents, give each specialty its own.
+Range fits work where another discipline can improve the result. Describe the actions and
+beliefs the artifact should enable, for whom and under which constraints. Use those verbs to
+find useful disciplines beyond the obvious one. Name each discipline's method and contribution,
+including an adversarial examination of the result. Specify real work, such as tracing numerical
+claims to original records, rather than asking for a performance of an expert persona. Separate
+specialists can do this work when the execution environment supports them.
+
+## Deliver one rewritten task
+
+Give a short line for each lens: speed as the reference, and why altitude, depth and range are
+each used or skipped. Combine all applicable lenses into one prompt the user can approve, cut
+or edit. The prompt should name the work to do, not merely describe how ambitious it sounds.
+If no lens adds value, keep the original scope and explain why.
+
+For every rewrite, specify the computer access needed to install software and reach relevant
+data. Name the sources, tools and reproduction environments concretely, and distinguish
+available access from access still needed. State what observable evidence would demonstrate
+success, including the independent checks the proposed work will use.
+
+End with the proposal for the user's approval. Proposing the rewritten task grants no permission
+to begin it; wait for the user to approve the revised scope before execution.
 
 ## Example
 
 Task: write release notes for version 2.4 of a library.
 
-- **Speed:** draft the notes from the merged pull-request titles.
-- **Altitude:** tell each user whether to upgrade and what they must change; one rung up, check
-  every pull request for an upgrade note so release notes assemble themselves.
-- **Depth:** classify each change from the diff rather than its title, run the old and new
-  versions against sample projects, and let that run judge which changes break.
-- **Range:** the verb is "let each user upgrade safely": add a support engineer who reads open
-  issues for affected users, and a red team that upgrades a real project and reports what failed.
+- **Speed reference:** drafting from merged pull-request titles would produce notes quickly.
+- **Altitude used:** users need an upgrade decision and migration steps from those notes.
+- **Depth used:** diffs and executable comparisons can reveal changes that titles miss.
+- **Range used:** support analysis and adversarial migration trials expose affected users and
+  failures that a release summary may overlook.
 
-## Make the choice usable
+**Rewritten task:** Prepare the 2.4 release notes so users can decide whether to upgrade and
+carry out the migration. Inspect the diffs, map relevant support issues to affected usage, and
+compare the previous release with 2.4 on representative sample projects. Attempt migrations
+that challenge the proposed guidance. Use the results to explain compatibility, required edits
+and remaining uncertainties, with links from each claim to its source or reproduction.
 
-Recommend a version, including speed if it best serves the user, and explain what changes in the
-work. The comparison is ready when the user can choose and the recommendation includes a rewritten
-task, the access it needs and evidence of success.
+**Access needed:** a computer with repository and issue access, both library versions, sample
+projects, and permission to install their dependencies in an isolated test environment. Confirm
+which of these are available before executing the approved task.
 
-Versions beyond speed usually need a computer where the agent can install software and reach the
-relevant data. For the recommended version, list that access concretely: data sources, tools to
-install, and the machines or environments to reproduce and verify on.
+**Success evidence:** saved comparison results demonstrate the compatibility claims, the sample
+migrations pass with the documented edits, and unresolved failures are visible in the notes.
 
-Proposing a version does not authorize starting it. Carry the chosen task into execution within
-existing authorization.
+**Approval:** Ask the user to approve, trim or edit this combined task before starting.
