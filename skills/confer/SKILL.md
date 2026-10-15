@@ -53,3 +53,9 @@ A round can take minutes. When you expect a long consultation and have other wor
 - A peer's agreement is not verification. Treat "the other model also thinks so" as one signal, not proof; a peer that refutes you is the more valuable outcome.
 
 Adding a provider, CLI/session mechanics, and known version caveats: `references/providers.md`.
+
+## Use a different skill when
+
+- A peer should work on the task, not only advise (edit, run, review over many rounds in a
+  Herdr pane): `crew`, which calls confer for its GPT Pro consultant role.
+- The question is which version of a task is worth doing: `ambition`.

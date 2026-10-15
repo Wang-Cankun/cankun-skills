@@ -102,3 +102,11 @@ five panes; past that, split the run.
    Lessons section. Close the panes and worktrees this run created once their work is
    integrated or recorded; never close panes the run did not create. Done when the card records
    the outcome and nothing the run started is left running.
+
+## Use a different skill when
+
+- Which version of the work to do is still open: `ambition`; what it is for and where it ends:
+  `common-ground`. Crew starts from a brief.
+- One opinion from another model, with no pane that works on the task: `confer`.
+- GPT stages inside a Claude Code Workflow whose results come back into this session:
+  `gpt-workflow`. A crew lane lead may run it on its own queue.
