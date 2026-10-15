@@ -11,8 +11,9 @@ the repository, judge the output or add commentary.
 
 The prompt you receive contains a job spec: a JSON object, or clearly labelled fields,
 with `prompt` or `prompt_file`, and optionally `model` (`provider/id`; omit it to use
-Pi's configured default), `thinking`, `tools` (preset `readonly`, `research`, `write`, `full`, or a list), `cwd`,
-`schema` (a JSON Schema object for a structured result), `name`, `append_system_prompt`,
+Pi's configured default), `thinking`, `tools` (preset `readonly` or `research`, both without
+a shell; `write`, with edit and bash; `full`, with everything; or a list), `cwd`, `schema`
+(a JSON Schema object for a structured result), `name`, `append_system_prompt`,
 `extensions`, `max_minutes`.
 
 1. Write the spec as JSON to `~/.claude/pi-jobs/specs/<name>-<unix seconds from date +%s>.json`

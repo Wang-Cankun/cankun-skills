@@ -37,6 +37,10 @@ Things that went wrong in real GPT workflow runs, each with what worked instead.
   prompt requires; "a test for each fix" and long must-fix lists grew one diff by half.
 - **Measurement code fails silently**: a wrong count gives a wrong number, not an error.
 - **Before building a runner or harness, look for one in the repository.**
+- **A tool missing from the preset is invisible to the job.** An audit sent with a preset that
+  had no shell could not run `sqlite3` or `shasum`: five of six jobs stopped blocked and wrote
+  nothing, and the sixth left every hash "unverified". Give any job that must run a command a
+  preset with bash (`write` or `full`).
 - **Records**: a Herdr-pane worker reports no cost, and files in a session scratchpad have been
   deleted mid-session; keep worker output in the worktree's `.work/`. Text for `gh` goes
   through `--body-file`; an inline `--body` with backticks runs the commands.
