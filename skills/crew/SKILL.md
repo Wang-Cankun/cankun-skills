@@ -64,8 +64,9 @@ stop fitting the coordinator's available attention and context.
      change, a reviewer and executor who still disagree at the round limit, a spent budget;
    - boundaries: who may commit, push, merge, post, restart or deploy;
    - budget and stop condition;
-   - current state: integration branch and head, each role's current unit, latest handoff and
-     review paths, pending actions, and the coordinator reset interval from step 4.
+   - current state: integration branch and head, each role's current unit, each unit's status and
+     latest processed handoff and review paths, pending actions, active coordinator pane and session,
+     watcher owner, and the coordinator handover interval from step 4.
 
    Show the card to the user in one message and start when they agree, unless they already
    said to go. Done when someone reading only the card knows who does what and when the user
@@ -108,17 +109,23 @@ stop fitting the coordinator's available attention and context.
    If startup is blocked, inspect `herdr agent get <role-name>` and
    `herdr agent read <role-name> --source recent-unwrapped --lines 120` before handling the
    prompt under the user's trust and permission choices. Assign the first unit using step 4's
-   context reset, then prompt the ready agent with
+   context rule, then prompt the ready agent with
    `herdr agent prompt <role-name> "Read <card> and do <unit> in your role."`.
    Label its tab with `herdr tab rename <tab-id> "<run>"`. Done when every role is `working`
    or has acknowledged its role.
 4. **Route each unit.**
-   Before an executor or reviewer starts a unit, the coordinator sends `/clear` for Claude Code,
-   or `/new` for Codex and Pi, as a separate prompt. Wait until the role is ready, then send the
-   unit prompt with the card and file paths. Apply this reset to the first unit too. Keep the
-   same context for review and fix rounds on that unit. Handoff and review files carry state
-   between units; the card records each role's current unit so a resumed coordinator knows
-   whether a reset is due.
+   Start each executor and reviewer on a unit in a fresh context. A newly started agent already
+   has one. When a role changes units, send `/clear` for Claude Code or `/new` for Codex and Pi
+   as a separate prompt. Wait for the reset to finish and use `herdr agent get <role-name>` to
+   confirm that the role has returned to `idle` before sending the unit prompt. Codex drops a
+   prompt sent while it still processes `/new`; a successful send does not confirm reset completion.
+   Keep context for consecutive review and fix rounds on the same unit. If a shared role returns
+   to an earlier unit, reset again. Every round-2-or-later prompt names the earlier handoff and
+   review paths, so correctness does not depend on retained context. The card records each role's
+   current unit; handoff and review files carry state.
+
+   Start each handoff and review with a routing summary: unit, branch, commit range, check status,
+   and paths to details. Put the review verdict first.
 
    1. The executor rebases its branch onto the card's current integration base and runs the
       project's checks in its worktree. It writes `<run dir>/handoff-<unit>.md`: branch, checked
@@ -126,14 +133,17 @@ stop fitting the coordinator's available attention and context.
    2. The coordinator prompts the reviewer with the handoff path and the commit range, after
       the context reset if the reviewer starts a different unit.
    3. The reviewer writes `<run dir>/review-<unit>.md`: verdict `accept` or `fix`, findings,
-      and the checks it ran. Put the verdict first. Start each handoff and review with a routing
-      summary: unit, branch, commit range, check status, and paths to details.
+      and the checks it ran.
    4. On `fix`, the coordinator sends the review path to the executor. The executor fixes and
       writes a new handoff. Use new filenames for subsequent rounds, such as `handoff-<unit>-r2.md`
       and `review-<unit>-r2.md`. Repeat within the round limit, then escalate.
    5. On `accept`, the coordinator confirms that the checked base is still the integration head,
-      then merges within the card's boundaries. If the base has advanced, return the unit to its
-      executor to rebase, rerun checks, and submit the new commit range for review before merging.
+      then merges within the card's boundaries, by fast-forward or merge commit as allowed.
+      If the base has advanced, return the unit to its executor to rebase and rerun checks.
+      The executor records `git range-diff <old-base>..<old-head> <new-base>..<new-head>` in its
+      handoff. Keep acceptance if every entry is `=` and the executor resolved no conflicts.
+      Request a new review only if the reviewed patch changed or the executor resolved conflicts.
+      This integration review does not count against the fix-round limit.
       Send merge conflicts or post-merge failures to an executor or a one-shot subagent, with
       the failing command or output path. That worker resolves and checks the result; changes
       return through review. The coordinator runs no test suite in its own context. Record the
@@ -142,11 +152,24 @@ stop fitting the coordinator's available attention and context.
    Keep the coordinator's context bounded. Read only routing summaries, verdict lines, and paths;
    send detailed findings, diffs, and check output to the assigned worker or reviewer by path.
    Count each assignment, received handoff or review, and stall diagnosis as a routing event.
-   Update the card's current state and event count after each event. After eight events since
-   its last reset (an initial interval estimate, recorded in the card), the coordinator checkpoints
-   the card and starts a fresh coordinator context before routing another event. Use `/clear`
-   for Claude Code or `/new` for Codex and Pi, then resume from the card and reset the count.
-   Leave workers and the watcher running during this handover.
+   Update the card's current state and event count after each event. Keep log entries to one
+   line per event. After eight events since taking over (an initial interval estimate, recorded
+   in the card), hand over before routing another event:
+
+   1. Checkpoint the current state in the card. Append older log entries to `<run dir>/events.md`,
+      leaving a path and the latest event in the card.
+   2. Start a fresh coordinator in a new pane using step 3's split and agent-start commands,
+      with the current coordinator's model, native arguments, permission mode, and integration cwd.
+      Wait for readiness and record the new pane and session in the card.
+   3. Stop the old coordinator's watcher job if it is still running. Transfer the active coordinator
+      and watcher ownership in the card, then send the new agent an explicit prompt:
+      `Read <card> and resume as coordinator. Arm the watcher in your session, reconcile unhandled
+      handoff and review files against the card, then continue routing.`
+   4. Stop routing in the old session after delivering the resume prompt. Leave workers running
+      and preserve the user's conversation in the old session. The new coordinator owns subsequent
+      watcher re-arming and resets the event count. The file reconciliation covers events during
+      the handover gap. If prompt delivery fails, restore the old ownership in the card and re-arm
+      the old watcher.
 
    Messages carry file paths, not pasted reports. Peers may talk directly
    (`herdr agent prompt <peer> ...`) to settle a question; whoever ends the exchange writes the
