@@ -125,6 +125,48 @@ class LedgerTest(unittest.TestCase):
         self.assertEqual(data['total']['calls'], 1)
         self.assertTrue(any('malformed JSON' in w for w in data['warnings']))
 
+    def test_resumed_claude_history_counts_once_per_role(self):
+        def call(mid, minute, output, content=None):
+            return dict(type='assistant', cwd='/lead', timestamp=f'2026-10-15T10:0{minute}:00Z',
+                        requestId='r' + mid, message=dict(id=mid, model='claude', content=content or [],
+                        usage=dict(input_tokens=10, cache_creation_input_tokens=20,
+                                   cache_read_input_tokens=100, output_tokens=output)))
+        self.log('.claude/projects/project/c1.jsonl', [call('a', 1, 1, [
+            dict(type='tool_use', name='Write', input=dict(file_path='x'))])])
+        self.log('.claude/projects/project/c2.jsonl', [call('a', 2, 4), call('b', 3, 6)])
+        self.roles.write_text('lead claude cwd=/lead\n')
+        args = ['--roles', str(self.roles), '--since', '2026-10-15T10:00:00Z', '--include-calls']
+        data = self.ledger(*args)
+        self.assertEqual(data['total']['calls'], 2)
+        self.assertEqual(data['total']['cache_read'], 200)
+        self.assertEqual(data['total']['output'], 10)
+        self.assertEqual(data['total']['idle_equivalent_estimate'], 40)
+        self.assertEqual(data['roles'][0]['sessions'], ['c1', 'c2'])
+        self.assertTrue(data['calls'][0]['source'].endswith('c2.jsonl'))
+        self.assertEqual(data['warnings'], [])
+        self.roles.write_text('first claude session=c1\nsecond claude session=c2\n')
+        data = self.ledger(*args)
+        self.assertTrue(any('first' in w and 'second' in w and 'shared' in w for w in data['warnings']))
+
+    def test_review_formats_and_missing_latest_verdict(self):
+        self.roles.write_text('lead claude session=c1\n')
+        self.log('.claude/projects/project/c1.jsonl', [dict(type='user', cwd='/lead')])
+        formats = ['**Verdict:** accept', 'Verdict: `accept`', '## Verdict\naccept',
+                   'REVIEW U3 accept', 'Verdict: **accept**', '**Verdict: accept**',
+                   '- 结论：`accept`', '## Verdict\n\n**accept**']
+        for index, text in enumerate(formats):
+            (self.run / f'review-U{index}.md').write_text(text + '\n')
+        first = self.run / 'review-latest.md'
+        first.write_text('Verdict: accept\n')
+        os.utime(first, (1792058400, 1792058400))
+        later = self.run / 'review-latest-r2.md'
+        later.write_text('Stopped before the review was complete.\n')
+        os.utime(later, (1792058500, 1792058500))
+        data = self.ledger('--roles', str(self.roles), '--run-dir', str(self.run))
+        self.assertEqual({r['unit'] for r in data['accepted_reviews']},
+                         {f'U{i}' for i in range(len(formats))})
+        self.assertTrue(any(str(later) in w and 'verdict' in w for w in data['warnings']))
+
     def test_ambiguous_and_overlapping_roles_do_not_double_count(self):
         self.log('.claude/projects/project/c1.jsonl', [dict(type='user', cwd='/lead')])
         self.log('.claude/projects/project/c2.jsonl', [dict(type='user', cwd='/lead')])

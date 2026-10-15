@@ -205,7 +205,7 @@ def summarize(calls):
                 models=sorted({c["model"] for c in calls}))
 
 
-def reviews(run_dir, since, until):
+def reviews(run_dir, since, until, warnings):
     accepted = {}
     if run_dir:
         for path in sorted(run_dir.glob("review-*.md"), key=lambda p: p.stat().st_mtime):
@@ -213,10 +213,17 @@ def reviews(run_dir, since, until):
             if not since <= ts < until:
                 continue
             text = path.read_text()
-            verdict = re.search(r"(?im)^\s*(?:#{1,6}\s+)?(?:[-*]\s*)?\**(?:verdict|结论)\**\s*[:：]\s*\**([^\n]+)", text)
-            if verdict:
-                unit = re.sub(r"-r\d+$", "", path.stem.removeprefix("review-"))
-                accepted[unit] = ("accept" if re.match(r"accept\b", verdict[1], re.I) else "other", str(path))
+            unit = re.sub(r"-r\d+$", "", path.stem.removeprefix("review-"))
+            verdict = re.search(
+                r"(?im)^[ \t]*(?:#{1,6}[ \t]+)?(?:[-*][ \t]*)?[*`]*(?:verdict|结论)"
+                r"[*`]*[ \t]*(?:[:：]|\n)\s*([^\n]+)", text
+            )
+            if not verdict:
+                verdict = re.search(r"(?im)^\s*REVIEW\s+" + re.escape(unit) + r"\s+(accept|fix)\b", text)
+            value = verdict[1].strip(" \t*`") if verdict else ""
+            if not value:
+                warnings.add(f"No recognisable verdict: {path}; latest round is not counted as accepted")
+            accepted[unit] = ("accept" if re.match(r"accept\b", value, re.I) else "other", str(path))
     return [dict(unit=k, review=v[1]) for k, v in sorted(accepted.items()) if v[0] == "accept"]
 
 
@@ -245,6 +252,8 @@ def build_report(args):
     for tool in {r[1] for r in roles}:
         inventory[tool] = [(p, *metadata(tool, p, warnings)) for p in sorted(args.home.glob(patterns[tool]))]
     rows, all_calls, claimed = [], [], set()
+    claude_owners = {}
+    shared_keys = Counter()
     for name, tool, selector in roles:
         mode, sep, value = selector.partition("=")
         if not sep or not value or mode not in ("cwd", "session"):
@@ -271,7 +280,7 @@ def build_report(args):
                 calls, limits = parse_log(tool, source, sid, warnings, until)
                 rate_limits += [r for r in limits if r["timestamp"] and since <= timestamp(r["timestamp"]) < until]
                 for call in calls:
-                    key = (sid, call["key"]) if tool == "claude" else (str(source), call["key"])
+                    key = call["key"] if tool == "claude" else (str(source), call["key"])
                     old = seen.get(key)
                     if old:
                         idle = old["idle"] and call["idle"]
@@ -286,13 +295,20 @@ def build_report(args):
             elif since <= call["time"] < until:
                 call["role"] = name
                 role_calls.append(call)
+                if tool == "claude":
+                    owner = claude_owners.setdefault(call["key"], name)
+                    if owner != name:
+                        shared_keys[(owner, name)] += 1
         row = dict(role=name, tool=tool, selector=selector, sessions=sessions,
                    **summarize(role_calls), rate_limits=sorted(rate_limits, key=lambda r: r["timestamp"])[-1:])
         row["sources"] = [dict(source=p, **summarize([c for c in role_calls if c["source"] == p]))
                           for p in sorted({c["source"] for c in role_calls})]
         rows.append(row)
         all_calls += role_calls
-    accepted = reviews(args.run_dir, since, until)
+    for (first, second), count in shared_keys.items():
+        warnings.add(f"{count} Claude usage keys shared by roles {first} and {second}; "
+                     "per-role and run totals include both; choose disjoint roles")
+    accepted = reviews(args.run_dir, since, until, warnings)
     total = summarize(all_calls)
     total["accepted_units"] = len(accepted)
     total["equivalent_per_accepted_unit_estimate"] = (
