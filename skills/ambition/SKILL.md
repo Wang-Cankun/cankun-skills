@@ -12,6 +12,7 @@ Inspired by [Felix Rieseberg's discussion of using models for more ambitious wor
 
 Start with a clear task; if its purpose is unclear, settle that first. Compare the kinds below
 where they change the work. They can combine; they are not a quota of versions to produce.
+Each section describes a proposed assignment, not work to start during the comparison.
 
 ## Speed
 
@@ -19,28 +20,39 @@ Describe the familiar task completed faster: this is the baseline the other vers
 
 ## Altitude
 
-Pursue the downstream outcome. Use broader evidence to explain changes, prioritize decisions and
-compare responses. Consider an ongoing workflow; test it on historical cases and alongside current practice.
+Specify the result wanted after the current deliverable, then the further purpose that result
+serves. A subsequent discussion or decision meeting is a useful cue that the deliverable is an
+intermediate step.
 
-Name the data, software installation and operating access needed for autonomous investigation and verification.
+Where repeated requests could become sustained responsibility, propose a continuing workflow.
+Historical evaluation or a parallel trial may help assess a replacement; include them when they
+suit the work.
+
+List the data, software installation and operating access the proposed assignment would need
+for independent investigation and verification.
 Altitude fits outcome-driven work better than creative work; an unbounded business wish is not
 an executable objective.
 
 ## Depth
 
-Improve substance without enlarging scope:
+Specify a version that deepens the existing assignment rather than adding more deliverables:
 
-- Specify leading practitioners' instruments, methods and least-processed inputs.
-- Treat a seemingly unreasonable target as achievable; persist beyond the model's initial dismissal.
-- Reconstruct accepted claims from original records, seeking contradictions.
-- Produce a new explanation or predictive signal; test it on withheld observations.
-- Choose an evaluator outside the producing model, preferably a runnable feedback tool.
+- The instruments, techniques and unprocessed source material a leading practitioner would
+  actually use; professional-sounding language alone is not a change of method.
+- A much tougher target than the request, framed as feasible, with an instruction to seek
+  another approach when it initially seems beyond reach.
+- Reproduction of established conclusions from underlying records, with an active search for
+  conflicting evidence.
+- A new account or predictor, with evaluation on data excluded from its development.
+- An independent assessor, preferably a runnable check, whose verdict does not rely on the
+  producing model's assessment.
 
 ## Range
 
-Replace deliverable nouns with actions and recipients. Design a specialist team for those actions,
-including adversarial expertise where useful. Specify each specialty's methods and contribution:
-apply its techniques instead of role-playing its persona. Name any additional software or data.
+Rewrite the deliverable as an action for a recipient. Use that action to find disciplines outside
+the task's usual field. Specify complementary specialties, the methods each would use and what
+each would add, including adversarial examination where useful. Describe actual professional
+operations rather than simulated personalities, and list required software or data.
 
 ## Make the choice usable
 
@@ -49,5 +61,4 @@ work. The comparison is ready when the user can choose and the recommendation in
 task, required access and evidence of success.
 
 Proposing a version does not authorize starting it. Carry the chosen task into execution within
-existing authorization; staffing, independent consultation and artifact-specific authoring remain
-separate work. Use decisions already settled in the conversation.
+existing authorization.
