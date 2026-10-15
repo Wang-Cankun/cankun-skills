@@ -1,7 +1,7 @@
 interface:
   display_name: "Ambition"
-  short_description: "Choose beyond speed: altitude, depth and range"
+  short_description: "More ambitious versions of a clear task: altitude, depth, range"
   default_prompt: "Use $ambition to compare versions of this task and recommend one."
 
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
