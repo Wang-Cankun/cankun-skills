@@ -46,10 +46,14 @@ reply as a short argument applied to this task, in this order.
      the decision), including one field whose trade is finding what is wrong, applied to the
      result itself (a forensic accountant traces each number to its record). Ask for their
      work, not their voices.
-4. **Recommend one version.** Combine the lenses that earned their place and say why the result
-   beats the reference. Adding deliverables without raising what they show is bigger, not more
-   ambitious. Prefer the smallest version that captures the gain. Write it as an assignment
-   people can meet:
+4. **Write the full version, then recommend.** Combine the lenses that earned their place into
+   the full ambitious version and write it out; cutting it is the user's call, so they need to
+   see it. Then recommend the version whose gain is worth its cost now, the full one or a cut
+   of it, say why it beats the reference, and name what a cut leaves out and the evidence that
+   would justify the rest later. When the two are the same, write one. Adding deliverables
+   without raising what they show is bigger, not more ambitious. Put the extra work on the
+   agent: a version that needs hours of the user's time, such as labelling or reviewing, costs
+   more than one the agent can run itself. Write the versions as assignments people can meet:
    - a specific, hard target, with a number where one fits; difficulty is a reason to look for
      the route, not to lower the target;
    - a precedent when one exists: someone who has done the equivalent;
@@ -57,9 +61,6 @@ reply as a short argument applied to this task, in this order.
      small enough to lose;
    - the data and tool access it needs that is not at hand, as a request rather than a reason to
      aim lower.
-
-   If a bigger version is tempting but premature, name it and the evidence that would justify
-   it later.
 5. **Say how you will know, in proportion to the cost of being wrong.** The default judge is
    the user reading a few concrete results: for reversible work, including the user's own
    tools, notes and agent setup, one line on what they will see. Build a check beyond that
@@ -103,9 +104,9 @@ A task others will rely on:
 > **Range:** a support engineer maps open issues to the changed APIs; a tester follows the
 > migration guide literally on the sample projects and records where it breaks.
 >
-> **Altitude, deferred:** a codemod that performs the migration. Worth it only if the trial
-> migrations repeat the same mechanical edit across projects.
+> **Altitude:** a codemod that performs the migration for users.
 >
-> **Recommendation:** depth and range together: notes built from the API diff, with a
-> migration guide proven on the two samples. **Check:** both samples upgrade by following the
+> **Full version:** notes built from the API diff, a migration guide proven on the two samples,
+> and the codemod. **Recommendation:** all but the codemod, which pays off only if the trial
+> migrations repeat the same mechanical edit across projects. **Check:** both samples upgrade by following the
 > notes alone. **First step:** the API diff, read-only and minutes long. Start there?
