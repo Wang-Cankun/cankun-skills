@@ -81,8 +81,9 @@ Task: write release notes for version 2.4 of a library.
 - **Speed reference:** drafting from merged pull-request titles would produce notes quickly.
 - **Altitude used:** users need an upgrade decision and migration steps from those notes.
 - **Depth used:** diffs and executable comparisons can reveal changes that titles miss.
-- **Range used:** support analysis and adversarial migration trials expose affected users and
-  failures that a release summary may overlook.
+- **Range used:** users must decide whether to upgrade and migrate under time pressure →
+  support engineering maps issues to affected APIs; software testing tries to break the
+  migration guide with adversarial trials.
 
 **Rewritten task:** Prepare the 2.4 release notes so users can decide whether to upgrade and
 carry out the migration. Inspect the diffs, map relevant support issues to affected usage, and
