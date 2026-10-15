@@ -127,19 +127,15 @@ stop fitting the coordinator's available attention and context.
    inspect the role before retrying; a failed wait does not prove the prompt was not delivered.
 
    Watch with `scripts/crew-watch.sh <run dir> <role-name>...` in the background: it exits with
-   a Herdr notification when a new file lands in the run directory, a role is `blocked`, or
+   a Herdr notification when a new `handoff-*.md` or `review-*.md` lands in the run directory
+   (roles keep scratch files in a subdirectory), a role is `blocked`, or
    every role has been idle for 30 minutes. Re-arm it after handling each event. Read a pane
    only to diagnose a stall. Done when every unit is accepted and integrated, or escalated.
-5. **Debrief the user** at each escalation and at the finish line, in one message for a reader
-   who was not watching:
-   1. the bottom line: what is now true that was not when the work started;
-   2. what changed against the brief: premises overturned or confirmed;
-   3. evidence, inference and confidence, kept visibly apart, with where to check each fact;
-   4. the decisions that are the user's, each with options and a recommendation, or "none";
-   5. the defaults the crew took that the user may override.
-
-   Cut what would not change the user's next decision; link the card and files for detail.
-   Done when the user can decide without a follow-up question.
+5. **Debrief the user** only at an escalation and at the finish line, never as per-unit progress
+   reports: one message in the format of `common-ground`'s "Hand the understanding back" (bottom
+   line; what changed against the brief; evidence, inference and confidence apart; the user's
+   decisions; defaults taken), linking the card and files for detail. Done when the user can
+   decide without a follow-up question.
 6. **Wind down.** Tell each role there is no further work and ask for a last handoff with a
    Lessons section. Close the panes and worktrees this run created once their work is
    integrated or recorded; never close panes the run did not create. Done when the card records

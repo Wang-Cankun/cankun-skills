@@ -2,8 +2,8 @@
 name: common-ground
 metadata:
   group: thinking
-  summary: Align with the user on what a task is for, then close with a finish-line brief.
-description: "Align with the user on what a task is for before acting, closing with a brief that names the finish line. Use when the user brings a half-formed idea or direction to think through, asks how something should be designed or scoped, says a result misses what they meant, or before you start a long autonomous run."
+  summary: Align with the user on what a task is for, close with a finish-line brief, and hand the understanding back after the work.
+description: "Align with the user on what a task is for before acting, closing with a brief that names the finish line. Use when the user brings a half-formed idea or direction to think through, asks how something should be designed or scoped, says a result misses what they meant, before you start a long autonomous run, or after agents have explored or executed and the user must catch up before deciding."
 ---
 
 # Common Ground
@@ -18,8 +18,6 @@ Take intellectual initiative. Surface assumptions and tacit judgments that affec
 
 Make tacit knowledge discussable. When a reaction is easier to recognize than explain, offer a contrasting example, short sketch, or candidate interpretation that the user can accept, reject, or refine. Invite their own account of what matters. Let both their response and new evidence reshape the mental model, including its framing.
 
-For sustained exploration of a consequential blind spot, use [known-unknowns](../known-unknowns/SKILL.md) and bring the insight back into the shared mental model.
-
 Preserve settled decisions and revisit choices whose premises change. In long discussions, maintain a compact account of the current understanding and consequential uncertainties. Ask the user only for judgments that are theirs to make and whose answer would change the direction. Before asking, check whether earlier work or the record already settles the point. Decide reversible, low-stakes points yourself and state them as defaults the user can override; handle discoverable facts yourself and leave routine methods to execution.
 
 ## Test for fitness for purpose
@@ -29,6 +27,18 @@ Walk through a plausible use of the proposed result, especially its least-unders
 Connect enabling work to the final deliverable. Make the proposed content or behavior concrete enough to assess, including how the recipient would recognize success. Technical checks support particular claims; fitness for purpose also depends on the intended experience and use.
 
 Close when the shared understanding supports a useful next action and remaining uncertainty is resolved, delegated, or explicitly bounded. For exploratory work, agree on the question to investigate and a review point. If a consequential gap blocks progress, name the evidence or judgment needed. Summarize the resulting understanding as a brief that execution can run from as one message: the goal, the finish line (the behavior and the check that shows it), settled decisions, defaults you took, and bounded uncertainties.
+
+## Hand the understanding back
+
+After exploration or execution, whether yours, a subagent's or a crew's, the user rebuilds the shared mental model from one message written for a reader who was not watching:
+
+1. **Bottom line**: what is now true that was not known when the work started.
+2. **What changed**: the premises, plans or judgments this overturns or confirms, measured against the brief the work ran from.
+3. **Evidence, inference, confidence**: verified facts with where to check them, your inferences, and your confidence, kept visibly apart.
+4. **Decisions**: the one to three choices that are the user's, each with options and a recommendation, or "none".
+5. **Defaults taken**: choices made on the user's behalf that they may override.
+
+Cut what would not change the user's next decision and link to detail instead. Send it at a decision point or the finish line, not after every step. The debrief works when the user can decide without a follow-up question.
 
 ## Carry the understanding forward
 

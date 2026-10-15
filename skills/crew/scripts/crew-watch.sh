@@ -1,11 +1,13 @@
 #!/bin/bash
 # Usage: crew-watch.sh <run-dir> <role-name>...
-# Run in the background from the coordinator. Exits, with a Herdr notification, when a new file
-# lands in the run directory, a role is blocked, or every role has sat idle for 30 minutes (a role
+# Run in the background from the coordinator. Exits, with a Herdr notification, when a new
+# handoff-*.md or review-*.md lands in the run directory (other files, such as a reviewer's
+# scratch output, are ignored), a role is blocked, or every role has sat idle for 30 minutes (a role
 # waiting on its own background job looks idle too, so a short idle limit wakes the coordinator
 # for nothing). Exits quietly once the run directory is gone.
 dir=$1; shift
-before=$(ls "$dir" | sort)
+files() { ls "$dir" | grep -E '^(handoff|review)-.*\.md$' | sort; }
+before=$(files)
 idle=0
 status() {
   herdr agent list | python3 -c '
@@ -18,7 +20,7 @@ note() { herdr notification show "$1" --body "$2" --sound "$3" >/dev/null 2>&1; 
 while [ -d "$dir" ]; do
   sleep 30
   [ -d "$dir" ] || exit 0
-  now=$(ls "$dir" | sort)
+  now=$(files)
   if [ "$now" != "$before" ]; then note "Crew file" "$(comm -13 <(echo "$before") <(echo "$now") | tr '\n' ' ')" done; fi
   st=$(status "$@" | tr '\n' ' ')
   case "$st" in *blocked*) note "Crew blocked" "$st" request;; esac
