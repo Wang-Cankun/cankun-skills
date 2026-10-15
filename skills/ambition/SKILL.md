@@ -30,6 +30,7 @@ suit the work.
 
 List the data, software installation and operating access the proposed assignment would need
 for independent investigation and verification.
+
 Altitude fits outcome-driven work better than creative work; an unbounded business wish is not
 an executable objective.
 
