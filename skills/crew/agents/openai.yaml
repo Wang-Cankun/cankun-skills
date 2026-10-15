@@ -1,7 +1,7 @@
 interface:
   display_name: "Crew"
-  short_description: "Coordinator, executors and reviewers in Herdr panes"
-  default_prompt: "Use $crew to run this work with a coordinator, executors and an independent reviewer in Herdr panes."
+  short_description: "Resident agents in Herdr panes: side, table or team"
+  default_prompt: "Use $crew to open resident agents in Herdr panes for this: a side agent, a table of models, or an executor and reviewer."
 
 policy:
   allow_implicit_invocation: false

@@ -56,8 +56,9 @@ Adding a provider, CLI/session mechanics, and known version caveats: `references
 
 ## Use a different skill when
 
-- Another model should do the work rather than advise (edit, run, or review over many rounds):
-  a persistent agent setup such as `crew`, which uses confer for its one-off GPT Pro consultant,
-  or GPT stages inside a workflow such as `gpt-workflow`.
+- The other model should stay resident, holding context that you or other windows return to
+  (a side agent, a table of models discussing over rounds): a pane-based setup such as `crew`.
+- The other model should do delegated work whose result comes back: GPT stages inside a
+  workflow such as `gpt-workflow`.
 - The question is which version of a task is worth doing: `ambition`. A peer's opinion on one
   of its versions is still a confer round.
