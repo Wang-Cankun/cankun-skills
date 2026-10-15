@@ -1,0 +1,7 @@
+interface:
+  display_name: "Crew"
+  short_description: "Coordinator, executors and reviewers in Herdr panes"
+  default_prompt: "Use $crew to run this work with a coordinator, executors and an independent reviewer in Herdr panes."
+
+policy:
+  allow_implicit_invocation: false
