@@ -1,5 +1,6 @@
 ---
 name: crew
+compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1), the agent CLIs used by the chosen roles (Claude Code, Pi, Codex), and python3 for the optional watcher. GPT Pro consultations go through the confer skill.
 metadata:
   group: models
   personal: true
@@ -38,8 +39,7 @@ the installed CLI is the syntax authority. This skill decides who does what.
 - **Reviewer**: GPT by default, in a Codex or Pi pane; from a different model family than the
   executor it reviews, so the judge is outside the producer. Reads the diff and runs the checks
   itself; reads the executor's handoff only for what was claimed, never as evidence. Reports
-  findings and a verdict; does not edit
-  the executor's branch.
+  findings and a verdict; does not edit the executor's branch.
 - **Consultant** (optional): GPT Pro through the `confer` skill, for a judgement no pane can
   settle (a design direction, a stubborn bug). Run the round in a visible pane
   (`herdr pane run <pane> "<confer command>"`) so the user can watch it; record the thread name
