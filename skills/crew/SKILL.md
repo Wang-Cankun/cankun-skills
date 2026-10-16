@@ -74,6 +74,12 @@ one-line summary of what it read and its as-of: commit, plus "uncommitted change
 working tree is dirty, or a date. Record it in the served
 repository's `.work/crew/residents.md`: name, pane, model, what it holds, as-of.
 
+A resident agent never messages back: a prompt sent without `--wait` returns at once, and the
+answer sits in its pane or file until someone looks. After every prompt whose answer you need,
+including table rounds and team units, arm a wait that notifies you: run the prompt with `--wait`
+in the background, or a background loop until the expected file exists and `herdr agent get`
+shows `idle` or `done`. Tell the user you are waiting on it, not that it will report.
+
 Another window asks it:
 
 ```bash
