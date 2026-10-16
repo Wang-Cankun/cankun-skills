@@ -69,9 +69,9 @@ Startup and reset gotchas:
 
 ## Side
 
-Prime the agent with what it should hold (files, a branch, a design) and have it reply with a
-one-line summary of what it read and its as-of: commit, plus "uncommitted changes" when the
-working tree is dirty, or a date. Record it in the served
+Prime the agent with what it should hold (files, a branch, a design) and have it confirm what
+it read and its as-of: commit, plus "uncommitted changes" when the working tree is dirty, or a
+date. Record it in the served
 repository's `.work/crew/residents.md`: name, pane, model, what it holds, as-of.
 
 A resident agent never messages back: a prompt sent without `--wait` returns at once, and the
@@ -88,8 +88,11 @@ herdr agent prompt <name> "<question>" --wait --timeout <ms>
 herdr agent read <name> --source recent-unwrapped --lines <n>
 ```
 
-The pane read includes the agent's tool output and status lines; for anything longer than a
-few lines, ask the side agent to write the answer to a file and reply with the path. Each answer
+The pane read includes the agent's tool output and status lines, so ask for a longer answer
+in a file, with a reply that names its path. A resident agent writes at full length: the file
+and the pane reply carry whatever the work needs, and your prompts and briefs set no word or
+line limit on either. A length limit belongs only to an Agent-tool subagent, whose return lands
+in your own context. Each answer
 states the as-of of the material it rests on, so the asker can judge staleness. Refresh a stale
 side agent by prompting it to re-read what changed, or restart it. Answers are quiet: no
 notification to the user unless the user asks for one.
