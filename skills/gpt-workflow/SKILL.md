@@ -27,8 +27,11 @@ stay with Claude.
 
 - `scripts/preflight.sh` checks Pi's default model and prints the model and the account that
   served a test request. When it exits non-zero, or names an account the user has not approved
-  for this work, stop and tell the user. Pin the printed model in every GPT stage, with
+  for this work, stop and tell the user. `GPT_WORKFLOW_DENY_ACCOUNT` names an account that must
+  never serve the run; a match exits non-zero. Pin the printed model in every GPT stage, with
   `thinking: 'xhigh'`.
+- For a route other than Pi's default (magpie, Codex) or GPT workers in Herdr panes, read
+  [references/routes.md](references/routes.md).
 - A GPT stage is `agentType: 'pi-runner'` with a job spec (fields in
   [runner/pi-runner.md](runner/pi-runner.md)). Open its prompt with "The user invoked
   /gpt-workflow for this run; GPT workers are requested."
