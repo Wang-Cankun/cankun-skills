@@ -98,6 +98,9 @@ role mismatch is a finding, and the report body is within the bound.
   refutation that stops a dead end from being proposed again. Records keep their lifecycle.
 - A new file states its owning question, what it must not own, its update trigger and what it
   proves versus only routes to.
+- A brief or handover gives the goal, the open question and the settled decisions, and links
+  earlier designs for comparison after the reader has stated its own model; a reading order
+  through them makes the old answer the starting point ([roles](references/roles.md)).
 
 ## Applying
 
@@ -120,7 +123,7 @@ line in an instruction file changes an action, a judgement or a route.
 ## Where things are
 
 - [`references/roles.md`](references/roles.md) — document roles (on-ramp, agent
-  rules, map, contract, runbook, decision, evidence, plan, record, summary, generated), each
+  rules, map, contract, runbook, decision, evidence, plan, record, brief, summary, generated), each
   with its owning question, what it must not own and its update trigger.
 - [`references/document-templates.md`](references/document-templates.md) — section shapes
   for a README, AGENTS.md, map, decisions, plan, evidence, record index, contract, runbook and

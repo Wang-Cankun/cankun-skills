@@ -73,6 +73,20 @@ with an index of one row per record: date, subject, and where its outcome went.
 Historical from birth: a record is never rewritten to match today. Classify the family
 once; per-file metadata beyond date and subject is overhead.
 
+### brief / handover
+*What is this worker asked to do now, and what is already settled?* An agent starting a task,
+a review or a takeover.
+**Must not own** a reading order through earlier designs or reviews, or their conclusions
+restated as the starting point.
+**Trigger**: a new task or takeover; written once, then a record.
+It states the goal, the open question and the settled decisions with their owners, and has the
+worker write its own model of the problem (who it serves, invariants, the success measure)
+before opening earlier designs, which it links for comparison afterwards: an agent that reads
+the old answer first repairs that answer instead of modelling the problem. A review brief
+accepts "no major finding" as a result and asks each finding to name the goal or invariant it
+breaks; a brief that rewards defects gets local nitpicks. A design several models converged on
+gets a reviewer that did not see the discussion.
+
 ### summary for readers
 *What is the proposal or argument, for this reader, as of this date?* A proposal brief, a
 paper draft, a status report.
