@@ -4,19 +4,32 @@ Sources for the layering below:
 [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) ·
 [Codex skills](https://learn.chatgpt.com/docs/build-skills) ·
 [Claude Code memory](https://code.claude.com/docs/en/memory) ·
-[rethinking skills and prompts](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra).
+[rethinking skills and prompts](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) ·
+[Claude Code in large codebases](https://code.claude.com/docs/en/large-codebases) ·
+[context rot: a single on-topic distractor lowers accuracy](https://www.trychroma.com/research/context-rot).
 
 ## Loading limits
 
 The instruction chain loads on every task, so it is the one layer with hard budgets. As
-documented in September 2026 — recheck the sources before relying on a number:
+documented in October 2026 — recheck the sources before relying on a number:
 
-- Claude Code targets under 200 lines per `CLAUDE.md`; longer files reduce adherence.
+- Claude Code targets under 200 lines per `CLAUDE.md`; its docs say longer files reduce
+  adherence.
 - Codex stops adding instruction files once the combined chain reaches 32 KiB by default.
+- Claude Code loads only the first 200 lines or 25 KB of the auto-memory `MEMORY.md`.
+- Loading is eager or lazy by mechanism: `@` imports expand at launch (a thin `@AGENTS.md`
+  re-export costs the whole file); a subdirectory `CLAUDE.md` loads when a file there is read;
+  a `.claude/rules/` file with `paths:` frontmatter loads when matching files are touched;
+  block HTML comments in `CLAUDE.md` are stripped before injection. A rule only one kind of
+  task needs belongs in a lazy layer.
 
-Repository overviews and directory tours in an instruction file raise cost without raising
-task success ([Gloaguen et al., 2026](https://arxiv.org/abs/2602.11988)); route to a map
-instead.
+Measured effects of a context file on task success are small and mixed: developer-written
+files gained about 4% and generated ones lost a little, at 19–23% more cost, and repository
+overviews did not lead agents to the right files sooner
+([Gloaguen et al., 2026](https://arxiv.org/abs/2602.11988)); route to a map instead. File
+length showed no detectable effect on adherence, while adherence fell as a session went on
+([McMillan, 2026](https://arxiv.org/abs/2605.10039)): treat line targets as cost heuristics,
+and make a rule that must hold a check (Enforce).
 
 ## The AGENTS.md layer
 

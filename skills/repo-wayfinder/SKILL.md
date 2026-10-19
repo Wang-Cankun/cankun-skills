@@ -20,13 +20,16 @@ type, a schema, configuration, or one living document — and every other mentio
 
 ## Quick pass (default)
 
-1. Pin the commit, the scope and the instruction chain that loads for it (`AGENTS.md`,
-   `AGENTS.override.md`, `CLAUDE.md`, `GEMINI.md`, tool rule folders, ignored local files),
-   and measure the chain against the loading limits.
+1. Pin the commit agents actually load (the primary checkout's branch: a rule changed on an
+   unmerged branch still loads from the trunk), the scope and the instruction chain
+   (`AGENTS.md`, `AGENTS.override.md`, `CLAUDE.md`, `GEMINI.md`, tool rule folders, an agent
+   memory index, ignored local files), and measure the chain against the loading limits.
 2. Walk two to four real tasks from a cold start:
    `task -> first route -> next pointer -> owner -> test or probe`. Check every present-tense
    claim on the way against its owner (when a test and its implementation disagree, report
-   it), and count the files and words each walk read.
+   it), and count the files and words each walk read. Where agent session transcripts exist,
+   also count which documents agents actually opened in recent sessions and their sizes: a
+   long file opened often, and a historical file opened at all, are findings.
 3. In the instruction chain and the documents the walks read, find current claims stated in
    more than one place (versions, commands, behaviours, limits) and name each one's owner.
    Also flag sections with no owning question, and rules written for a weaker model (read X
@@ -68,7 +71,10 @@ role mismatch is a finding, and the report body is within the bound.
   document keeps at most a pointer.
 - **Retire** — displaced text moves to where history lives (a record, version control, or an
   archive the repository declares), leaving one line that names the successor and where the
-  old text is.
+  old text is. The archive sits outside agents' default search (an `.ignore` or `.rgignore`
+  entry for ripgrep-based search, or a Read deny rule); a status label does not stop an agent
+  from reading a file, and a superseded plan that still reads fluent and on-topic is the
+  costliest distractor.
 - **Delete** — no unique evidence, history or owning question.
 - **Needs evidence** — its authority cannot be judged yet.
 
@@ -81,7 +87,13 @@ role mismatch is a finding, and the report body is within the bound.
   task needs goes in the root instruction file; what one kind of task needs goes in the
   document, skill or path-scoped rule that task opens.
 - A document that carries state opens with it, within a word and item bound the repository
-  states; completed material retires.
+  states; completed material retires. Agent memory points to that document; a copy of
+  project state in memory is one more owner going stale.
+- A document agents open at the start of many tasks has a size budget the repository states
+  (for example a hub near 10 KB, a record's main file under 16 KB). Over budget, it becomes
+  a contract head that keeps every heading, so inbound anchors still land, plus detail files
+  beside it holding the moved text verbatim; a ratchet check (fail only when an over-budget
+  file grows) holds the budget without blocking unrelated work.
 - Living documents keep what is current plus history that still changes an action, such as a
   refutation that stops a dead end from being proposed again. Records keep their lifecycle.
 - A new file states its owning question, what it must not own, its update trigger and what it
@@ -97,6 +109,8 @@ commit, apply the dispositions with the fewest files, then sweep:
   a second assertion to fix; grep finds candidates, rephrasings need reading;
 - **reference** — resolve every moved path, anchor, numbered item and renamed symbol, and run
   the repository's link check when it has one;
+- **content** — after a split or move, every paragraph and table row of the original appears
+  in the new files, unless the change deliberately retires it;
 - **cold start** — re-walk two journeys from the entry document, compare the reads, and say
   whether the walk ran in a fresh context.
 
