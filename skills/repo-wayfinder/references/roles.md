@@ -52,7 +52,9 @@ Prefer generation from schema or code; hand-written contracts drift.
 
 ### rationale / decision
 *Why is it this way?* Anyone questioning a design; also the future author.
-**Must not own** the rule (guidance), the number (evidence), or repair steps (plan).
+**Must not own** the rule (guidance), the number (evidence), repair steps (plan), or the
+mechanism (the code and its module guide); a design record that restates the mechanism is
+re-synced with every change or goes stale.
 **Trigger**: a decision changes or an assumption resolves.
 The document holds decisions in force, open choices and refutations, each with who decided,
 when and on what source; superseded and completed entries retire. Advice — from a review, a

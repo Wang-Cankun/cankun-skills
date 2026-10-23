@@ -39,9 +39,9 @@ document that drifts again after each fact check is caching the code.
    long file opened often, and a historical file opened at all, are findings.
 3. For each code-adjacent document the walks read, measure over the last month or two the
    share of its code's commits that also edit it, its churned lines, and the commits that only
-   re-sync it. A document edited with most of its code's commits is a cache: report its
-   altitude as the finding, with sample sentences that fail the refactor test, rather than
-   its stale facts.
+   re-sync it. A document edited with most of its code's commits, or whose stated update
+   trigger is "the implementation changes", is a cache: report its altitude as the finding,
+   with sample sentences that fail the refactor test, rather than its stale facts.
 4. In the instruction chain and the documents the walks read, find current claims stated in
    more than one place (versions, commands, behaviours, limits) and name each one's owner.
    Also flag sections with no owning question, and rules written for a weaker model (read X
@@ -135,6 +135,9 @@ commit, apply the dispositions with the fewest files, then sweep:
 - **content** — after a split or move, every paragraph and table row of the original appears
   in the new files, unless the change deliberately retires it; a cache cut keeps every hazard
   and caller-facing invariant it held, in the document or co-located at the code;
+- **claims** — a reader that did not write the rewrite checks each of its sentences against the
+  code. Compression drops qualifiers and turns true sentences into overclaims; a claim that
+  stays true only with its qualifiers goes to its owner instead of being compressed;
 - **cold start** — re-walk two journeys from the entry document, compare the reads, and say
   whether the walk ran in a fresh context.
 
