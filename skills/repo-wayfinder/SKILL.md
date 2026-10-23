@@ -13,12 +13,12 @@ Documentation routes; it does not prove. Every current claim has one **owner** �
 type, a schema, configuration, or one living document — and every other mention is a
 **pointer** to it. Tests and probes verify the owner without becoming a second one.
 
-A sentence that a refactor keeping the design would make false (a constant, a field name, a
-page size, which file does what, the order of queries) is a **cache** of the code: a second
-owner, edited with every change or left stale. Apply this **refactor test** to each sentence.
-A living document states what the code cannot: the job and the boundary, the invariant a
-caller relies on, the hazard that bit, the reason. Shrink the cache before checking it: a
-document that drifts again after each fact check is caching the code.
+A **cache** is a sentence that restates the code, so a refactor that keeps the design would
+make it false: a constant, a field name, a page size, which file does what, the order of
+queries. It is a second owner, edited with every change or left stale. A living document states
+what the code cannot: the job and the boundary, the invariant a caller relies on, the hazard
+that bit, the reason. When a document drifts again after each fact check, cut its cache
+instead of checking it again.
 
 - A **living document** is edited in place to stay current. It owns one question and changes
   when that question's answer changes: its update trigger.
@@ -38,11 +38,10 @@ document that drifts again after each fact check is caching the code.
    also count which documents agents actually opened in recent sessions and their sizes: a
    long file opened often, and a historical file opened at all, are findings.
 3. For each code-adjacent document the walks read, measure over the last month or two the
-   share of its code's commits that also edit it, its churned lines, and the commits that only
-   re-sync it; start after the module's first build, and count a squash-merged history per
-   pull request. A document edited with most of its code's commits, or whose stated update
-   trigger is "the implementation changes", is a cache: report its altitude as the finding,
-   with sample sentences that fail the refactor test, rather than its stale facts.
+   share of its code's changes that also edit it, and the changes that only re-sync it; count
+   from the module's first build, per pull request where the history squash-merges. A document
+   that changes with most of them, or whose stated update trigger is "the implementation
+   changes", is a cache: report that, with sample cache sentences, rather than its stale facts.
 4. In the instruction chain and the documents the walks read, find current claims stated in
    more than one place (versions, commands, behaviours, limits) and name each one's owner.
    Also flag sections with no owning question, and rules written for a weaker model (read X
@@ -96,13 +95,12 @@ role mismatch is a finding, and the report body is within the bound.
 - A fact sits where its change trigger matches the document's owning question; judge by the
   trigger, not by whether a number appears: a port an operator types belongs in a runbook.
   Copied versions, lists and error strings point to their owner; explanation that builds a
-  mental model stays when the model holds above the code and passes the refactor test.
-- Each kind of cache has its disposition. A constant or bound: Point to the named constant. A
-  hazard local to one function: Co-locate it as a comment at the site. A sentence restating a
-  test's assertion: Point to the test. Narration of control flow, query shape, or which file
-  does what below the directory level: Delete; the code owns it. A pointer names a path,
-  anchor or symbol that a link or symbol check resolves (Enforce), so it fails loudly when it
-  rots.
+  mental model stays unless it is cache.
+- Cache goes to its owner: a constant or bound → Point to the named constant; a hazard local to
+  one function → Co-locate it as a comment at the site; a restated test assertion → Point to
+  the test; narration of control flow, query shape, or which file does what below the
+  directory level → Delete. A pointer names a path, anchor or symbol that a link or symbol
+  check resolves (Enforce).
 - Each route names the task that fires it (schema change → `docs/database.md`). What every
   task needs goes in the root instruction file; what one kind of task needs goes in the
   document, skill or path-scoped rule that task opens.
@@ -136,9 +134,10 @@ commit, apply the dispositions with the fewest files, then sweep:
 - **content** — after a split or move, every paragraph and table row of the original appears
   in the new files, unless the change deliberately retires it; a cache cut keeps every hazard
   and caller-facing invariant it held, in the document or co-located at the code;
-- **claims** — a reader that did not write the rewrite checks each of its sentences against the
-  code. Compression drops qualifiers and turns true sentences into overclaims; a claim that
-  stays true only with its qualifiers goes to its owner instead of being compressed;
+- **claims** — cut cache by deleting it, and keep the surviving sentences as they stand: a
+  deletion adds no claim, while every written or reworded sentence is a new one. A reader that
+  did not write those checks them against the code; a claim that holds only with its
+  qualifiers goes to its owner rather than into a shorter sentence;
 - **cold start** — re-walk two journeys from the entry document, compare the reads, and say
   whether the walk ran in a fresh context.
 

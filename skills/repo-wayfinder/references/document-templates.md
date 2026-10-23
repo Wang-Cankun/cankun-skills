@@ -114,7 +114,7 @@ boundaries · contested system terms.
 <where the tests that pin these rules are>
 ```
 
-Each sentence passes the refactor test; bounds, fields and control flow stay in the code.
+No cache: bounds, fields and control flow stay in the code.
 
 ## Decisions / rationale
 
