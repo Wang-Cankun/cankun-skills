@@ -20,6 +20,11 @@ what the code cannot: the job and the boundary, the invariant a caller relies on
 that bit, the reason. When a document drifts again after each fact check, cut its cache
 instead of checking it again.
 
+A sentence is **stale** when its owner now says otherwise: a present-tense claim the code
+contradicts, a decision a later one superseded, a link to a moved or removed target, a status
+or next step shown as current that is done or dropped. The aim is no stale sentence, not a
+length: cache goes because it goes stale, and a long document of owned, true sentences stays.
+
 - A **living document** is edited in place to stay current. It owns one question and changes
   when that question's answer changes: its update trigger.
 - A **record** is dated and written once (a review, report, meeting note), kept in a folder
@@ -33,13 +38,13 @@ instead of checking it again.
    memory index, ignored local files), and measure the chain against the loading limits.
 2. Walk two to four real tasks from a cold start:
    `task -> first route -> next pointer -> owner -> test or probe`. Check every present-tense
-   claim on the way against its owner (when a test and its implementation disagree, report
-   it), and count the files and words each walk read. Where agent session transcripts exist,
-   also count which documents agents actually opened in recent sessions and their sizes: a
-   long file opened often, and a historical file opened at all, are findings.
+   claim and stated decision on the way against its owner; each stale one is a finding (when a
+   test and its implementation disagree, report it). Count the files and words each walk read.
+   Where agent session transcripts exist, also count which documents agents actually opened in
+   recent sessions: a historical file opened at all is a finding.
 3. For each code-adjacent document the walks read, measure over the last month or two the
    share of its code's changes that also edit it, and the changes that only re-sync it; count
-   from the module's first build, per pull request where the history squash-merges. A document
+   from the module's first build, per merged change. A document
    that changes with most of them, or whose stated update trigger is "the implementation
    changes", is a cache: report that, with sample cache sentences, rather than its stale facts.
 4. In the instruction chain and the documents the walks read, find current claims stated in
@@ -63,6 +68,7 @@ The quick pass, plus:
   `path | role | owning question | update trigger | lifecycle (current, proposed, historical)`.
   An observed role that differs from the declared one is a finding; a file that mixes roles or
   time frames (now, next, then) is classified by section.
+- Check every living document for stale sentences, not only those the walks read.
 - For a new project, take the identity and tasks from the accepted goal, plan and code
   skeleton; rows are `proposed`, and a walk may end at a planned owner, naming the evidence
   that will accept it.
@@ -104,15 +110,8 @@ role mismatch is a finding, and the report body is within the bound.
 - Each route names the task that fires it (schema change → `docs/database.md`). What every
   task needs goes in the root instruction file; what one kind of task needs goes in the
   document, skill or path-scoped rule that task opens.
-- A document that carries state opens with it, within a word and item bound the repository
-  states; completed material retires. Agent memory points to that document; a copy of
-  project state in memory is one more owner going stale.
-- A document agents open at the start of many tasks has a size budget the repository states
-  (for example a hub near 10 KB, a record's main file under 16 KB); a code README's budget
-  follows what its code cannot say, not the code's size. Over budget, first cut the cache;
-  then the document becomes a contract head that keeps every heading, so inbound anchors
-  still land, plus detail files beside it holding the moved text verbatim; a ratchet check
-  (fail only when an over-budget file grows) holds the budget without blocking unrelated work.
+- A document that carries state opens with it, and completed material retires. Agent memory
+  points to that document; a copy of project state in memory is one more owner going stale.
 - Living documents keep what is current plus history that still changes an action, such as a
   refutation that stops a dead end from being proposed again. Records keep their lifecycle.
 - A new file states its owning question, what it must not own, its update trigger and what it

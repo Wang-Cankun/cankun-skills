@@ -67,8 +67,7 @@ Candidate shape:
 <repo-wide hazards that have bitten or are independently established>
 
 ## Document maintenance
-<only when agents keep adding to the documents: a few rules, with the word and item limits
- this repository sets for documents that open with state>
+<only when agents keep adding to the documents: a few rules from the menu below>
 ```
 
 A grant reads like: "The local tests use disposable fixtures and have no production
@@ -81,7 +80,6 @@ Maintenance rules, a menu to re-derive rather than copy:
 - **Replace the slot, append the record** — the same question and scope revises the
   current entry in place, and version control keeps the old wording; a distinct result,
   decision or record is a new entry; a verbatim record gets a dated correction attached.
-- **Short openings** — the word and item limits for documents that open with state.
 - **Finish the update** — when work completes or direction changes, update each owner whose
   question changed (the plan's state, a decision's status) and repair anchors that moved;
   a pointer elsewhere needs no edit.
@@ -147,7 +145,7 @@ No cache: bounds, fields and control flow stay in the code.
 > Owns what next and in what order. Why → decisions; numbers → evidence.
 
 ## Current state
-<within the stated bound: the stage, and the constraint that determines the route>
+<the stage, and the constraint that determines the route>
 
 ## Next
 <a few items, each a short paragraph: action, owner, the decision it informs, exit>
