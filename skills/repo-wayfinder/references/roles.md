@@ -29,6 +29,16 @@ List directories and stable file *groups*; a file census decays on the
 next commit. A glossary defines the system's contested terms, not the domain's. Keep a map
 only when a cross-boundary mental model cannot be recovered cheaply from the owning sources.
 
+### module guide (code README)
+*What must I know before changing this code that the code does not tell me?* A contributor
+about to edit one module.
+**Must not own** what the code and its tests already state: constants, field names, call order,
+query shape, which file does what below the directory level, signatures, test inventories.
+**Trigger**: the module's job, its boundary, an invariant a caller relies on, or a hazard
+changes; not every commit. A guide edited with most of its module's commits caches the code.
+It holds the job, what the module must not know, each invariant with the test that guards it,
+the hazards that bit, and the entry files.
+
 ### current contract
 *What may callers rely on?* Integrator.
 **Must not own** rationale (decision) or usage walkthroughs (on-ramp or runbook).

@@ -8,6 +8,7 @@ question. Each document's role is in [`roles.md`](roles.md).
 - README / on-ramp
 - Root AGENTS.md / agent rules
 - Architecture map
+- Module guide
 - Decisions / rationale
 - Roadmap / plan
 - Measurements / evidence
@@ -94,6 +95,24 @@ pipeline) · stable directories and file groups, each with one responsibility ·
 boundaries (`component | responsibility | interface | must not know`) · data stores and
 formats, where persistence affects navigation · external integrations as trust and failure
 boundaries · contested system terms.
+
+## Module guide
+
+```markdown
+# <module>
+
+<its job in two or three sentences, and what it must not know>
+
+## Invariants
+- **<rule a caller relies on>.** <why it holds; the test that guards it>
+
+## Hazards
+- **<what bit>.** <where, and how to avoid it>
+
+<entry files, one line each, only where the directory does not make them obvious>
+```
+
+Each sentence passes the refactor test; bounds, fields and control flow stay in the code.
 
 ## Decisions / rationale
 

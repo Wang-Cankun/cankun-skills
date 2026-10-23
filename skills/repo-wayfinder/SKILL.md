@@ -5,13 +5,20 @@ metadata:
   summary: >-
     Checks or designs a repository's documentation system: which document owns each
     question, how agents reach it, and how it stays current.
-description: "Check or design a repository's documentation system (README, AGENTS.md, CLAUDE.md, docs/): which document owns each question and how agents reach it. Use when existing docs have drifted or conflict, or to design or rebuild a project's documentation set."
+description: "Check or design a repository's documentation system (README, AGENTS.md, CLAUDE.md, docs/): which document owns each question and how agents reach it. Use when existing docs have drifted, conflict or keep needing sync passes, or to design or rebuild a project's documentation set."
 ---
 # Repo Wayfinder
 
 Documentation routes; it does not prove. Every current claim has one **owner** — code, a
 type, a schema, configuration, or one living document — and every other mention is a
 **pointer** to it. Tests and probes verify the owner without becoming a second one.
+
+A sentence that a refactor keeping the design would make false (a constant, a field name, a
+page size, which file does what, the order of queries) is a **cache** of the code: a second
+owner, edited with every change or left stale. Apply this **refactor test** to each sentence.
+A living document states what the code cannot: the job and the boundary, the invariant a
+caller relies on, the hazard that bit, the reason. Shrink the cache before checking it: a
+document that drifts again after each fact check is caching the code.
 
 - A **living document** is edited in place to stay current. It owns one question and changes
   when that question's answer changes: its update trigger.
@@ -30,11 +37,16 @@ type, a schema, configuration, or one living document — and every other mentio
    it), and count the files and words each walk read. Where agent session transcripts exist,
    also count which documents agents actually opened in recent sessions and their sizes: a
    long file opened often, and a historical file opened at all, are findings.
-3. In the instruction chain and the documents the walks read, find current claims stated in
+3. For each code-adjacent document the walks read, measure over the last month or two the
+   share of its code's commits that also edit it, its churned lines, and the commits that only
+   re-sync it. A document edited with most of its code's commits is a cache: report its
+   altitude as the finding, with sample sentences that fail the refactor test, rather than
+   its stale facts.
+4. In the instruction chain and the documents the walks read, find current claims stated in
    more than one place (versions, commands, behaviours, limits) and name each one's owner.
    Also flag sections with no owning question, and rules written for a weaker model (read X
    before every edit, always run every test, a boundary stated more strongly than its risk).
-4. Report the findings, each with evidence and one disposition, and the choices only the user
+5. Report the findings, each with evidence and one disposition, and the choices only the user
    can make.
 
 Done when every walk ends at an owner and a check, or at a named unknown, and every finding
@@ -81,8 +93,15 @@ role mismatch is a finding, and the report body is within the bound.
 ## Placement
 
 - A fact sits where its change trigger matches the document's owning question; judge by the
-  trigger, not by whether a number appears. Copied versions, lists and error strings point to
-  their owner; explanation that builds a mental model stays.
+  trigger, not by whether a number appears: a port an operator types belongs in a runbook.
+  Copied versions, lists and error strings point to their owner; explanation that builds a
+  mental model stays when the model holds above the code and passes the refactor test.
+- Each kind of cache has its disposition. A constant or bound: Point to the named constant. A
+  hazard local to one function: Co-locate it as a comment at the site. A sentence restating a
+  test's assertion: Point to the test. Narration of control flow, query shape, or which file
+  does what below the directory level: Delete; the code owns it. A pointer names a path,
+  anchor or symbol that a link or symbol check resolves (Enforce), so it fails loudly when it
+  rots.
 - Each route names the task that fires it (schema change → `docs/database.md`). What every
   task needs goes in the root instruction file; what one kind of task needs goes in the
   document, skill or path-scoped rule that task opens.
@@ -90,10 +109,11 @@ role mismatch is a finding, and the report body is within the bound.
   states; completed material retires. Agent memory points to that document; a copy of
   project state in memory is one more owner going stale.
 - A document agents open at the start of many tasks has a size budget the repository states
-  (for example a hub near 10 KB, a record's main file under 16 KB). Over budget, it becomes
-  a contract head that keeps every heading, so inbound anchors still land, plus detail files
-  beside it holding the moved text verbatim; a ratchet check (fail only when an over-budget
-  file grows) holds the budget without blocking unrelated work.
+  (for example a hub near 10 KB, a record's main file under 16 KB); a code README's budget
+  follows what its code cannot say, not the code's size. Over budget, first cut the cache;
+  then the document becomes a contract head that keeps every heading, so inbound anchors
+  still land, plus detail files beside it holding the moved text verbatim; a ratchet check
+  (fail only when an over-budget file grows) holds the budget without blocking unrelated work.
 - Living documents keep what is current plus history that still changes an action, such as a
   refutation that stops a dead end from being proposed again. Records keep their lifecycle.
 - A new file states its owning question, what it must not own, its update trigger and what it
@@ -113,7 +133,8 @@ commit, apply the dispositions with the fewest files, then sweep:
 - **reference** — resolve every moved path, anchor, numbered item and renamed symbol, and run
   the repository's link check when it has one;
 - **content** — after a split or move, every paragraph and table row of the original appears
-  in the new files, unless the change deliberately retires it;
+  in the new files, unless the change deliberately retires it; a cache cut keeps every hazard
+  and caller-facing invariant it held, in the document or co-located at the code;
 - **cold start** — re-walk two journeys from the entry document, compare the reads, and say
   whether the walk ran in a fresh context.
 
@@ -122,11 +143,11 @@ line in an instruction file changes an action, a judgement or a route.
 
 ## Where things are
 
-- [`references/roles.md`](references/roles.md) — document roles (on-ramp, agent
-  rules, map, contract, runbook, decision, evidence, plan, record, brief, summary, generated), each
-  with its owning question, what it must not own and its update trigger.
+- [`references/roles.md`](references/roles.md) — document roles (on-ramp, agent rules, map,
+  module guide, contract, runbook, decision, evidence, plan, record, brief, summary,
+  generated), each with its owning question, what it must not own and its update trigger.
 - [`references/document-templates.md`](references/document-templates.md) — section shapes
-  for a README, AGENTS.md, map, decisions, plan, evidence, record index, contract, runbook and
-  retirement line.
+  for a README, AGENTS.md, map, module guide, decisions, plan, evidence, record index,
+  contract, runbook and retirement line.
 - [`references/topology.md`](references/topology.md) — instruction-chain loading limits,
   nested and cross-tool instruction layers, and the `AGENTS.md` / `CLAUDE.md` layouts.
