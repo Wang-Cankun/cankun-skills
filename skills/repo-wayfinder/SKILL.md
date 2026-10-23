@@ -39,7 +39,8 @@ document that drifts again after each fact check is caching the code.
    long file opened often, and a historical file opened at all, are findings.
 3. For each code-adjacent document the walks read, measure over the last month or two the
    share of its code's commits that also edit it, its churned lines, and the commits that only
-   re-sync it. A document edited with most of its code's commits, or whose stated update
+   re-sync it; start after the module's first build, and count a squash-merged history per
+   pull request. A document edited with most of its code's commits, or whose stated update
    trigger is "the implementation changes", is a cache: report its altitude as the finding,
    with sample sentences that fail the refactor test, rather than its stale facts.
 4. In the instruction chain and the documents the walks read, find current claims stated in

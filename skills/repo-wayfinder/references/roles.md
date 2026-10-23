@@ -36,8 +36,8 @@ about to edit one module.
 query shape, which file does what below the directory level, signatures, test inventories.
 **Trigger**: the module's job, its boundary, an invariant a caller relies on, or a hazard
 changes; not every commit. A guide edited with most of its module's commits caches the code.
-It holds the job, what the module must not know, each invariant with the test that guards it,
-the hazards that bit, and the entry files.
+It holds the job, what the module must not know, the invariants, the hazards that bit, and
+where the tests that pin them are; test titles already name each rule.
 
 ### current contract
 *What may callers rely on?* Integrator.

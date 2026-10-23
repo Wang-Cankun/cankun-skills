@@ -104,12 +104,14 @@ boundaries · contested system terms.
 <its job in two or three sentences, and what it must not know>
 
 ## Invariants
-- **<rule a caller relies on>.** <why it holds; the test that guards it>
+- **<rule a caller relies on>.** <why it holds>
 
 ## Hazards
 - **<what bit>.** <where, and how to avoid it>
 
 <entry files, one line each, only where the directory does not make them obvious>
+
+<where the tests that pin these rules are>
 ```
 
 Each sentence passes the refactor test; bounds, fields and control flow stay in the code.
