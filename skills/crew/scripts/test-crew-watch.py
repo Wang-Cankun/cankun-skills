@@ -46,7 +46,7 @@ class WatchTest(unittest.TestCase):
             "--until", datetime.fromtimestamp(self.now, timezone.utc).isoformat(), *extra],
             capture_output=True, text=True, timeout=10)
 
-    def watch(self, event="", status="working", polls=4):
+    def watch(self, event="", status="working", polls=4, files=()):
         bin_dir = self.root / "bin"
         bin_dir.mkdir()
         programs = {
@@ -54,7 +54,10 @@ class WatchTest(unittest.TestCase):
 from pathlib import Path
 root = Path(os.environ["FIXTURE_ROOT"])
 if sys.argv[1:3] == ["agent", "list"]:
-    print(json.dumps({"result": {"agents": [{"name": "worker", "agent_status": os.environ["FIXTURE_STATUS"]}]}}))
+    with (root / "lists").open("a") as f: f.write("list\\n")
+    statuses = os.environ["FIXTURE_STATUS"].split(",")
+    status = statuses[min(len((root / "lists").read_text().splitlines()), len(statuses)) - 1]
+    print(json.dumps({"result": {"agents": [{"name": "worker", "agent_status": status}]}}))
 elif sys.argv[1:3] == ["notification", "show"]:
     with (root / "notifications").open("a") as f: f.write(json.dumps(sys.argv[3:]) + "\\n")
 else:
@@ -86,7 +89,7 @@ os.execv(sys.executable, [sys.executable, *args])
             FIXTURE_ROOT=str(self.root), FIXTURE_EVENT=event, FIXTURE_STATUS=status,
             FIXTURE_POLLS=str(polls), CREW_BURN_WINDOW_SECONDS="600", CREW_BURN_THRESHOLD="1000000")
         result = subprocess.run(["bash", str(SCRIPTS / "crew-watch.sh"), str(self.run),
-            "--roles", str(self.roles), "worker"], env=env, capture_output=True, text=True, timeout=30)
+            "--roles", str(self.roles), *files, "worker"], env=env, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, "")
         self.assertEqual(set((self.root / "polls").read_text().splitlines()), {"30"})
@@ -123,15 +126,66 @@ os.execv(sys.executable, [sys.executable, *args])
         result = self.burn("--threshold", "nan")
         self.assertEqual(result.returncode, 2)
 
+    def test_a_role_with_no_log_yet_leaves_the_alert_on(self):
+        self.roles.write_text("worker claude session=fixture\nlater pi cwd=/not-started\n")
+        result = self.burn()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("2,000,000 equivalent input", result.stdout)
+        self.assertIn("later", result.stdout)
+
+    def test_a_watched_pattern_counts_as_progress(self):
+        self.artifact("thread.md", self.now - 10)
+        self.assertIn("equivalent input", self.burn().stdout)
+        result = self.burn("--files", r"^thread\.md$")
+        self.assertEqual((result.returncode, result.stdout), (0, ""))
+
+    def test_file_waits_while_its_writer_works(self):
+        self.usage(1)
+        result, notes = self.watch("handoff-U1.md", "working")
+        self.assertEqual(notes, [])
+
+    def test_file_fires_once_its_writer_stops(self):
+        self.usage(1)
+        result, notes = self.watch("handoff-U1.md", "working,unknown,idle", polls=10)
+        self.assertEqual([n[0] for n in notes], ["Crew file"])
+        self.assertEqual(len((self.root / "polls").read_text().splitlines()), 3)
+
+    def test_rewritten_file_matching_files_notifies(self):
+        self.usage(1)
+        self.artifact("thread.md", self.now - 600)
+        result, notes = self.watch("thread.md", "idle", files=("--files", r"^thread\.md$"))
+        self.assertEqual([(n[0], n[2].split()) for n in notes], [("Crew file", ["thread.md"])])
+
+    def test_burn_counts_the_watched_files(self):
+        self.artifact("thread.md", self.now - 600)
+        result, notes = self.watch("thread.md", "working", files=("--files", r"^thread\.md$"))
+        self.assertEqual(notes, [])
+
+    def test_unmatched_file_stays_quiet(self):
+        self.usage(1)
+        result, notes = self.watch("thread.md", "idle")
+        self.assertEqual(notes, [])
+
+    def test_bad_options_are_refused(self):
+        for args in (["--files", "("], ["--files"], ["--roles"]):
+            with self.subTest(args=args):
+                result = subprocess.run(["bash", str(SCRIPTS / "crew-watch.sh"), str(self.run), *args],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn(args[0], result.stderr)
+        result = self.burn("--files", "(")
+        self.assertEqual(result.returncode, 2)
+        self.assertNotIn("Traceback", result.stderr)
+
     def test_existing_events_keep_their_notifications(self):
-        for event, status, title in [("handoff-U1.md", "working", "Crew file"),
+        for event, status, title in [("handoff-U1.md", "idle", "Crew file"),
                                       ("", "blocked", "Crew blocked"),
                                       ("", "idle", "Crew idle")]:
             with self.subTest(title=title):
                 self.usage(1)
                 result, notes = self.watch(event, status, polls=62)
                 self.assertEqual([n[0] for n in notes], [title])
-                for name in ("bin/herdr", "bin/sleep", "bin/python3", "polls", "notifications", "run/handoff-U1.md"):
+                for name in ("bin/herdr", "bin/sleep", "bin/python3", "polls", "lists", "notifications", "run/handoff-U1.md"):
                     (self.root / name).unlink(missing_ok=True)
                 (self.root / "bin").rmdir()
 

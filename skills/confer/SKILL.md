@@ -62,5 +62,8 @@ Adding a provider, CLI/session mechanics, and known version caveats: `references
   (a side agent, a table of models discussing over rounds): a pane-based setup such as `crew`.
 - The other model should do delegated work whose result comes back: a stage of a workflow
   such as `fleet`.
+- The review must run commands (tests, queries, checksums): Claude, Pi and agy peers have no
+  shell and Codex's sandbox is read-only, so a `fleet` stage with a preset that carries a shell,
+  or a `crew` seat in its own worktree.
 - The question is which version of a task is worth doing: `ambition`. A peer's opinion on one
   of its versions is still a confer round.

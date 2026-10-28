@@ -35,20 +35,27 @@ Read only the worker's budget summary and paths in the coordinator. At the card'
 projected overrun, follow its stop/escalation rule before assigning more work.
 
 Watch in the background with
-`scripts/crew-watch.sh <run dir> --roles <run dir>/roles.txt <role-name>...`.
+`scripts/crew-watch.sh <run dir> --roles <run dir>/roles.txt [--files <regex>] <role-name>...`.
 Herdr role names select active panes; the ledger spec also covers previous coordinators.
 The watcher polls every 30 seconds and exits quietly when the run directory is gone.
-It exits with a Herdr notification when a new `handoff-*.md` or `review-*.md` lands,
-a role is `blocked`, or every role has been idle for 30 minutes. Re-arm after those events.
-Keep scratch files in a subdirectory.
+It exits with a Herdr notification when a run file whose name `--files` matches (a Python
+regex searched in the name; default `^(handoff|review)-.*\.md$`, and `^thread\.md$` for a
+table) is new or rewritten and no named role is working or `unknown`, a role is `blocked`, or
+every role has been idle for 30 minutes. Re-arm after those events. To hear from one agent
+while others keep working, run one watcher per agent with `--files` matching its files, and
+give `--roles` to only one watcher, whose `--files` covers every agent's files: each watcher
+with `--roles` raises its own burn alerts for the whole run. Keep scratch files in a
+subdirectory.
 
 With `--roles`, it also notifies when equivalent input exceeds 1M in a trailing 600-second
-window with no top-level handoff or review file update. These are initial threshold estimates
+window with no update to a matching run file. These are initial threshold estimates
 from history, not proof of wasted work. Set `CREW_BURN_THRESHOLD` and
 `CREW_BURN_WINDOW_SECONDS` from the run's measured pace and record overrides in the card.
 A burn notification leaves agents and the watcher running; the watcher limits repeats to once per
-window. Diagnose the leading roles before changing the plan. Ledger errors
-appear on stderr and suppress that burn check; the existing events keep working.
+window. Diagnose the leading roles before changing the plan. Ledger warnings, such as a role
+with no session yet, ride along in the notification; ledger errors appear on stderr and
+suppress that burn check, and the other events keep working.
 Omitting `--roles` keeps file/status watching alone. For historical diagnosis, run
-`scripts/crew-burn.py --roles <roles-file> --run-dir <run-dir> --until <ISO-timestamp>`;
+`scripts/crew-burn.py --roles <roles-file> --run-dir <run-dir> --until <ISO-timestamp>`
+with the watcher's `--files`;
 it prints only an eligible alert, using current artifact mtimes.

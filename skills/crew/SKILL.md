@@ -31,19 +31,21 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   builder beside an outside reviewer or as one voice at a table. A model the user names gets
   the job it fits best; when none fits, say so before seating it.
 - **One coordinator.** It holds the goal and finish line, assigns work, accepts results and
-  merges. It keeps the card at `.work/crew/<run>/card.md` (Git-ignored): goal and finish line,
-  its own pane, each agent's name, model, pane and worktree, who may commit, merge or push, the
-  budget and round cap when they matter, and what goes to the user. Show the card before
-  starting unless the user already said go, and update it whenever the crew changes.
+  merges. It keeps the card at `.work/crew/<run>/card.md`, with `.work/` in `.git/info/exclude`
+  unless the repository already ignores it: goal and finish line, its own pane, each agent's
+  name, model, pane and worktree, who may commit, merge or push, the budget and round cap when
+  they matter, and what goes to the user. Show the card before starting unless the user already
+  said go, and update it whenever the crew changes.
 - **Independent lanes.** Parallel lanes touch separate files; an agent that edits works in its
   own worktree and branch. The coordinator orders dependent work and says which lane waits.
+  Worktrees still share the machine: the card gives each lane its own ports or a turn at a
+  shared service or heavy test run, and an agent kills only processes it started, by PID.
 - **Families for judgement.** Seat a different model family where a shared blind spot costs
   most: a design, the review of a unit whose wrong accept is expensive, a check of the whole
-  run against its goal. Throughput work goes to the model the project's rules name. One opinion
-  with no resident context is a `confer` call.
+  run against its goal. Throughput work goes to the model the project's rules name.
 - **Evidence over reports.** A result counts when the coordinator can see it: a commit, a file,
   a finished check's log. Another family's findings are claims: check each against the code or
-  source and record the ruling beside it.
+  source and record the ruling beside it before another agent acts on it.
 - **Paths, not pastes.** Every model works on the repository or worktree itself; a copy of the
   material is only for a model that cannot read it, since copies go stale and hide the rest.
   Messages carry file paths. An answer longer than a few lines goes to a
@@ -57,7 +59,8 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   shows; when they leave the target open, ask the user.
 - **Fresh context when it pays.** Compact or reset an agent whose context has grown large or
   whose next work is unrelated. A coordinator whose own context is filling hands over through
-  the card and a handoff file a fresh session can start from.
+  the card: it records there what is in flight and which waits are armed, stops its own
+  watchers, and the fresh session starts from the card and re-arms them.
 - **The user at decisions.** Bring each decision when it arises, with the options and a
   recommendation; report progress at milestones, quietly otherwise.
 - **Close what you opened** once its work is merged or recorded. Side agents stay until the user
@@ -99,9 +102,9 @@ Any kind `herdr agent start --help` lists can sit in a crew. Name agents for wha
 (`side-provenance`, `table-gpt`); the name is how other windows find them. Pass the user's
 launch preferences after `--`, and confirm the model on the agent's status line at startup,
 since the kind alone selects no model. A new folder may open a trust dialog: read the pane and
-answer it under the user's trust choices. Prime a side agent with what it holds and have it
-confirm what it read and its as-of (a commit, plus "uncommitted changes" when the tree is
-dirty). To see cost and progress, use the optional ledger and watcher in
+answer it under the user's trust choices before the first prompt. Prime a side agent with what
+it holds and have it confirm what it read and its as-of (a commit, plus "uncommitted changes"
+when the tree is dirty). To see cost and progress, use the optional ledger and watcher in
 [references/observe.md](references/observe.md).
 
 ## Use a different skill when
