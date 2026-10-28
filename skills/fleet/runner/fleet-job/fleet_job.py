@@ -283,7 +283,7 @@ def summarize_agy(jdir: Path, spec: dict) -> dict:
         "turns": final.get("num_turns"),
         "cost_usd": 0.0,
         "tokens": {"input": usage.get("input_tokens", 0), "output": usage.get("output_tokens", 0),
-                   "cacheRead": 0, "cacheWrite": 0},
+                   "cacheRead": usage.get("cache_read_tokens", 0), "cacheWrite": 0},
         "session_id": final.get("conversation_id"),
         "session_file": None,
         "dir": str(jdir),

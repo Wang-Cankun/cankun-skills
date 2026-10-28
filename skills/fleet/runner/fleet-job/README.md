@@ -47,7 +47,7 @@ agy takes a preset, not a tool list: `readonly` and `research` run in plan mode,
 write is denied; `write` and `full` skip permissions, shell included, so give those a worktree.
 `thinking` becomes agy's `--effort`. Pi-only fields (`append_system_prompt`, `extensions`,
 `no_extensions`, `approve`) are refused for agy. Its conversation id is the result's
-`session_id`; continue it with `agy --conversation <id>`. agy reports input and output tokens but no cost.
+`session_id`; continue it with `agy --conversation <id>`. agy reports tokens but no cost.
 
 Pi sessions are kept under the job directory; continue one interactively with
 `pi --session <session_file>`.

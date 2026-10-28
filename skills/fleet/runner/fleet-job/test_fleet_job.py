@@ -18,7 +18,7 @@ for a in "$@"; do [[ "$prev" == "--json-schema" ]] && schema="$a"; prev="$a"; do
 structured=""
 [[ -n "$schema" && "${FAKE_MODE:-ok}" == ok ]] && structured=',"structured_output":{"verdict":"take"}'
 case "${FAKE_MODE:-ok}" in
-  ok)      echo "{\"conversation_id\":\"conv-1\",\"status\":\"SUCCESS\",\"response\":\"agy reply\",\"num_turns\":2,\"usage\":{\"input_tokens\":1200,\"output_tokens\":34}$structured}" ;;
+  ok)      echo "{\"conversation_id\":\"conv-1\",\"status\":\"SUCCESS\",\"response\":\"agy reply\",\"num_turns\":2,\"usage\":{\"input_tokens\":1200,\"output_tokens\":34,\"cache_read_tokens\":500}$structured}" ;;
   denied)  echo 'jetski: no output produced'
            echo '{"conversation_id":"conv-1","status":"SUCCESS","response":"","denied_actions":[{"action":"write_file"}]}' ;;
   error)   echo '{"conversation_id":"conv-1","status":"ERROR","response":""}' ;;
@@ -74,7 +74,7 @@ class FleetJobTest(unittest.TestCase):
         self.assertEqual(args, ["--mode", "plan", "--model", "gemini-4-argon-high", "--effort", "xhigh",
                                 "--output-format", "json", "-p", "review it"])
         self.assertEqual((result["status"], result["text"], result["session_id"]), ("completed", "agy reply", "conv-1"))
-        self.assertEqual(result["tokens"], {"input": 1200, "output": 34, "cacheRead": 0, "cacheWrite": 0})
+        self.assertEqual(result["tokens"], {"input": 1200, "output": 34, "cacheRead": 500, "cacheWrite": 0})
 
     def test_agy_write_preset_skips_permissions(self):
         _, args = self.job({"engine": "agy", "prompt": "fix it", "tools": "write"})
