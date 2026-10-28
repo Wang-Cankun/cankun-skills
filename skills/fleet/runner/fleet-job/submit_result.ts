@@ -1,8 +1,8 @@
 /**
- * Structured-result tool for pi-job workers.
+ * Structured-result tool for fleet-job Pi workers.
  *
  * Loaded with `pi -e submit_result.ts` when a job has a schema. Reads the JSON Schema
- * from PI_JOB_SCHEMA and registers `submit_result` with it as the parameter schema, so
+ * from FLEET_JOB_SCHEMA and registers `submit_result` with it as the parameter schema, so
  * Pi validates the model's submission and returns validation errors for a retry. If the
  * run completes without a submission, it appends a reminder and continues (twice at most).
  */
@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 const MAX_REMINDERS = 2;
 
 export default function (pi: any) {
-	const schemaPath = process.env.PI_JOB_SCHEMA;
+	const schemaPath = process.env.FLEET_JOB_SCHEMA;
 	if (!schemaPath) return;
 	const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
 

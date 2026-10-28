@@ -13,7 +13,7 @@ future host from one deployment; harness differences are absorbed by SKILL.md (p
 |---|---|---|---|---|
 | claude | `claude -p --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `claude -p --resume <id> --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `.session_id` in the JSON result (refreshed every round) | Claude Code 2.1.218 |
 | codex | `codex exec --sandbox read-only --skip-git-repo-check --json --output-last-message <f> -- "<prompt>"` | `codex exec --sandbox read-only --skip-git-repo-check resume <id> --json --output-last-message <f> -- "<prompt>"` | `thread_id` of the `{"type":"thread.started"}` JSONL event | codex-cli 0.145.0 |
-| pi | `pi --mode json --print --tools read,grep,find,ls --no-context-files --no-skills --no-extensions --model openrouter/google/gemini-3.8-flash --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
+| pi | `pi --mode json --print --tools read,grep,find,ls --no-context-files --no-skills --no-extensions [--model <provider/model>] --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
 | agy | `agy --mode plan --model gemini-4-argon-high --output-format json -p "<prompt>"` | same flags plus `--conversation <id>` before `-p` | `conversation_id` in the JSON result (stable across rounds) | agy 1.4.9 |
 | oracle | `oracle --engine browser --model gpt-6-pro --browser-thinking-time pro --browser-timeout 60m --wait --no-notify --browser-archive never --write-output <f> --prompt "<prompt>"` | same flags plus `--followup <id>` | stdout `Session: <id>` or `Reattach via: oracle session <id>` | Oracle >= 0.21.1 required |
 
@@ -34,12 +34,13 @@ Caveats (each verified against the real CLI, not assumed):
 - **Every peer but Oracle reads the caller's repository**: each CLI is spawned in the caller's
   working directory, so a peer opens the files it needs instead of receiving copies. Run confer
   from the repository or worktree the question is about.
-- **Pi uses local model configuration without local agent behavior**: built-in presets are
-  `gemini-3.8-flash` → `openrouter/google/gemini-3.8-flash` (Pi default) and
-  `glm-5.3` → `openrouter/z-ai/glm-5.3`. `CONFER_PI_MODEL` overrides the saved
-  `config pi-model` preference for new threads; other configured `provider/model` identifiers
-  remain supported. Each Pi thread saves its selected identifier as `piModel`; `reply` reuses it,
-  falling back to the recorded model for older threads. Changing defaults affects new threads.
+- **Pi uses local model configuration without local agent behavior**: with no model chosen,
+  `--model` is left out and Pi runs its own default. A chosen model is a full `provider/model`
+  identifier (`CONFER_PI_MODEL`, then `config pi-model`); a bare id is refused, because Pi
+  matches it as a pattern and can land on a route that bills elsewhere or is refused. Each Pi
+  thread saves its model as `piModel` (the chosen one, else the `provider/model` Pi reports) and
+  `reply` reuses it, falling back to the recorded model for older threads, so a thread stays on
+  its model after Pi's default changes.
   Only the read tools are enabled (`read,grep,find,ls`); context files, skills and extensions stay
   disabled. With tools a round spans several assistant messages: the reply is the last one's text,
   and usage is summed over all of them.
@@ -48,11 +49,11 @@ Caveats (each verified against the real CLI, not assumed):
   round ends with an empty `response`; confer reports that as a denial, not a reply. `-p` must come
   last, directly before the prompt, or agy takes the next flag as the prompt. `CONFER_AGY_ARGS`
   passes `--model` and `--effort`; the default model is `gemini-4-argon-high`.
-- **Oracle is the default consultant**: `ask` without a provider uses `CONFER_PROVIDER`, then
-  `config provider`, then `oracle`. Explicit `ask <provider>` and `open <provider>` win over defaults.
+- **Pi is the default consultant**: `ask` without a provider uses `CONFER_PROVIDER`, then
+  `config provider`, then `pi`. Explicit `ask <provider>` and `open <provider>` win over defaults.
   Use `--` before a prompt beginning with a provider name or option-like text.
   `all` remains Claude + Codex; `all --with-oracle` adds Oracle. Bare `doctor --live` remains the
-  Claude + Codex diagnostic; `doctor --live oracle` tests the default consultant.
+  Claude + Codex diagnostic; `doctor --live pi` tests the default consultant.
 - **Oracle selects GPT-6 Pro**: use `--model gpt-6-pro --browser-thinking-time pro`.
   Oracle maps this browser alias to ChatGPT's Latest/GPT-6 Astra model and verifies the Pro tier.
   The supported minimum is Oracle 0.21.4 (earlier releases miss ChatGPT's "Select ChatGPT model" button); reject older versions before submission.
@@ -129,13 +130,13 @@ Caveats (each verified against the real CLI, not assumed):
    session id is a protocol error, not a warning** — resumable threads are the core contract. Add a
    capability flag only when a genuinely non-resumable provider actually exists.
 2. Verify: `bun scripts/confer-test.mjs` (extend the fakes if the CLI shape is new), then run the
-   relevant best-effort live probe under a temporary `CONFER_HOME`; `doctor --live oracle` tests
-   GPT-6 Pro, and `CONFER_PI_MODEL=glm-5.3 doctor --live pi` tests the optional Pi model. A live probe is diagnostic, not a merge gate.
+   relevant best-effort live probe under a temporary `CONFER_HOME`; `doctor --live pi` tests
+   Pi's default model, and `CONFER_PI_MODEL=<provider/model> doctor --live pi` another one. A live probe is diagnostic, not a merge gate.
 
 ## Tests
 
 `bun scripts/confer-test.mjs` — deterministic, zero live calls: fake Claude, Codex, Pi, and Oracle CLIs
-on a prepended PATH, fresh `CONFER_HOME` per case. Covers default Oracle routing, saved provider/Pi preferences, model continuity, version/output/
+on a prepended PATH, fresh `CONFER_HOME` per case. Covers default Pi routing, saved provider/Pi preferences, model continuity, version/output/
 session gates, child-session refresh, provider-specific timeout, fan-out isolation, total-failure
 exit, process-tree timeout kill (heartbeat grandchild), malformed output, concurrent same-thread
 reply, duplicate-name opens, name validation, doctor cleanup, and stale-lock stealing. Run it after

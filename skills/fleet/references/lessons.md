@@ -1,6 +1,6 @@
 # Lessons from earlier runs
 
-Things that went wrong in real GPT workflow runs, each with what worked instead.
+Things that went wrong in real runs with GPT and Gemini stages, each with what worked instead.
 
 - **The card is the spec.** The worst bugs began as one unchecked sentence in Claude's task
   card: an invented data shape, a wrong library behaviour, "remove the temp dir unless --keep".
@@ -29,6 +29,17 @@ Things that went wrong in real GPT workflow runs, each with what worked instead.
   while breaking the project's stable prompt-cache prefix, because GPT wrote the contract and
   the tests asserted the new behaviour. Accept against the project's invariants and design
   records, not against the diff's own tests.
+- **Gemini's evidence needs its own check.** In whole-run reviews Gemini 4 Argon pointed at the
+  right places more often than not, but several of its quotes, error texts and line numbers did
+  not exist, and two root causes were wrong. A check stage that opened every cited `file:line`
+  kept the real hazards and dropped the invented support. When it writes, give it a fact table
+  with `file:line` per claim and check the draft's facts against it.
+- **Gemini's schema output can disagree with its answer.** Asked to list directories with a
+  schema, Gemini 4 Argon started a subagent of its own, then answered correctly in prose while
+  `structured_output` held an empty list. Read the `text`; structure it in a Claude stage.
+- **A blind second ruling.** Gemini 4 Argon ruled on GPT-6.1 Sol's 13 review findings without
+  seeing the coordinator's verdicts and matched an independent code check on 11, adding two
+  real issues. Withhold your own verdicts from the ruling stage so it does not anchor on them.
 - **Look before trusting the checks.** A slice that passed 800 tests was unusable at first
   sight of its screen. Before reading test results, look at one realistic result as its user
   would see it. Process grows into its own goal (checksums, smoke test plus dry run plus matrix
@@ -40,7 +51,9 @@ Things that went wrong in real GPT workflow runs, each with what worked instead.
 - **A tool missing from the preset is invisible to the job.** An audit sent with a preset that
   had no shell could not run `sqlite3` or `shasum`: five of six jobs stopped blocked and wrote
   nothing, and the sixth left every hash "unverified". Give any job that must run a command a
-  preset with bash (`write` or `full`).
+  preset or list with bash (`full`, or a list naming `bash`). agy in plan mode runs no commands either: a review that
+  asked for some came back with 78 bytes. Name the files to read, or run it with a writing
+  preset in its own worktree.
 - **Records**: a Herdr-pane worker reports no cost, and files in a session scratchpad have been
   deleted mid-session; keep worker output in the worktree's `.work/`. Text for `gh` goes
   through `--body-file`; an inline `--body` with backticks runs the commands.

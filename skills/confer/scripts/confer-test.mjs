@@ -84,13 +84,14 @@ if [[ -n "$FAKE_PI_CALLS" ]]; then
   printf '\\n' >> "$FAKE_PI_CALLS"
 fi
 [[ "$1" == "--version" ]] && { echo 0.84.2; exit 0; }
-session=""; model=""; prev=""
+session=""; model=""; provider=""; prev=""
 for a in "$@"; do
   [[ "$prev" == "--session" || "$prev" == "--session-id" ]] && session="$a"
   [[ "$prev" == "--model" ]] && model="$a"
+  [[ "$prev" == "--provider" ]] && provider="$a"
   prev="$a"
 done
-provider="\${model%%/*}"; model_id="\${model#*/}"
+if [[ -z "$model" ]]; then provider="fakeprov"; model_id="default-model"; else model_id="$model"; fi
 case "\${FAKE_PI_MODE:-ok}" in
   ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
        echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-fake-reply\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":2345,\\"output\\":67}}}" ;;
@@ -101,6 +102,8 @@ case "\${FAKE_PI_MODE:-ok}" in
   badjson) echo 'not-json' ;;
   nosession) echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"reply"}]}}' ;;
   noreply) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}" ;;
+  failed) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
+       echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"half an answer"}],"stopReason":"error","errorMessage":"Stream ended without finish_reason"}}' ;;
 esac
 `;
 
@@ -233,38 +236,38 @@ function check(name, cond, detail = "") {
   const oldArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("existing Oracle thread keeps its model and truthful provenance", oldReply.code === 0 && reg(home).pro?.model === "gpt-5.6/pro" && oldArgs.includes("--model gpt-5.6 "), oldReply.stderr + oldArgs);
 
-  const background = await confer(["ask", "-t", "background", "q"], { home, env: { FAKE_ORACLE_MODE: "detached" } });
+  const background = await confer(["ask", "oracle", "-t", "background", "q"], { home, env: { FAKE_ORACLE_MODE: "detached" } });
   check("Oracle background --wait output preserves session id", background.code === 0 && reg(home).background?.session === "oracle-background-session" && background.stdout.includes("oracle-background-reply"), background.stderr);
-  const mixed = await confer(["ask", "-t", "mixed", "q"], { home, env: { FAKE_ORACLE_MODE: "mixed" } });
+  const mixed = await confer(["ask", "oracle", "-t", "mixed", "q"], { home, env: { FAKE_ORACLE_MODE: "mixed" } });
   check("Oracle conflicting foreground/background ids fail closed", mixed.code === 1 && mixed.stderr.includes("conflicting session ids"), mixed.stderr);
 }
 
-// 1c-pi. Pi uses the OpenRouter Gemini 3.8 Flash model and resumes the same session.
+// 1c-pi. Pi runs its own default model unless one is chosen, and resumes the same session on it.
 {
   const home = freshHome();
   const calls = path.join(home, "pi-calls");
   const r1 = await confer(["open", "pi", "-t", "gemini", "q"], { home, env: { FAKE_PI_CALLS: calls } });
   check("pi open exits 0", r1.code === 0 && r1.stdout.includes("pi-fake-reply"), r1.stderr);
-  check("pi stores session and model", reg(home).gemini?.session && reg(home).gemini?.model === "openrouter/google/gemini-3.8-flash");
-  check("pi provenance in ← header", tx(home, "gemini").includes("· openrouter/google/gemini-3.8-flash · 2.3k→67tok"), tx(home, "gemini"));
+  check("pi stores session and the model Pi reports", reg(home).gemini?.session && reg(home).gemini?.model === "fakeprov/default-model" && reg(home).gemini?.piModel === "fakeprov/default-model");
+  check("pi provenance in ← header", tx(home, "gemini").includes("· fakeprov/default-model · 2.3k→67tok"), tx(home, "gemini"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
-  check("pi pins read-only Gemini invocation", [
+  check("pi pins a read-only invocation on Pi's default model", [
     "--mode json", "--print", "--tools read\\,grep\\,find\\,ls", "--no-context-files", "--no-skills",
-    "--no-extensions", "--model openrouter/google/gemini-3.8-flash", "--session-dir", "--session-id",
-  ].every((s) => openArgs.includes(s)) && !openArgs.includes("--no-tools"), openArgs);
+    "--no-extensions", "--session-dir", "--session-id",
+  ].every((s) => openArgs.includes(s)) && !openArgs.includes("--no-tools") && !openArgs.includes("--model"), openArgs);
 
   const session = reg(home).gemini.session;
   const r2 = await confer(["reply", "gemini", "again"], { home, env: { FAKE_PI_CALLS: calls } });
   check("pi reply exits 0", r2.code === 0 && reg(home).gemini?.rounds === 2, r2.stderr);
   const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
-  check("pi reply resumes stored session", replyArgs.includes(`--session ${session}`), replyArgs);
+  check("pi reply resumes stored session pinned to the recorded route", replyArgs.includes(`--session ${session}`) && replyArgs.includes("--provider fakeprov --model default-model"), replyArgs);
 
   const tools = freshHome();
   const read = await confer(["open", "pi", "-t", "tools", "q"], { home: tools, env: { FAKE_PI_MODE: "tools" } });
   check("pi reply is the last assistant message after tool use", read.code === 0 && read.stdout.includes("pi-final-answer") && !read.stdout.includes("reading"), read.stdout);
   check("pi usage sums every assistant message", tx(tools, "tools").includes("2.5k→50tok"), tx(tools, "tools"));
 
-  for (const [mode, expected] of [["badjson", "malformed JSONL"], ["nosession", "unexpected session id"], ["noreply", "no assistant text"]]) {
+  for (const [mode, expected] of [["badjson", "malformed JSONL"], ["nosession", "unexpected session id"], ["noreply", "no assistant text"], ["failed", "stopReason error: Stream ended without finish_reason"]]) {
     const h = freshHome();
     const r = await confer(["open", "pi", "-t", mode, "q"], { home: h, env: { FAKE_PI_MODE: mode } });
     check(`pi ${mode} is a protocol error`, r.code === 1 && r.stderr.includes(expected), r.stderr);
@@ -311,27 +314,27 @@ function check(name, cond, detail = "") {
   const home = freshHome();
   const defaults = await confer(["config"], { home });
   const config = JSON.parse(defaults.stdout);
-  check("fresh defaults are Oracle and Gemini", defaults.code === 0 && config.provider === "oracle" && config.piModel === "openrouter/google/gemini-3.8-flash");
+  check("fresh defaults are Pi on its own default model", defaults.code === 0 && config.provider === "pi" && config.piModel === null);
   const first = await confer(["ask", "-t", "default", "q"], { home });
-  check("ask without provider selects GPT-6 Pro", first.code === 0 && reg(home).default?.provider === "oracle" && reg(home).default?.model === "gpt-6/pro", first.stderr);
+  check("ask without provider selects Pi", first.code === 0 && reg(home).default?.provider === "pi" && reg(home).default?.model === "fakeprov/default-model", first.stderr);
 
   const saves = await Promise.all([
     confer(["config", "provider", "pi"], { home }),
-    confer(["config", "pi-model", "glm-5.3"], { home }),
+    confer(["config", "pi-model", "route/model-b"], { home }),
   ]);
   check("concurrent preferences are saved", saves.every((r) => r.code === 0), saves.map((r) => r.stderr).join("\n"));
   const calls = path.join(home, "pi-calls");
   const glm = await confer(["ask", "-t", "glm", "q"], { home, env: { FAKE_PI_CALLS: calls } });
-  check("saved Pi and GLM defaults reach Pi", glm.code === 0 && reg(home).glm?.provider === "pi" && reg(home).glm?.model === "openrouter/z-ai/glm-5.3", glm.stderr);
-  check("GLM remains advisory", fs.readFileSync(calls, "utf8").includes("--tools read\\,grep\\,find\\,ls --no-context-files --no-skills --no-extensions --model openrouter/z-ai/glm-5.3"));
+  check("saved Pi provider and model reach Pi", glm.code === 0 && reg(home).glm?.provider === "pi" && reg(home).glm?.model === "route/model-b", glm.stderr);
+  check("a saved Pi model stays read-only", fs.readFileSync(calls, "utf8").includes("--tools read\\,grep\\,find\\,ls --no-context-files --no-skills --no-extensions --provider route --model model-b"));
 
-  await confer(["config", "pi-model", "gemini-3.8-flash"], { home });
-  const resumed = await confer(["reply", "glm", "again"], { home, env: { CONFER_PI_MODEL: "gemini-3.8-flash", FAKE_PI_CALLS: calls } });
-  check("Pi reply keeps original GLM after default changes", resumed.code === 0 && reg(home).glm?.rounds === 2 && reg(home).glm?.piModel === "openrouter/z-ai/glm-5.3" && reg(home).glm?.model === "openrouter/z-ai/glm-5.3", resumed.stderr);
+  await confer(["config", "pi-model", "route/model-a"], { home });
+  const resumed = await confer(["reply", "glm", "again"], { home, env: { CONFER_PI_MODEL: "route/model-a", FAKE_PI_CALLS: calls } });
+  check("Pi reply keeps the thread's model after the default changes", resumed.code === 0 && reg(home).glm?.rounds === 2 && reg(home).glm?.piModel === "route/model-b" && reg(home).glm?.model === "route/model-b", resumed.stderr);
   const fresh = await confer(["ask", "-t", "fresh", "q"], { home });
-  check("new Pi thread uses changed Gemini default", fresh.code === 0 && reg(home).fresh?.piModel === "openrouter/google/gemini-3.8-flash", fresh.stderr);
-  const override = await confer(["ask", "-t", "env", "q"], { home, env: { CONFER_PI_MODEL: "glm-5.3" } });
-  check("Pi environment overrides saved preference", override.code === 0 && reg(home).env?.piModel === "openrouter/z-ai/glm-5.3", override.stderr);
+  check("new Pi thread uses the changed default", fresh.code === 0 && reg(home).fresh?.piModel === "route/model-a", fresh.stderr);
+  const override = await confer(["ask", "-t", "env", "q"], { home, env: { CONFER_PI_MODEL: "route/model-b" } });
+  check("Pi environment overrides saved preference", override.code === 0 && reg(home).env?.piModel === "route/model-b", override.stderr);
   const providerOverride = await confer(["ask", "-t", "env-provider", "q"], { home, env: { CONFER_PROVIDER: "codex" } });
   check("provider environment overrides saved preference", providerOverride.code === 0 && reg(home)["env-provider"]?.provider === "codex", providerOverride.stderr);
   const explicit = await confer(["ask", "oracle", "-t", "explicit", "q"], { home, env: { CONFER_PROVIDER: "codex" } });
@@ -342,11 +345,11 @@ function check(name, cond, detail = "") {
   delete legacy.glm.piModel;
   fs.writeFileSync(path.join(home, "threads.json"), JSON.stringify(legacy));
   const legacyReply = await confer(["reply", "glm", "again"], { home });
-  check("legacy Pi thread reuses recorded model", legacyReply.code === 0 && reg(home).glm?.piModel === "openrouter/z-ai/glm-5.3", legacyReply.stderr);
+  check("legacy Pi thread reuses recorded model", legacyReply.code === 0 && reg(home).glm?.piModel === "route/model-b", legacyReply.stderr);
 
   const before = fs.readFileSync(path.join(home, "config.json"), "utf8");
-  const invalid = await confer(["config", "pi-model", "glmm-5.3"], { home });
-  check("invalid Pi preset leaves config unchanged", invalid.code === 1 && before === fs.readFileSync(path.join(home, "config.json"), "utf8"), invalid.stderr);
+  const invalid = await confer(["config", "pi-model", "model-b"], { home });
+  check("a bare Pi model id is refused and leaves config unchanged", invalid.code === 1 && before === fs.readFileSync(path.join(home, "config.json"), "utf8"), invalid.stderr);
   const invalidProvider = await confer(["config", "provider", "bogus"], { home });
   check("invalid provider is rejected", invalidProvider.code === 1, invalidProvider.stderr);
   const custom = await confer(["open", "pi", "-t", "custom", "q"], { home, env: { CONFER_PI_MODEL: "custom/model-id" } });

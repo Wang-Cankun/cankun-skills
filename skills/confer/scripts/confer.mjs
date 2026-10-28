@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// confer — consult GPT Pro by default, or a chosen peer, with resumable threads.
+// confer — consult a peer model (Pi's default model unless chosen otherwise), with resumable threads.
 // State: ~/.confer/threads.json (registry) + ~/.confer/threads/<name>.md (transcripts)
 // Locks: ~/.confer/locks/ — per-thread operation lock (held across the provider call)
 //        + short registry transaction lock. See references/providers.md.
@@ -25,10 +25,6 @@ const ORACLE_PROFILE_ROOT =
   process.env.CONFER_ORACLE_PROFILE_ROOT || path.join(os.homedir(), ".oracle", "browser-profile");
 const ORACLE_MODEL = "gpt-6-pro";
 const ORACLE_MODEL_LABEL = "gpt-6/pro";
-const PI_MODELS = {
-  "gemini-3.8-flash": "openrouter/google/gemini-3.8-flash",
-  "glm-5.3": "openrouter/z-ai/glm-5.3",
-};
 const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
 const PI_READ_TOOLS = "read,grep,find,ls";
 const CLAUDE_DENIED_TOOLS = "Edit,Write,NotebookEdit,Bash";
@@ -66,18 +62,26 @@ function readConfig() {
 }
 
 function resolvePiModel(value) {
-  if (typeof value !== "string" || !value.trim() || /\s/.test(value)) die("pi-model needs a preset or provider/model identifier");
-  if (Object.hasOwn(PI_MODELS, value)) return PI_MODELS[value];
-  if (!value.includes("/")) die(`unknown Pi preset '${value}' (have: ${Object.keys(PI_MODELS).join(", ")}); custom models need provider/model`);
+  // A bare id is a pattern to Pi and can match a route that bills elsewhere or is refused.
+  if (typeof value !== "string" || /\s/.test(value) || !/^[^/]+\/./.test(value)) die(`pi-model needs a full provider/model identifier (see: pi --list-models), got '${value}'`);
   return value;
 }
 
+// Pi reads provider/model as a hint and can resolve the whole string as a model id on another
+// authenticated provider; --provider restricts the search to the recorded route.
+function piModelArgs(model) {
+  if (!model) return [];
+  const slash = model.indexOf("/");
+  return ["--provider", model.slice(0, slash), "--model", model.slice(slash + 1)];
+}
+
 function piModel() {
-  return resolvePiModel(process.env.CONFER_PI_MODEL || readConfig().piModel || "gemini-3.8-flash");
+  const value = process.env.CONFER_PI_MODEL || readConfig().piModel;
+  return value ? resolvePiModel(value) : null;
 }
 
 function defaultProvider() {
-  const provider = process.env.CONFER_PROVIDER || readConfig().provider || "oracle";
+  const provider = process.env.CONFER_PROVIDER || readConfig().provider || "pi";
   if (!PROVIDERS.includes(provider)) die(`unknown default provider '${provider}'`);
   return provider;
 }
@@ -398,7 +402,7 @@ const providers = {
         "--no-context-files",
         "--no-skills",
         "--no-extensions",
-        "--model", selectedModel,
+        ...piModelArgs(selectedModel),
         "--session-dir", PI_SESSION_DIR,
         ...(session ? ["--session", session] : ["--session-id", sessionId]),
         prompt,
@@ -421,14 +425,19 @@ const providers = {
       }
       if (reportedSession !== sessionId)
         throw new ProviderError("pi", `unexpected session id: ${reportedSession ?? "missing"} (expected ${sessionId})`);
+      // Pi's JSON mode exits 0 when the model call fails, keeping whatever text had streamed.
+      if (["error", "aborted", "length"].includes(message?.stopReason))
+        throw new ProviderError("pi", `round did not finish (stopReason ${message.stopReason}${message.errorMessage ? `: ${message.errorMessage}` : ""})`);
       const reply = message?.content?.filter((c) => c.type === "text").map((c) => c.text).join("") ?? "";
       if (!reply.trim()) throw new ProviderError("pi", "no assistant text in response (protocol error)");
-      const model = message.provider && message.model ? `${message.provider}/${message.model}` : selectedModel;
+      const model = message.provider && message.model ? `${message.provider}/${message.model}` : selectedModel ?? null;
       const parts = [
         model,
         usage ? `${fmtTok(usage.input ?? 0)}→${fmtTok(usage.output ?? 0)}tok` : null,
       ].filter(Boolean);
-      return { reply, session: sessionId, piModel: selectedModel, meta: { model, parts } };
+      // Without a chosen model Pi runs its own default; record the one it reports so a reply
+      // stays on it after Pi's default changes.
+      return { reply, session: sessionId, piModel: selectedModel ?? model, meta: { model, parts } };
     },
   },
   agy: {
@@ -594,14 +603,14 @@ async function cmdAsk(args) {
 async function cmdConfig(args) {
   if (!args.length) {
     const oracleProfile = readConfig().oracleProfile ?? null;
-    console.log(JSON.stringify({ provider: defaultProvider(), piModel: piModel(), piPresets: PI_MODELS, oracleProfile }, null, 2));
+    console.log(JSON.stringify({ provider: defaultProvider(), piModel: piModel(), oracleProfile }, null, 2));
     return;
   }
   const [key, value] = args;
   const fields = { provider: "provider", "pi-model": "piModel", "oracle-profile": "oracleProfile" };
   if (args.length > 2 || !Object.hasOwn(fields, key)) die("usage: confer.mjs config [provider|pi-model|oracle-profile [value]]");
   if (value === undefined) {
-    console.log(key === "provider" ? defaultProvider() : key === "pi-model" ? piModel() : readConfig().oracleProfile ?? "");
+    console.log(key === "provider" ? defaultProvider() : key === "pi-model" ? piModel() ?? "(Pi's default)" : readConfig().oracleProfile ?? "");
     return;
   }
   const resolved = key === "pi-model" ? resolvePiModel(value) : value;
@@ -735,15 +744,15 @@ async function cmdDoctor(args) {
 
 const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   open <provider> [-t name] <prompt|->   start a thread (${PROVIDERS.join("|")}); '-' reads prompt from stdin
-  ask [provider] [-t name] <prompt|->    default: GPT-6 Pro via Oracle; '--' ends options
-  config [provider|pi-model|oracle-profile [value]]  show/save defaults; Pi presets: ${Object.keys(PI_MODELS).join(", ")}
+  ask [provider] [-t name] <prompt|->    default: Pi's default model; '--' ends options
+  config [provider|pi-model|oracle-profile [value]]  show/save defaults; pi-model is a full provider/model id
   reply <thread> <prompt|->              continue a thread (session resumed provider-side)
-  all [--with-oracle] <prompt|->         fan out to claude+codex; explicit flag adds GPT Pro
+  all [--with-oracle] <prompt|->         fan out to claude+codex; explicit flag adds Oracle
   list | show <thread>                   registry / full transcript
   doctor [--live [provider]]             check CLIs; live defaults to claude+codex
 env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
      CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_AGY_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
-defaults: oracle (GPT-6 Pro); Pi: gemini-3.8-flash; agy: ${AGY_MODEL}. Environment > saved config > built-in defaults.
+defaults: pi on Pi's default model; agy: ${AGY_MODEL}; oracle: ${ORACLE_MODEL}. Environment > saved config > built-in defaults.
 Peers other than Oracle run read-only in the caller's working directory and read the repository there.`;
 
 const [cmd, ...rest] = process.argv.slice(2);

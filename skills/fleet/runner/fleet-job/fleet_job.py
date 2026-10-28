@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Run Pi (pi.dev coding agent) as a background worker and collect its result.
+"""Run a Pi (GPT) or agy (Gemini) agent as a background worker and collect its result.
 
 Usage:
-  pi_job.py start --spec SPEC.json            # or flags: --model --prompt-file --tools ...
-  pi_job.py wait JOB [--timeout SECONDS]      # exit 0 when finished, 3 while still running
-  pi_job.py result JOB [--text | --structured]
-  pi_job.py status JOB
-  pi_job.py cancel JOB
-  pi_job.py list
+  fleet_job.py start --spec SPEC.json         # or flags: --engine --model --prompt-file --tools ...
+  fleet_job.py wait JOB [--timeout SECONDS]   # exit 0 when finished, 3 while still running
+  fleet_job.py result JOB [--text | --structured]
+  fleet_job.py status JOB
+  fleet_job.py cancel JOB
+  fleet_job.py list
 
-Spec (JSON): prompt | prompt_file, model (optional; Pi's configured default otherwise), thinking, tools (list or preset name:
-readonly, research, write, full), cwd, schema | schema_file, append_system_prompt,
-extensions (list), no_extensions, session (default true), approve (true/false/null),
-max_minutes (default 60), name.
+Spec (JSON): engine (pi, the default, or agy), prompt | prompt_file, model (Pi: its configured
+default otherwise; agy: gemini-4-argon-high), thinking, tools (preset name: readonly, research,
+write, full; Pi also takes a list), cwd, schema | schema_file, max_minutes (default 60), name.
+Pi only: append_system_prompt, extensions (list), no_extensions, session (default true),
+approve (true/false/null).
 
-Jobs live in $PI_JOB_HOME (default ~/.claude/pi-jobs/<job-id>/): spec.json, prompt.md,
-events.jsonl (Pi JSON mode), stderr.log, state.json, result.json, session/.
+Jobs live in $FLEET_JOB_HOME (default ~/.claude/fleet-jobs/<job-id>/): spec.json, prompt.md,
+events.jsonl (the engine's JSON output), stderr.log, state.json, result.json, session/ (Pi).
 """
 from __future__ import annotations
 
@@ -31,7 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-JOBS_HOME = Path(os.environ.get("PI_JOB_HOME", Path.home() / ".claude" / "pi-jobs"))
+JOBS_HOME = Path(os.environ.get("FLEET_JOB_HOME", Path.home() / ".claude" / "fleet-jobs"))
 SUBMIT_EXTENSION = HERE / "submit_result.ts"
 
 TOOL_PRESETS = {
@@ -46,6 +47,14 @@ TOOL_PRESETS = {
              "subagent", "subagent_supervisor", "bg_wait", "codemode"],
 }
 TERMINAL = {"completed", "failed", "no_result", "cancelled", "timeout"}
+ENGINES = ("pi", "agy")
+AGY_DEFAULT_MODEL = "gemini-4-argon-high"
+# agy has one switch where Pi has a tool list: plan mode denies every write, and skipping
+# permissions approves everything, the shell included.
+AGY_READ_ONLY = ("readonly", "research")
+AGY_EFFORT = {"off": "low", "minimal": "low", "low": "low", "medium": "medium", "high": "high",
+              "xhigh": "xhigh", "max": "max"}
+PI_ONLY = ("append_system_prompt", "extensions", "no_extensions", "approve")
 
 
 def now() -> str:
@@ -96,7 +105,7 @@ def build_spec(args) -> dict:
     spec = read_json(Path(args.spec), None) if args.spec else {}
     if spec is None:
         die(f"cannot read spec: {args.spec}")
-    for key in ("model", "thinking", "cwd", "name", "prompt_file", "schema_file"):
+    for key in ("engine", "model", "thinking", "cwd", "name", "prompt_file", "schema_file"):
         value = getattr(args, key, None)
         if value is not None:
             spec[key] = value
@@ -117,12 +126,23 @@ def build_spec(args) -> dict:
     if schema is not None and schema.get("type") != "object":
         die("schema root must be a JSON Schema object (type: object)")
 
+    engine = spec.setdefault("engine", "pi")
+    if engine not in ENGINES:
+        die(f"unknown engine: {engine} (have: {', '.join(ENGINES)})")
     tools = spec.get("tools", "readonly")
-    if isinstance(tools, str):
-        tools = TOOL_PRESETS.get(tools, tools.split(","))
-    tools = [t for t in tools if t]
-    if schema is not None and "submit_result" not in tools:
-        tools.append("submit_result")
+    if engine == "agy":
+        if not isinstance(tools, str) or tools not in TOOL_PRESETS:
+            die(f"agy takes a tool preset ({', '.join(TOOL_PRESETS)}), not a tool list")
+        given = [key for key in PI_ONLY if spec.get(key) not in (None, [], "")]
+        if given:
+            die(f"agy does not support: {', '.join(given)}")
+        spec.setdefault("model", AGY_DEFAULT_MODEL)
+    else:
+        if isinstance(tools, str):
+            tools = TOOL_PRESETS.get(tools, tools.split(","))
+        tools = [t for t in tools if t]
+        if schema is not None and "submit_result" not in tools:
+            tools.append("submit_result")
     spec["tools"] = tools
     spec["cwd"] = str(Path(spec.get("cwd") or os.getcwd()).expanduser().resolve())
     if not Path(spec["cwd"]).is_dir():
@@ -135,7 +155,9 @@ def build_spec(args) -> dict:
 def pi_command(spec: dict, jdir: Path) -> list[str]:
     cmd = ["pi", "--mode", "json", "--offline"]
     if spec.get("model"):
-        cmd += ["--model", spec["model"]]
+        provider, slash, model = spec["model"].partition("/")
+        # Pi reads provider/id as a hint and can resolve the whole string on another provider.
+        cmd += ["--provider", provider, "--model", model] if slash else ["--model", spec["model"]]
     if spec.get("thinking"):
         cmd += ["--thinking", spec["thinking"]]
     cmd += ["--tools", ",".join(spec["tools"])]
@@ -159,6 +181,24 @@ def pi_command(spec: dict, jdir: Path) -> list[str]:
         cmd += ["--name", spec["name"]]
     cmd += ["-p", "--", spec["prompt"]]
     return cmd
+
+
+def agy_command(spec: dict, jdir: Path) -> list[str]:
+    cmd = ["agy"]
+    cmd += ["--mode", "plan"] if spec["tools"] in AGY_READ_ONLY else ["--dangerously-skip-permissions"]
+    cmd += ["--model", spec["model"]]
+    if spec.get("thinking"):
+        cmd += ["--effort", AGY_EFFORT.get(spec["thinking"], spec["thinking"])]
+    cmd += ["--output-format", "json"]
+    if spec.get("schema") is not None:
+        cmd += ["--json-schema", str(jdir / "schema.json")]
+    # agy reads the argument after -p as the prompt, so -p comes last.
+    cmd += ["-p", spec["prompt"]]
+    return cmd
+
+
+def command(spec: dict, jdir: Path) -> list[str]:
+    return agy_command(spec, jdir) if spec.get("engine") == "agy" else pi_command(spec, jdir)
 
 
 # ---------------------------------------------------------------- event parsing
@@ -189,6 +229,69 @@ def text_of(message: dict) -> str:
 
 def summarize(jdir: Path) -> dict:
     spec = read_json(jdir / "spec.json", {})
+    if spec.get("engine") == "agy":
+        return summarize_agy(jdir, spec)
+    return summarize_pi(jdir, spec)
+
+
+def summarize_agy(jdir: Path, spec: dict) -> dict:
+    state = read_json(jdir / "state.json", {})
+    final = None
+    for ev in iter_events(jdir / "events.jsonl"):
+        if isinstance(ev, dict) and "conversation_id" in ev:
+            final = ev
+    final = final or {}
+    exit_code = state.get("exit_code")
+    response = final.get("response") or ""
+    structured = final.get("structured_output")
+    denied = [a.get("action", "?") for a in final.get("denied_actions") or []]
+    error = None
+    if state.get("status") in ("cancelled", "timeout", "starting", "running"):
+        status = state["status"]
+    elif exit_code not in (0, None):
+        status, error = "failed", f"agy exited {exit_code}"
+    elif not final:
+        status, error = "failed", "agy printed no JSON result"
+    elif final.get("status") != "SUCCESS":
+        status, error = "failed", f"agy status {final.get('status')}"
+    elif not response.strip() and structured is None:
+        status = "failed"
+        error = f"plan mode denied {', '.join(denied)}" if denied else "empty response"
+    elif spec.get("schema") is not None and structured is None:
+        status = "no_result"
+    else:
+        status = "completed"
+    usage = final.get("usage") or {}
+    stderr_tail = ""
+    if status == "failed" and (jdir / "stderr.log").exists():
+        stderr_tail = (jdir / "stderr.log").read_text(errors="replace")[-2000:]
+    return {
+        "job_id": jdir.name,
+        "engine": "agy",
+        "status": status,
+        "model": spec.get("model"),
+        "requested_model": spec.get("model"),
+        "name": spec.get("name"),
+        "started_at": state.get("started_at"),
+        "finished_at": state.get("finished_at"),
+        "exit_code": exit_code,
+        "stop_reason": None,
+        "error": error,
+        "text": response,
+        "structured": structured,
+        "denied_actions": denied,
+        "turns": final.get("num_turns"),
+        "cost_usd": 0.0,
+        "tokens": {"input": usage.get("input_tokens", 0), "output": usage.get("output_tokens", 0),
+                   "cacheRead": 0, "cacheWrite": 0},
+        "session_id": final.get("conversation_id"),
+        "session_file": None,
+        "dir": str(jdir),
+        "stderr_tail": stderr_tail,
+    }
+
+
+def summarize_pi(jdir: Path, spec: dict) -> dict:
     state = read_json(jdir / "state.json", {})
     settled = False
     last_assistant = None
@@ -250,6 +353,7 @@ def summarize(jdir: Path) -> dict:
         stderr_tail = (jdir / "stderr.log").read_text(errors="replace")[-2000:]
     return {
         "job_id": jdir.name,
+        "engine": "pi",
         "status": status,
         "model": actual_model or spec.get("model"),
         "requested_model": spec.get("model"),
@@ -314,10 +418,10 @@ def cmd_supervise(args) -> None:
     spec = read_json(jdir / "spec.json")
     env = dict(os.environ)
     if spec.get("schema") is not None:
-        env["PI_JOB_SCHEMA"] = str(jdir / "schema.json")
+        env["FLEET_JOB_SCHEMA"] = str(jdir / "schema.json")
     with open(jdir / "events.jsonl", "wb") as out, open(jdir / "stderr.log", "wb") as err:
         try:
-            proc = subprocess.Popen(pi_command(spec, jdir), cwd=spec["cwd"], env=env,
+            proc = subprocess.Popen(command(spec, jdir), cwd=spec["cwd"], env=env,
                                     stdin=subprocess.DEVNULL, stdout=out, stderr=err)
         except OSError as exc:
             write_json(jdir / "state.json", {"status": "failed", "error": str(exc), "finished_at": now()})
@@ -356,7 +460,7 @@ def current_status(jdir: Path) -> dict:
 
 
 def brief(result: dict) -> dict:
-    keys = ("job_id", "status", "model", "name", "stop_reason", "error", "cost_usd", "tool_calls", "dir")
+    keys = ("job_id", "engine", "status", "model", "name", "stop_reason", "error", "cost_usd", "tool_calls", "dir")
     out = {k: result.get(k) for k in keys}
     out["has_structured"] = result.get("structured") is not None
     return out
@@ -419,9 +523,10 @@ def main() -> None:
 
     p = sub.add_parser("start")
     p.add_argument("--spec")
+    p.add_argument("--engine", choices=ENGINES)
     p.add_argument("--model")
     p.add_argument("--thinking")
-    p.add_argument("--tools", help="preset (readonly, research, write, full) or comma list")
+    p.add_argument("--tools", help="preset (readonly, research, write, full); Pi also takes a comma list")
     p.add_argument("--cwd")
     p.add_argument("--name")
     p.add_argument("--prompt")

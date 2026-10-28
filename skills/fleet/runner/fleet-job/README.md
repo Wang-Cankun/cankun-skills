@@ -1,26 +1,30 @@
-# pi-job
+# fleet-job
 
-Run Pi as a background worker from Claude Code (main session or a Workflow stage) and
-collect a reliable result. Pi's JSON mode exits 0 even when the model call fails, so
-success is judged from the event stream, not the exit code.
+Run Pi (GPT) or agy (Gemini) as a background worker from Claude Code (main session or a
+Workflow stage) and collect a reliable result. Both exit 0 when the model call fails, so success
+is judged from their JSON output, not the exit code: Pi's event stream, agy's final object
+(`status`, `response`, `structured_output`, `denied_actions`).
 
 ## Files
 
-- `pi_job.py`: `start`, `wait`, `result`, `status`, `cancel`, `list` (see `--help`).
+- `fleet_job.py`: `start`, `wait`, `result`, `status`, `cancel`, `list` (see `--help`).
+  `test_fleet_job.py` pins each engine's invocation against fake CLIs.
 - `submit_result.ts`: Pi extension loaded automatically when a job has a `schema`. It
   registers `submit_result` with that JSON Schema as its parameters, so Pi validates the
   submission and returns errors for a retry. If the run completes without a submission it
   appends a reminder and continues, at most twice.
-- `~/.claude/agents/pi-runner.md`: thin Workflow stage that runs one job via this script.
-- Jobs: `~/.claude/pi-jobs/<job-id>/` (`spec.json`, `prompt.md`, `events.jsonl`,
-  `stderr.log`, `state.json`, `result.json`, `session/`). Override with `PI_JOB_HOME`.
+- `~/.claude/agents/fleet-runner.md`: thin Workflow stage that runs one job via this script.
+- Jobs: `~/.claude/fleet-jobs/<job-id>/` (`spec.json`, `prompt.md`, `events.jsonl`,
+  `stderr.log`, `state.json`, `result.json`, `session/`). Override with `FLEET_JOB_HOME`.
 
 ## Use
 
 ```bash
-J=~/.claude/tools/pi-job/pi_job.py
-$J start --name review-01 --model anthropic/claude-sonnet-5 --thinking medium \
+J=~/.claude/tools/fleet-job/fleet_job.py
+$J start --name review-01 --thinking xhigh \
    --tools readonly --cwd ~/repo --prompt-file prompt.md --schema-file schema.json
+$J start --name whole-run --engine agy --model gemini-4-argon-high \
+   --tools readonly --cwd ~/repo --prompt-file prompt.md
 $J wait <job_id> --timeout 540   # exit 0 finished, 3 still running
 $J result <job_id>               # full JSON; --text or --structured for one field
 ```
@@ -36,10 +40,16 @@ Tool presets: `readonly` (read, grep, find, ls), `research` (plus `web_search`,
 available only when the preset or list names it. Tools are an allowlist, not a sandbox: `bash` can write anywhere, so
 give write-capable jobs a worktree as `cwd`. Installed Pi packages load normally.
 `--model` is optional: without it Pi uses its configured default, and `result` reports the
-model that actually answered. Use Pi workers for non-Claude models; run Claude models as
+model that actually answered; agy defaults to `gemini-4-argon-high`. Run Claude models as
 native Claude Code agents instead.
 
-Sessions are kept under the job directory; continue one interactively with
+agy takes a preset, not a tool list: `readonly` and `research` run in plan mode, where every
+write is denied; `write` and `full` skip permissions, shell included, so give those a worktree.
+`thinking` becomes agy's `--effort`. Pi-only fields (`append_system_prompt`, `extensions`,
+`no_extensions`, `approve`) are refused for agy. Its conversation id is the result's
+`session_id`; continue it with `agy --conversation <id>`. agy reports input and output tokens but no cost.
+
+Pi sessions are kept under the job directory; continue one interactively with
 `pi --session <session_file>`.
 
 ## Notes

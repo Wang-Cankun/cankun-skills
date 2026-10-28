@@ -7,8 +7,8 @@ metadata:
   summary: >-
     Resident agents of any model family in Herdr panes, orchestrated by the
     session that opens them: general rules for sizing, routing and accepting
-    work, and notes on seating each model.
-description: "Run resident agents of any model family in Herdr panes, with this session as coordinator: it chooses how many agents, which models and how work and review flow, from general rules and per-model notes. Use when the user invokes /crew or asks for side agents, several models working or discussing together, or a coordinator in Herdr."
+    work, and how to seat each model.
+description: "Run resident agents of any model family in Herdr panes, with this session as coordinator: it chooses how many agents, which models and how work and review flow, from general rules and the user's model roster. Use when the user invokes /crew or asks for side agents, several models working or discussing together, or a coordinator in Herdr."
 ---
 
 # Crew
@@ -16,7 +16,7 @@ description: "Run resident agents of any model family in Herdr panes, with this 
 A crew is resident agents in Herdr panes: each keeps its context across turns, and the user
 and other windows reach it by name. This session is the **coordinator**. It designs the crew for
 the task in front of it and reshapes it as the work changes; this skill holds the rules every
-crew keeps and notes on each model, not a workflow.
+crew keeps and how to seat each model, not a workflow.
 
 **The user decides**: whether to open a crew; which models join, when the user names them; the
 points the user settles personally; anything destructive, outward-facing, or costly beyond what
@@ -73,13 +73,14 @@ Shapes that have worked, to combine or change as the work goes:
   round cap, bringing the user each standing disagreement;
 - an executor and a reviewer from another family, trading `handoff-<unit>.md` and
   `review-<unit>.md` (`accept` or `fix`; later rounds `-r2`);
-- parallel lanes under one coordinator, each landing its own units.
+- parallel lanes under one coordinator, each landing its own units ([how lanes ran](references/seating.md#lanes)).
 
 ## Models
 
-Before choosing models, read [references/models.md](references/models.md): how to seat each
-family, what to give it, and what to watch for. When the project's rules name who works and who
-reviews, they decide.
+Before choosing models, read the user's model roster (`~/.codex/agent-notes/models.md`, when
+present): which model does what, what to give it and what to watch for. Name each model by its
+full version (GPT-6.1 Sol, Gemini 4 Argon) on the card. When the project's rules name who works
+and who reviews, they decide. To start each one in a pane: [references/seating.md](references/seating.md).
 
 ## Herdr
 
@@ -105,7 +106,7 @@ dirty). To see cost and progress, use the optional ledger and watcher in
 
 ## Use a different skill when
 
-- The brief is settled and units have checks: delegate to a Claude Code Workflow, or to
-  `gpt-workflow` for GPT producing stages.
+- The brief is settled and units have checks: `fleet`, a Workflow whose stages run on any of
+  the roster's models.
 - One opinion from another model, with no resident agent: `confer`.
 - Which version of the work to do: `ambition`; what it is for and where it ends: `common-ground`.

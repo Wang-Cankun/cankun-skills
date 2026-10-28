@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fleet"
+  short_description: "Workflows across Claude, GPT and Gemini; this session accepts each result"
+  default_prompt: "Use $fleet to run this task as a Workflow whose stages each run on the model they need, accepting each result before anything relies on it."
+
+policy:
+  allow_implicit_invocation: true

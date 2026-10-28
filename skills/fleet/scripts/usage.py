@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-stage token use of one workflow run: Claude stages from their transcripts, GPT jobs from Pi.
+"""Per-stage token use of one workflow run: Claude stages from their transcripts, fleet jobs from theirs.
 
 usage.py <runId> [--project-dir ~/.claude/projects/<slug>]
 
@@ -34,8 +34,11 @@ def claude_usage(transcript):
     return total, len(seen)
 
 
-def pi_usage(job):
-    r = json.loads((Path.home() / ".claude/pi-jobs" / job / "result.json").read_text())
+JOBS = Path.home() / ".claude/fleet-jobs"
+
+
+def job_usage(job):
+    r = json.loads((JOBS / job / "result.json").read_text())
     t = r.get("tokens", {})
     return {"input": t.get("input", 0), "output": t.get("output", 0), "cache_read": t.get("cacheRead", 0),
             "cache_write": t.get("cacheWrite", 0)}, r.get("cost_usd", 0.0), r.get("model", "")
@@ -58,8 +61,8 @@ def main():
         u, turns = claude_usage(transcript)
         rows.append((info["description"], info.get("model") or "inherit", turns, u, None))
         for job in sorted(set(JOB_ID.findall(transcript.read_text()))):
-            if (Path.home() / ".claude/pi-jobs" / job / "result.json").exists():
-                pu, cost, model = pi_usage(job)
+            if (JOBS / job / "result.json").exists():
+                pu, cost, model = job_usage(job)
                 rows.append((f"  └ {job}", model, None, pu, cost))
 
     print(f"{'stage':44} {'model':26} {'turns':>5} {'input':>9} {'output':>8} {'cache_rd':>10} {'cache_wr':>9} {'total':>10} {'usd':>6}")
@@ -67,8 +70,8 @@ def main():
         total = sum(u.values())
         print(f"{name:44} {model:26} {turns if turns is not None else '':>5} {u['input']:>9} {u['output']:>8} "
               f"{u['cache_read']:>10} {u['cache_write']:>9} {total:>10} {f'{cost:.2f}' if cost is not None else '':>6}")
-    gpt = sum(c for *_, c in rows if c is not None)
-    print(f"GPT cost_usd (API-equivalent; billed to the Codex subscription): {gpt:.2f}")
+    jobs = sum(c for *_, c in rows if c is not None)
+    print(f"Pi jobs' cost_usd (API-equivalent; billed to the ChatGPT subscription; agy reports none): {jobs:.2f}")
 
 
 if __name__ == "__main__":
