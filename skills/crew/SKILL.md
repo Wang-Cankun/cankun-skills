@@ -27,6 +27,10 @@ Use the shape the user names, or the smallest that fits:
 
 Invoking this skill authorizes opening the panes for that shape.
 
+A table or team has **one coordinator**, normally the session that opened it: it prompts the
+others, reads their files, and alone accepts and merges. The card or `residents.md` names its
+pane, so every agent knows where its results go.
+
 **The user decides**: whether to open a crew; the question a table works on and what counts as
 converged; the points the user settles personally; which models sit at the table; when converged
 work moves to delegated execution; and anything destructive or outward-facing.
@@ -41,8 +45,12 @@ the `herdr` skill covers pane mechanics.
 
   ```bash
   herdr pane split --pane <source-pane> --direction right --cwd "<cwd>" --no-focus
-  herdr agent start <name> --kind <claude|codex|pi> --pane <pane-id> -- <native-args...>
+  herdr agent start <name> --kind <kind> --pane <pane-id> -- <native-args...>
   ```
+
+  Any kind `herdr agent start --help` lists can sit in a crew, so a model from another family
+  (GPT through `pi` or `codex`, Gemini through `agy`) joins as a resident pane the user can
+  watch and steer, not as a one-shot call.
 
 - A team executor: its own worktree and branch, which returns the lane's root pane.
 
@@ -52,8 +60,10 @@ the `herdr` skill covers pane mechanics.
 
 Pass the user's launch preferences after `--`. Agent kind alone does not select a model; confirm
 the model on the agent's status line at startup. Name agents for what they hold
-(`side-provenance`, `table-gpt`), because the name is how other windows find them. An agent
-that edits files works in its own worktree, never in a checkout another session uses.
+(`side-provenance`, `table-gpt`), because the name is how other windows find them. Address an
+agent by a name or pane that `herdr agent list` or the card shows; when they leave the target
+open, ask the user. An agent that edits files works in its own worktree, never in a checkout
+another session uses.
 
 Startup and reset gotchas:
 
@@ -111,7 +121,8 @@ its path. Each participant answers `AGREE` or `DISAGREE` with reasons. Keep disa
 and attributed; consensus is reached only when every participant writes `AGREE`. A dispute that
 evidence can settle may get a small, recorded experiment. A participant without file access,
 such as GPT Pro through `confer`, gets the material inline, and its replies go into
-`thread.md` verbatim.
+`thread.md` verbatim. Another family's findings are claims: the coordinator checks each against
+the code or source before taking it and records the ruling beside it.
 
 Bring the user the points that need their judgement as they arise. At convergence, hand the
 understanding back with
@@ -120,8 +131,9 @@ and offer the converged result as a brief for delegated execution.
 
 ## Team
 
-Write a short card at `.work/crew/<run>/card.md`: goal and finish line, each agent's name,
-model, pane and branch, who may commit, merge or push, and what goes to the user. Show it to the
+Write a short card at `.work/crew/<run>/card.md`: goal and finish line, the coordinator's pane,
+each agent's name, model, pane and branch, who may commit, merge or push, and what goes to the
+user. Show it to the
 user unless they already said to go.
 
 1. The executor works on its branch, runs the project's checks in its worktree, and writes
