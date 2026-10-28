@@ -1,157 +1,107 @@
 ---
 name: crew
-compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1) and the agent CLIs used by the chosen agents (Claude Code, Pi, Codex); python3 for the optional ledger and watcher. GPT Pro joins through the confer skill.
+compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1) and the CLIs of the chosen models (Claude Code, Pi, Codex, agy); python3 for the optional ledger and watcher.
 metadata:
   group: models
   personal: true
   summary: >-
-    Resident agents in Herdr panes that the user and other windows reach by
-    name: a side agent to consult, a table of models converging on a
-    judgement, or an executor and reviewer pair to watch.
-description: "Keep resident agents in Herdr panes that the user and other windows reach by name: a side agent to consult, a table of different models converging on a judgement, or an executor and reviewer pair the user wants to watch. Use when the user invokes /crew or asks for side agents, panes that discuss with each other, or a coordinator in Herdr."
+    Resident agents of any model family in Herdr panes, orchestrated by the
+    session that opens them: general rules for sizing, routing and accepting
+    work, and notes on seating each model.
+description: "Run resident agents of any model family in Herdr panes, with this session as coordinator: it chooses how many agents, which models and how work and review flow, from general rules and per-model notes. Use when the user invokes /crew or asks for side agents, several models working or discussing together, or a coordinator in Herdr."
 ---
 
 # Crew
 
-A crew is one or more **resident** agents: each keeps its own context across turns, and the
-user and other windows reach it by name. That is what separates a crew from a delegated
-workflow, whose stages start fresh and end once their result comes back.
+A crew is resident agents in Herdr panes: each keeps its context across turns, and the user
+and other windows reach it by name. This session is the **coordinator**. It designs the crew for
+the task in front of it and reshapes it as the work changes; this skill holds the rules every
+crew keeps and notes on each model, not a workflow.
 
-Use the shape the user names, or the smallest that fits:
+**The user decides**: whether to open a crew; which models join, when the user names them; the
+points the user settles personally; anything destructive, outward-facing, or costly beyond what
+the card allows. Invoking this skill authorizes opening the panes the card lists.
 
-- **Side**: one resident agent to consult, or to serve other windows as a resource.
-- **Table**: several models, usually from different families, converging on a judgement such
-  as a design or a plan.
-- **Team**: an executor and a reviewer from another model family, for building the user wants
-  to watch or steer.
+## Rules for any crew
 
-Invoking this skill authorizes opening the panes for that shape.
+- **Earn the seat.** A resident agent joins when it brings what the coordinator lacks: a context
+  to hold for later, a different model's eye, or work that runs in parallel on separate files.
+  Work that needs none of these stays in this session or goes to a subagent or Workflow. Start
+  from the smallest crew that covers the need; the coordinator can hold a seat itself, as the
+  builder beside an outside reviewer or as one voice at a table. A model the user names gets
+  the job it fits best; when none fits, say so before seating it.
+- **One coordinator.** It holds the goal and finish line, assigns work, accepts results and
+  merges. It keeps the card at `.work/crew/<run>/card.md` (Git-ignored): goal and finish line,
+  its own pane, each agent's name, model, pane and worktree, who may commit, merge or push, the
+  budget and round cap when they matter, and what goes to the user. Show the card before
+  starting unless the user already said go, and update it whenever the crew changes.
+- **Independent lanes.** Parallel lanes touch separate files; an agent that edits works in its
+  own worktree and branch. The coordinator orders dependent work and says which lane waits.
+- **Families for judgement.** Seat a different model family where a shared blind spot costs
+  most: a design, the review of a unit whose wrong accept is expensive, a check of the whole
+  run against its goal. Throughput work goes to the model the project's rules name. One opinion
+  with no resident context is a `confer` call.
+- **Evidence over reports.** A result counts when the coordinator can see it: a commit, a file,
+  a finished check's log. Another family's findings are claims: check each against the code or
+  source and record the ruling beside it.
+- **Paths, not pastes.** Every model works on the repository or worktree itself; a copy of the
+  material is only for a model that cannot read it, since copies go stale and hide the rest.
+  Messages carry file paths. An answer longer than a few lines goes to a
+  file the reply names. Residents write at full length; a length limit belongs only to an
+  Agent-tool subagent, whose return lands in your own context.
+- **Arm a wait.** A resident never messages back. After each prompt whose answer you need, arm a
+  wait that notifies you: the prompt with `--wait` in the background, or a background loop until
+  the expected file exists and `herdr agent get` shows `idle` or `done`. Tell the user you are
+  waiting on it.
+- **Address by roster.** Reach an agent by a name or pane that `herdr agent list` or the card
+  shows; when they leave the target open, ask the user.
+- **Fresh context when it pays.** Compact or reset an agent whose context has grown large or
+  whose next work is unrelated. A coordinator whose own context is filling hands over through
+  the card and a handoff file a fresh session can start from.
+- **The user at decisions.** Bring each decision when it arises, with the options and a
+  recommendation; report progress at milestones, quietly otherwise.
+- **Close what you opened** once its work is merged or recorded. Side agents stay until the user
+  retires them.
 
-A table or team has **one coordinator**, normally the session that opened it: it prompts the
-others, reads their files, and alone accepts and merges. The card or `residents.md` names its
-pane, so every agent knows where its results go.
+Shapes that have worked, to combine or change as the work goes:
 
-**The user decides**: whether to open a crew; the question a table works on and what counts as
-converged; the points the user settles personally; which models sit at the table; when converged
-work moves to delegated execution; and anything destructive or outward-facing.
-**This skill holds**: pane mechanics, the records each shape keeps, and the defaults below.
+- a side agent holding a context (a branch, a design) for other windows, listed with its as-of
+  in the served repository's `.work/crew/residents.md`;
+- a table of families on one versioned document, each answering `AGREE` or `DISAGREE` with
+  reasons, positions attributed in `thread.md` and the user's settled points kept apart. It
+  ends when all agree, handing the understanding back as `common-ground` does, or at the card's
+  round cap, bringing the user each standing disagreement;
+- an executor and a reviewer from another family, trading `handoff-<unit>.md` and
+  `review-<unit>.md` (`accept` or `fix`; later rounds `-r2`);
+- parallel lanes under one coordinator, each landing its own units.
 
-## Open panes
+## Models
+
+Before choosing models, read [references/models.md](references/models.md): how to seat each
+family, what to give it, and what to watch for. When the project's rules name who works and who
+reviews, they decide.
+
+## Herdr
 
 Check `test "${HERDR_ENV:-}" = 1`. `herdr --help` and its group help are the syntax authority;
 the `herdr` skill covers pane mechanics.
 
-- A side agent or table participant: split a pane, then start the agent in it.
-
-  ```bash
-  herdr pane split --pane <source-pane> --direction right --cwd "<cwd>" --no-focus
-  herdr agent start <name> --kind <kind> --pane <pane-id> -- <native-args...>
-  ```
-
-  Any kind `herdr agent start --help` lists can sit in a crew, so a model from another family
-  (GPT through `pi` or `codex`, Gemini through `agy`) joins as a resident pane the user can
-  watch and steer, not as a one-shot call.
-
-- A team executor: its own worktree and branch, which returns the lane's root pane.
-
-  ```bash
-  herdr worktree create --cwd "<repo>" --branch "<branch>" --base "<base>" --label "<name>" --no-focus
-  ```
-
-Pass the user's launch preferences after `--`. Agent kind alone does not select a model; confirm
-the model on the agent's status line at startup. Name agents for what they hold
-(`side-provenance`, `table-gpt`), because the name is how other windows find them. Address an
-agent by a name or pane that `herdr agent list` or the card shows; when they leave the target
-open, ask the user. An agent that edits files works in its own worktree, never in a checkout
-another session uses.
-
-Startup and reset gotchas:
-
-- A new folder may open a trust dialog; inspect `herdr agent read <name> --source recent-unwrapped
-  --lines 40` and answer it under the user's trust choices.
-- A Codex agent that must commit in a worktree needs a permission mode that allows Git metadata
-  writes; when the user has authorized it, start with `--cd "<worktree>"
-  --dangerously-bypass-approvals-and-sandbox`. `workspace-write` with approvals `never` can
-  edit source yet fail to commit.
-- Codex `/new` may open a "where should the new conversation run" picker, and drops a prompt
-  sent while it is still resetting. After `/new` or `/clear`, wait until `herdr agent get <name>`
-  shows `idle` before the next prompt.
-
-## Side
-
-Prime the agent with what it should hold (files, a branch, a design) and have it confirm what
-it read and its as-of: commit, plus "uncommitted changes" when the working tree is dirty, or a
-date. Record it in the served
-repository's `.work/crew/residents.md`: name, pane, model, what it holds, as-of.
-
-A resident agent never messages back: a prompt sent without `--wait` returns at once, and the
-answer sits in its pane or file until someone looks. After every prompt whose answer you need,
-including table rounds and team units, arm a wait that notifies you: run the prompt with `--wait`
-in the background, or a background loop until the expected file exists and `herdr agent get`
-shows `idle` or `done`. Tell the user you are waiting on it, not that it will report.
-
-Another window asks it:
-
 ```bash
-herdr agent get <name>          # ask when idle or done; --wait can match a busy agent's current turn
-herdr agent prompt <name> "<question>" --wait --timeout <ms>
+herdr pane split --pane <source-pane> --direction right --cwd "<cwd>" --no-focus
+herdr agent start <name> --kind <kind> --pane <pane-id> -- <native-args...>
+herdr worktree create --cwd "<repo>" --branch "<branch>" --base "<base>" --label "<name>" --no-focus
+herdr agent prompt <name> "<prompt>" --wait --timeout <ms>
 herdr agent read <name> --source recent-unwrapped --lines <n>
 ```
 
-The pane read includes the agent's tool output and status lines, so ask for a longer answer
-in a file, with a reply that names its path. A resident agent writes at full length: the file
-and the pane reply carry whatever the work needs, and your prompts and briefs set no word or
-line limit on either. A length limit belongs only to an Agent-tool subagent, whose return lands
-in your own context. Each answer
-states the as-of of the material it rests on, so the asker can judge staleness. Refresh a stale
-side agent by prompting it to re-read what changed, or restart it. Answers are quiet: no
-notification to the user unless the user asks for one.
-
-## Table
-
-Run the table from a directory Git ignores (`.work/crew/<topic>/`) holding:
-
-- the question and what counts as converged, in the user's words;
-- one versioned main document (`model.md`, then a new version per round);
-- `thread.md`: each participant's position, attributed and in their own words;
-- **Settled by the user**: the points the user has decided, kept apart from open points.
-
-A coordinator (normally this session) drafts each version and prompts each participant with
-its path. Each participant answers `AGREE` or `DISAGREE` with reasons. Keep disagreement visible
-and attributed; consensus is reached only when every participant writes `AGREE`. A dispute that
-evidence can settle may get a small, recorded experiment. A participant without file access,
-such as GPT Pro through `confer`, gets the material inline, and its replies go into
-`thread.md` verbatim. Another family's findings are claims: the coordinator checks each against
-the code or source before taking it and records the ruling beside it.
-
-Bring the user the points that need their judgement as they arise. At convergence, hand the
-understanding back with
-[common-ground's "Hand the understanding back"](../common-ground/SKILL.md#hand-the-understanding-back),
-and offer the converged result as a brief for delegated execution.
-
-## Team
-
-Write a short card at `.work/crew/<run>/card.md`: goal and finish line, the coordinator's pane,
-each agent's name, model, pane and branch, who may commit, merge or push, and what goes to the
-user. Show it to the
-user unless they already said to go.
-
-1. The executor works on its branch, runs the project's checks in its worktree, and writes
-   `handoff-<unit>.md`: branch, commits, checks and results, open items.
-2. The coordinator gives the reviewer the handoff path and commit range. The reviewer reads the
-   diff, runs the checks itself, and writes `review-<unit>.md` with a verdict `accept` or
-   `fix` and its findings; later rounds use new filenames (`-r2`).
-3. On `fix`, the executor gets the review path. On `accept`, the coordinator merges within the
-   card's boundaries and sends any conflict or failing check back to the executor.
-
-Messages carry file paths, not pasted reports. Agents keep their context; compact or reset one
-when its context has grown large or its next unit is unrelated, as a judgement call. To see cost
-and progress, use the optional ledger and watcher in [references/observe.md](references/observe.md).
-
-## Close
-
-Close only panes and worktrees the crew opened, once their work is merged or recorded. Side
-agents stay until the user retires them; then remove their line from `residents.md`.
+Any kind `herdr agent start --help` lists can sit in a crew. Name agents for what they hold
+(`side-provenance`, `table-gpt`); the name is how other windows find them. Pass the user's
+launch preferences after `--`, and confirm the model on the agent's status line at startup,
+since the kind alone selects no model. A new folder may open a trust dialog: read the pane and
+answer it under the user's trust choices. Prime a side agent with what it holds and have it
+confirm what it read and its as-of (a commit, plus "uncommitted changes" when the tree is
+dirty). To see cost and progress, use the optional ledger and watcher in
+[references/observe.md](references/observe.md).
 
 ## Use a different skill when
 
