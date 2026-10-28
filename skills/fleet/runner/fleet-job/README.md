@@ -35,8 +35,8 @@ Statuses: `completed`, `no_result` (schema given but nothing submitted), `failed
 
 Tool presets: `readonly` (read, grep, find, ls), `research` (plus `web_search`,
 `fetch_content`, `get_search_content` from pi-web-access, `agent_browser`, `codemode`, and
-`subagent`, `subagent_supervisor`, `bg_wait` from pi-subagents), `write` (plus edit, write),
-`full` (write plus bash and everything `research` adds). A tool an extension registers is
+`subagent`, `subagent_supervisor`, `bg_wait` from pi-subagents), `write` (plus edit, write, bash),
+`full` (write plus everything `research` adds). A tool an extension registers is
 available only when the preset or list names it. Tools are an allowlist, not a sandbox: `bash` can write anywhere, so
 give write-capable jobs a worktree as `cwd`. Installed Pi packages load normally.
 `--model` is optional: without it Pi uses its configured default, and `result` reports the

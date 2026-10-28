@@ -57,7 +57,8 @@ stage's model, by full version, in its label (`review:gemini-4-argon-high`).
   that served it. When it exits non-zero, or names an account the user has not approved for
   this work, stop and tell the user. `FLEET_DENY_ACCOUNT` names an account that must never
   serve the run.
-- Tool presets: `readonly` and `research` read only; `write` adds edits, `full` everything.
+- Tool presets: `readonly` and `research` read only; `write` adds edits and a shell, `full`
+  adds web, browser and subagent tools as well.
   agy has one switch for them: plan mode for the read presets, where every write is denied,
   and all permissions, shell included, for `write` and `full`, so a writing Gemini stage gets
   its own worktree as `cwd`. Take a Gemini stage's result as prose (`text`), and have a Claude

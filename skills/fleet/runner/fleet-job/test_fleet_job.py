@@ -101,7 +101,8 @@ class FleetJobTest(unittest.TestCase):
                 self.assertEqual(self.refused({"engine": "agy", "prompt": "q", **spec}).returncode, 2)
 
     def test_pi_model_is_pinned_to_its_provider(self):
-        _, args = self.job({"prompt": "q", "model": "magpie/codex/gpt-6-luna"})
+        _, args = self.job({"prompt": "q", "model": "magpie/codex/gpt-6-luna", "tools": "write"})
+        self.assertEqual(args[args.index("--tools") + 1], "read,grep,find,ls,edit,write,bash")
         self.assertEqual(args[args.index("--provider"):args.index("--provider") + 4],
                          ["--provider", "magpie", "--model", "codex/gpt-6-luna"])
 

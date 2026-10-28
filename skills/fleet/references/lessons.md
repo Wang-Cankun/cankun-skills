@@ -51,7 +51,7 @@ Things that went wrong in real runs with GPT and Gemini stages, each with what w
 - **A tool missing from the preset is invisible to the job.** An audit sent with a preset that
   had no shell could not run `sqlite3` or `shasum`: five of six jobs stopped blocked and wrote
   nothing, and the sixth left every hash "unverified". Give any job that must run a command a
-  preset or list with bash (`full`, or a list naming `bash`). agy in plan mode runs no commands either: a review that
+  preset with bash (`write` or `full`). agy in plan mode runs no commands either: a review that
   asked for some came back with 78 bytes. Name the files to read, or run it with a writing
   preset in its own worktree.
 - **Records**: a Herdr-pane worker reports no cost, and files in a session scratchpad have been

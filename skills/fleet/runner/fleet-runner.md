@@ -14,7 +14,7 @@ The prompt you receive contains a job spec: a JSON object, or clearly labelled f
 `prompt` or `prompt_file`, and optionally `engine` (`pi`, the default, for GPT; `agy` for
 Gemini), `model` (Pi: `provider/id`, omitted for Pi's configured default; agy: an id from
 `agy models`, default `gemini-4-argon-high`), `thinking`, `tools` (preset `readonly` or
-`research`, both without a shell; `write`, with edits; `full`, with everything; Pi also takes a
+`research`, both without a shell; `write`, with edits and a shell; `full`, with everything; Pi also takes a
 list), `cwd`, `schema` (a JSON Schema object for a structured result), `name`, `max_minutes`,
 and for Pi only `append_system_prompt` and `extensions`.
 
