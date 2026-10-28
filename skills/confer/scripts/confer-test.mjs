@@ -16,6 +16,10 @@ const BIN = path.join(ROOT, "bin");
 fs.mkdirSync(BIN);
 
 const FAKE_CLAUDE = `#!/bin/bash
+if [[ -n "$FAKE_CLAUDE_CALLS" ]]; then
+  printf '%q ' "$@" >> "$FAKE_CLAUDE_CALLS"
+  printf '\\n' >> "$FAKE_CLAUDE_CALLS"
+fi
 [[ -n "$FAKE_CLAUDE_SLEEP" ]] && sleep "$FAKE_CLAUDE_SLEEP"
 case "\${FAKE_CLAUDE_MODE:-ok}" in
   ok)        echo '{"session_id":"sess-claude-1","result":"claude-fake-reply","total_cost_usd":0.12,"duration_ms":3000,"modelUsage":{"claude-fake-model":{"costUSD":0.12,"canonicalModel":"claude-fake-model"}}}' ;;
@@ -90,12 +94,35 @@ provider="\${model%%/*}"; model_id="\${model#*/}"
 case "\${FAKE_PI_MODE:-ok}" in
   ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
        echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-fake-reply\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":2345,\\"output\\":67}}}" ;;
+  tools) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"reading\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":1000,\\"output\\":10}}}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"toolResult\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"file body\\"}]}}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"pi-final-answer\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":1500,\\"output\\":40}}}" ;;
   badjson) echo 'not-json' ;;
   nosession) echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"reply"}]}}' ;;
   noreply) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}" ;;
 esac
 `;
 
+const FAKE_AGY = `#!/bin/bash
+if [[ -n "$FAKE_AGY_CALLS" ]]; then
+  printf '%q ' "$@" >> "$FAKE_AGY_CALLS"
+  printf '\\n' >> "$FAKE_AGY_CALLS"
+fi
+[[ "$1" == "--version" ]] && { echo 1.4.9; exit 0; }
+conv="agy-conv-1"; prev=""
+for a in "$@"; do [[ "$prev" == "--conversation" ]] && conv="$a"; prev="$a"; done
+case "\${FAKE_AGY_MODE:-ok}" in
+  ok)      echo "{\\"conversation_id\\":\\"$conv\\",\\"status\\":\\"SUCCESS\\",\\"response\\":\\"agy-fake-reply\\",\\"duration_seconds\\":12.4,\\"usage\\":{\\"input_tokens\\":3456,\\"output_tokens\\":78}}" ;;
+  denied)  echo 'jetski: no output produced — a tool required the "write_file" permission'
+           echo "{\\"conversation_id\\":\\"$conv\\",\\"status\\":\\"SUCCESS\\",\\"response\\":\\"\\",\\"denied_actions\\":[{\\"action\\":\\"write_file\\"}]}" ;;
+  error)   echo "{\\"conversation_id\\":\\"$conv\\",\\"status\\":\\"ERROR\\",\\"response\\":\\"\\"}" ;;
+  drift)   echo '{"conversation_id":"other-conv","status":"SUCCESS","response":"r"}' ;;
+  badjson) echo 'not-json' ;;
+esac
+`;
+
+fs.writeFileSync(path.join(BIN, "agy"), FAKE_AGY, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "claude"), FAKE_CLAUDE, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "codex"), FAKE_CODEX, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "oracle"), FAKE_ORACLE, { mode: 0o755 });
@@ -222,9 +249,9 @@ function check(name, cond, detail = "") {
   check("pi provenance in ← header", tx(home, "gemini").includes("· openrouter/google/gemini-3.8-flash · 2.3k→67tok"), tx(home, "gemini"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("pi pins read-only Gemini invocation", [
-    "--mode json", "--print", "--no-tools", "--no-context-files", "--no-skills",
+    "--mode json", "--print", "--tools read\\,grep\\,find\\,ls", "--no-context-files", "--no-skills",
     "--no-extensions", "--model openrouter/google/gemini-3.8-flash", "--session-dir", "--session-id",
-  ].every((s) => openArgs.includes(s)), openArgs);
+  ].every((s) => openArgs.includes(s)) && !openArgs.includes("--no-tools"), openArgs);
 
   const session = reg(home).gemini.session;
   const r2 = await confer(["reply", "gemini", "again"], { home, env: { FAKE_PI_CALLS: calls } });
@@ -232,11 +259,51 @@ function check(name, cond, detail = "") {
   const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("pi reply resumes stored session", replyArgs.includes(`--session ${session}`), replyArgs);
 
+  const tools = freshHome();
+  const read = await confer(["open", "pi", "-t", "tools", "q"], { home: tools, env: { FAKE_PI_MODE: "tools" } });
+  check("pi reply is the last assistant message after tool use", read.code === 0 && read.stdout.includes("pi-final-answer") && !read.stdout.includes("reading"), read.stdout);
+  check("pi usage sums every assistant message", tx(tools, "tools").includes("2.5k→50tok"), tx(tools, "tools"));
+
   for (const [mode, expected] of [["badjson", "malformed JSONL"], ["nosession", "unexpected session id"], ["noreply", "no assistant text"]]) {
     const h = freshHome();
     const r = await confer(["open", "pi", "-t", mode, "q"], { home: h, env: { FAKE_PI_MODE: mode } });
     check(`pi ${mode} is a protocol error`, r.code === 1 && r.stderr.includes(expected), r.stderr);
   }
+}
+
+// 1c-agy. Gemini through agy runs in plan mode, so writes are denied, and resumes by conversation id.
+{
+  const home = freshHome();
+  const calls = path.join(home, "agy-calls");
+  const r1 = await confer(["open", "agy", "-t", "argon", "q"], { home, env: { FAKE_AGY_CALLS: calls } });
+  check("agy open exits 0", r1.code === 0 && r1.stdout.includes("agy-fake-reply"), r1.stderr);
+  check("agy stores conversation id", reg(home).argon?.session === "agy-conv-1");
+  check("agy provenance in ← header", tx(home, "argon").includes("· gemini-4-argon-high · 3.5k→78tok · 12s"), tx(home, "argon"));
+  const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("agy opens read-only with the prompt last", openArgs.startsWith("--mode plan --model gemini-4-argon-high --output-format json -p "), openArgs);
+  const r2 = await confer(["reply", "argon", "again"], { home, env: { FAKE_AGY_CALLS: calls } });
+  const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("agy reply resumes the conversation", r2.code === 0 && replyArgs.includes("--conversation agy-conv-1") && reg(home).argon?.rounds === 2, `${r2.stderr} ${replyArgs}`);
+  const own = await confer(["open", "agy", "-t", "flash", "q"], { home, env: { FAKE_AGY_CALLS: calls, CONFER_AGY_ARGS: "--model gemini-3.8-flash-high --effort high" } });
+  const ownArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("CONFER_AGY_ARGS picks the model once", own.code === 0 && ownArgs.split("--model").length === 2 && tx(home, "flash").includes("· gemini-3.8-flash-high/high ·"), ownArgs);
+
+  for (const [mode, expected] of [["denied", "plan mode denied write_file"], ["error", "status ERROR"], ["badjson", "unparseable JSON"]]) {
+    const h = freshHome();
+    const r = await confer(["open", "agy", "-t", mode, "q"], { home: h, env: { FAKE_AGY_MODE: mode } });
+    check(`agy ${mode} fails with its reason`, r.code === 1 && r.stderr.includes(expected), r.stderr);
+  }
+  const drift = await confer(["reply", "argon", "q"], { home, env: { FAKE_AGY_MODE: "drift" } });
+  check("agy changed conversation id fails closed", drift.code === 1 && drift.stderr.includes("conflicting conversation ids"), drift.stderr);
+}
+
+// 1c-claude. Claude's writing tools are removed whatever permission mode the user's settings set.
+{
+  const home = freshHome();
+  const calls = path.join(home, "claude-calls");
+  const r = await confer(["open", "claude", "-t", "ro", "q"], { home, env: { FAKE_CLAUDE_CALLS: calls } });
+  const args = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("claude runs without its writing tools", r.code === 0 && args.includes("--disallowedTools Edit\\,Write\\,NotebookEdit\\,Bash"), args);
 }
 
 // Defaults, saved Pi choices, and thread continuity across preference changes.
@@ -256,7 +323,7 @@ function check(name, cond, detail = "") {
   const calls = path.join(home, "pi-calls");
   const glm = await confer(["ask", "-t", "glm", "q"], { home, env: { FAKE_PI_CALLS: calls } });
   check("saved Pi and GLM defaults reach Pi", glm.code === 0 && reg(home).glm?.provider === "pi" && reg(home).glm?.model === "openrouter/z-ai/glm-5.3", glm.stderr);
-  check("GLM remains advisory", fs.readFileSync(calls, "utf8").includes("--no-tools --no-context-files --no-skills --no-extensions --model openrouter/z-ai/glm-5.3"));
+  check("GLM remains advisory", fs.readFileSync(calls, "utf8").includes("--tools read\\,grep\\,find\\,ls --no-context-files --no-skills --no-extensions --model openrouter/z-ai/glm-5.3"));
 
   await confer(["config", "pi-model", "gemini-3.8-flash"], { home });
   const resumed = await confer(["reply", "glm", "again"], { home, env: { CONFER_PI_MODEL: "gemini-3.8-flash", FAKE_PI_CALLS: calls } });

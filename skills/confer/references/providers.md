@@ -11,9 +11,10 @@ future host from one deployment; harness differences are absorbed by SKILL.md (p
 
 | Provider | New thread | Resume | Session id source | Version verified |
 |---|---|---|---|---|
-| claude | `claude -p --output-format json -- "<prompt>"` | `claude -p --resume <id> --output-format json -- "<prompt>"` | `.session_id` in the JSON result (refreshed every round) | Claude Code 2.1.218 |
+| claude | `claude -p --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `claude -p --resume <id> --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `.session_id` in the JSON result (refreshed every round) | Claude Code 2.1.218 |
 | codex | `codex exec --sandbox read-only --skip-git-repo-check --json --output-last-message <f> -- "<prompt>"` | `codex exec --sandbox read-only --skip-git-repo-check resume <id> --json --output-last-message <f> -- "<prompt>"` | `thread_id` of the `{"type":"thread.started"}` JSONL event | codex-cli 0.145.0 |
-| pi | `pi --mode json --print --no-tools --no-context-files --no-skills --no-extensions --model openrouter/google/gemini-3.8-flash --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
+| pi | `pi --mode json --print --tools read,grep,find,ls --no-context-files --no-skills --no-extensions --model openrouter/google/gemini-3.8-flash --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
+| agy | `agy --mode plan --model gemini-4-argon-high --output-format json -p "<prompt>"` | same flags plus `--conversation <id>` before `-p` | `conversation_id` in the JSON result (stable across rounds) | agy 1.4.9 |
 | oracle | `oracle --engine browser --model gpt-6-pro --browser-thinking-time pro --browser-timeout 60m --wait --no-notify --browser-archive never --write-output <f> --prompt "<prompt>"` | same flags plus `--followup <id>` | stdout `Session: <id>` or `Reattach via: oracle session <id>` | Oracle >= 0.21.1 required |
 
 Caveats (each verified against the real CLI, not assumed):
@@ -26,15 +27,27 @@ Caveats (each verified against the real CLI, not assumed):
   consultant must not depend on the caller's git state.
 - **stdin must be ignored** when the prompt travels via argv — codex otherwise announces "Reading
   additional input from stdin..." and reads it. The runner spawns every CLI with `stdio: ignore` on stdin.
-- **claude read-only**: print mode cannot interactively approve permissions, so write tools fail
-  closed — the intended consultant posture. Do not add `--dangerously-skip-permissions`.
+- **claude read-only by tool removal**: a permission mode in the user's settings (`auto`, bypass)
+  approves writes even in print mode; a live `claude -p` under `auto` wrote a file. So the writing
+  tools and Bash are disallowed outright, and Read, Grep and Glob remain. Do not add
+  `--dangerously-skip-permissions`.
+- **Every peer but Oracle reads the caller's repository**: each CLI is spawned in the caller's
+  working directory, so a peer opens the files it needs instead of receiving copies. Run confer
+  from the repository or worktree the question is about.
 - **Pi uses local model configuration without local agent behavior**: built-in presets are
   `gemini-3.8-flash` → `openrouter/google/gemini-3.8-flash` (Pi default) and
   `glm-5.3` → `openrouter/z-ai/glm-5.3`. `CONFER_PI_MODEL` overrides the saved
   `config pi-model` preference for new threads; other configured `provider/model` identifiers
   remain supported. Each Pi thread saves its selected identifier as `piModel`; `reply` reuses it,
   falling back to the recorded model for older threads. Changing defaults affects new threads.
-  Tools, context files, skills, and extensions stay disabled.
+  Only the read tools are enabled (`read,grep,find,ls`); context files, skills and extensions stay
+  disabled. With tools a round spans several assistant messages: the reply is the last one's text,
+  and usage is summed over all of them.
+- **agy is Gemini 4 Argon, read-only by plan mode**: print mode approves file writes unless
+  `--mode plan`, where a write is auto-denied (the JSON lists it under `denied_actions`) and the
+  round ends with an empty `response`; confer reports that as a denial, not a reply. `-p` must come
+  last, directly before the prompt, or agy takes the next flag as the prompt. `CONFER_AGY_ARGS`
+  passes `--model` and `--effort`; the default model is `gemini-4-argon-high`.
 - **Oracle is the default consultant**: `ask` without a provider uses `CONFER_PROVIDER`, then
   `config provider`, then `oracle`. Explicit `ask <provider>` and `open <provider>` win over defaults.
   Use `--` before a prompt beginning with a provider name or option-like text.

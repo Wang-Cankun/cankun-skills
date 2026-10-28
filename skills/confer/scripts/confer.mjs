@@ -30,10 +30,13 @@ const PI_MODELS = {
   "glm-5.3": "openrouter/z-ai/glm-5.3",
 };
 const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
+const PI_READ_TOOLS = "read,grep,find,ls";
+const CLAUDE_DENIED_TOOLS = "Edit,Write,NotebookEdit,Bash";
+const AGY_MODEL = "gemini-4-argon-high";
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
 const PREAMBLE =
-  "[confer] You are consulted as an independent peer model by another AI agent. Give your own analysis in plain text. Do not modify files or run destructive commands. This thread may continue for multiple rounds.";
+  "[confer] You are consulted as an independent peer model by another AI agent. Where you can read files, your working directory is the caller's: read what you need to check a claim rather than relying on this prompt alone. Give your own analysis in plain text. Do not modify files or run state-changing commands. This thread may continue for multiple rounds.";
 
 class ConferError extends Error {}
 class ProviderError extends Error {
@@ -307,7 +310,10 @@ async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS } = {}) 
 const providers = {
   claude: {
     async ask(prompt, session) {
+      // A permission mode in the user's settings (auto, bypass) can approve writes even in
+      // print mode, so the writing tools are removed outright; Read, Grep and Glob remain.
       const args = ["-p", ...(session ? ["--resume", session] : []), "--output-format", "json",
+                    "--disallowedTools", CLAUDE_DENIED_TOOLS,
                     ...splitArgs(process.env.CONFER_CLAUDE_ARGS), "--", prompt];
       const r = await runOrThrow("claude", "claude", args);
       let j;
@@ -388,7 +394,7 @@ const providers = {
       const args = [
         "--mode", "json",
         "--print",
-        "--no-tools",
+        "--tools", PI_READ_TOOLS,
         "--no-context-files",
         "--no-skills",
         "--no-extensions",
@@ -398,26 +404,75 @@ const providers = {
         prompt,
       ];
       const r = await runOrThrow("pi", "pi", args);
-      let reportedSession = null, message = null;
+      // With read tools a round spans several assistant messages: the last one carries the
+      // answer, and usage is the sum over all of them.
+      let reportedSession = null, message = null, usage = null;
       for (const line of r.stdout.split("\n")) {
         if (!line.trim()) continue;
         let evt;
         try { evt = JSON.parse(line); }
         catch { throw new ProviderError("pi", `malformed JSONL event: ${line.slice(0, 200)}`); }
         if (evt.type === "session" && evt.id) reportedSession = evt.id;
-        if (evt.type === "message_end" && evt.message?.role === "assistant") message = evt.message;
+        if (evt.type === "message_end" && evt.message?.role === "assistant") {
+          message = evt.message;
+          const u = evt.message.usage;
+          if (u) usage = { input: (usage?.input ?? 0) + (u.input ?? 0), output: (usage?.output ?? 0) + (u.output ?? 0) };
+        }
       }
       if (reportedSession !== sessionId)
         throw new ProviderError("pi", `unexpected session id: ${reportedSession ?? "missing"} (expected ${sessionId})`);
       const reply = message?.content?.filter((c) => c.type === "text").map((c) => c.text).join("") ?? "";
       if (!reply.trim()) throw new ProviderError("pi", "no assistant text in response (protocol error)");
       const model = message.provider && message.model ? `${message.provider}/${message.model}` : selectedModel;
-      const usage = message.usage;
       const parts = [
         model,
         usage ? `${fmtTok(usage.input ?? 0)}→${fmtTok(usage.output ?? 0)}tok` : null,
       ].filter(Boolean);
       return { reply, session: sessionId, piModel: selectedModel, meta: { model, parts } };
+    },
+  },
+  agy: {
+    defaultFanout: false,
+    // Verified against agy 1.4.9: print mode approves file writes unless --mode plan, where a
+    // write is auto-denied and the round ends with an empty response; reads still work.
+    // -p must come last, directly before the prompt, or agy takes the next flag as the prompt.
+    async ask(prompt, session) {
+      const extra = splitArgs(process.env.CONFER_AGY_ARGS);
+      const mi = extra.findIndex((a) => a === "--model");
+      const model = mi >= 0 ? extra[mi + 1] ?? AGY_MODEL : AGY_MODEL;
+      const args = [
+        "--mode", "plan",
+        ...(mi >= 0 ? [] : ["--model", AGY_MODEL]),
+        ...(session ? ["--conversation", session] : []),
+        "--output-format", "json",
+        ...extra,
+        "-p", prompt,
+      ];
+      const r = await runOrThrow("agy", "agy", args);
+      // A denial notice can precede the JSON result on stdout.
+      const line = r.stdout.split("\n").filter((l) => l.trim().startsWith("{")).at(-1);
+      let j;
+      try { j = JSON.parse(line); } catch { throw new ProviderError("agy", `unparseable JSON output: ${r.stdout.slice(0, 200)}`); }
+      if (j.status !== "SUCCESS") throw new ProviderError("agy", `status ${j.status ?? "missing"}`, { stderr: r.stderr });
+      const newSession = j.conversation_id;
+      if (!newSession) throw new ProviderError("agy", "no conversation_id in response (protocol error)");
+      if (session && newSession !== session)
+        throw new ProviderError("agy", `conflicting conversation ids: ${session} vs ${newSession}`);
+      const reply = j.response ?? "";
+      if (!reply.trim()) {
+        const denied = (j.denied_actions ?? []).map((a) => a.action).join(", ");
+        throw new ProviderError("agy", denied
+          ? `no reply: plan mode denied ${denied}; ask for analysis only`
+          : "no response text (protocol error)");
+      }
+      const effort = extra[extra.findIndex((a) => a === "--effort") + 1];
+      const label = extra.includes("--effort") && effort ? `${model}/${effort}` : model;
+      const parts = [
+        label,
+        j.usage ? `${fmtTok(j.usage.input_tokens ?? 0)}→${fmtTok(j.usage.output_tokens ?? 0)}tok` : null,
+        j.duration_seconds != null ? `${Math.round(j.duration_seconds)}s` : null,
+      ].filter(Boolean);
+      return { reply, session: newSession, meta: { model: label, parts } };
     },
   },
   oracle: {
@@ -687,8 +742,9 @@ const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   list | show <thread>                   registry / full transcript
   doctor [--live [provider]]             check CLIs; live defaults to claude+codex
 env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
-     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
-defaults: oracle (GPT-6 Pro); Pi: gemini-3.8-flash. Environment > saved config > built-in defaults.`;
+     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_AGY_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
+defaults: oracle (GPT-6 Pro); Pi: gemini-3.8-flash; agy: ${AGY_MODEL}. Environment > saved config > built-in defaults.
+Peers other than Oracle run read-only in the caller's working directory and read the repository there.`;
 
 const [cmd, ...rest] = process.argv.slice(2);
 try {
