@@ -53,6 +53,7 @@ TOOL_PRESETS = {
              "subagent", "subagent_supervisor", "bg_wait", "codemode"],
 }
 TERMINAL = {"completed", "failed", "no_result", "cancelled", "timeout"}
+ENDED = {"cancelled": "job cancelled", "timeout": "job ran past max_minutes"}
 ENGINES = ("pi", "agy")
 AGY_DEFAULT_MODEL = "gemini-4-argon-high"
 # agy has one switch where Pi has a tool list: plan mode denies every write, and skipping
@@ -272,8 +273,12 @@ def summarize_agy(jdir: Path, spec: dict) -> dict:
     structured = final.get("structured_output")
     denied = [a.get("action", "?") for a in final.get("denied_actions") or []]
     error = None
-    if state.get("status") in ("cancelled", "timeout", "starting", "running"):
+    if state.get("status") in ("starting", "running"):
         status = state["status"]
+    elif state.get("status") in ("cancelled", "timeout"):
+        status, error = state["status"], ENDED[state["status"]]
+    elif state.get("status") == "failed":
+        status, error = "failed", state.get("error")
     elif exit_code not in (0, None):
         status, error = "failed", f"agy exited {exit_code}"
     elif not final:
@@ -285,6 +290,7 @@ def summarize_agy(jdir: Path, spec: dict) -> dict:
         error = "agy returned nothing" + (f"; denied: {', '.join(denied)}" if denied else "")
     elif spec.get("schema") is not None and structured is None:
         status = "no_result"
+        error = "agy answered without a structured result" + (f"; denied: {', '.join(denied)}" if denied else "")
     else:
         status = "completed"
     usage = final.get("usage") or {}
@@ -360,20 +366,26 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
 
     if state.get("status") in ("cancelled", "timeout"):
         status = state["status"]
+        error_message = error_message or ENDED[status]
     elif state.get("status") in ("starting", "running"):
         status = state["status"]
+    elif state.get("status") == "failed":
+        status, error_message = "failed", state.get("error")
     elif exit_code not in (0, None):
         status = "failed"
+        error_message = error_message or f"pi exited {exit_code}"
     elif not settled:
         status = "failed"
         error_message = error_message or "Pi exited before agent_settled"
     elif stop_reason in ("error", "aborted"):
         status = "failed"
+        error_message = error_message or f"pi stopped: {stop_reason}"
     elif structured is None and not text.strip():
         status = "no_result"
         error_message = error_message or "pi returned nothing"
     elif spec.get("schema") is not None and structured is None:
         status = "no_result"
+        error_message = error_message or "pi answered without calling submit_result"
     else:
         status = "completed"
 
@@ -476,7 +488,9 @@ def cmd_supervise(args) -> None:
             proc = subprocess.Popen(command(spec, jdir), cwd=spec["cwd"], env=env,
                                     stdin=subprocess.DEVNULL, stdout=out, stderr=err)
         except OSError as exc:
-            write_json(jdir / "state.json", {"status": "failed", "error": str(exc), "finished_at": now()})
+            write_json(jdir / "state.json", {"status": "failed", "error": str(exc),
+                                             "supervisor_pid": os.getpid(), "finished_at": now()})
+            finalize(jdir)
             return
         write_json(jdir / "state.json", {"status": "running", "pid": proc.pid,
                                          "supervisor_pid": os.getpid(), "started_at": now()})
@@ -507,7 +521,9 @@ def finalize(jdir: Path) -> None:
             write_outcome(Path(spec["output"]), result, spec.get("schema") is not None)
             result["output"] = spec["output"]
         except OSError as exc:
-            result["output"], result["output_error"] = None, str(exc)
+            # The stage reads only the outcome, so a lost file must read as a failure there.
+            result.update({"status": "failed", "output": None,
+                           "error": f"cannot write output {spec['output']}: {exc}"})
     # result.json appears last: waiters treat it as the sign that the job is over.
     write_json(jdir / "result.json", result)
 
@@ -525,15 +541,20 @@ def write_outcome(path: Path, result: dict, schema: bool) -> None:
 
 
 def current_status(jdir: Path) -> dict:
-    state = read_json(jdir / "state.json", {})
-    if state.get("status") == "running" and not pid_alive(state.get("supervisor_pid")) \
-            and not (jdir / "result.json").exists():
-        state.update({"status": "finished", "exit_code": state.get("exit_code", -1), "finished_at": now()})
-        write_json(jdir / "state.json", state)
-        finalize(jdir)
     if (jdir / "result.json").exists():
         return read_json(jdir / "result.json")
-    return summarize(jdir)
+    state = read_json(jdir / "state.json", {})
+    if state.get("status") != "starting" and not pid_alive(state.get("supervisor_pid")):
+        if state.get("status") == "running":
+            state.update({"status": "finished", "exit_code": state.get("exit_code", -1), "finished_at": now()})
+            write_json(jdir / "state.json", state)
+        finalize(jdir)
+        return read_json(jdir / "result.json")
+    result = summarize(jdir)
+    if result["status"] in TERMINAL:
+        # The supervisor is still writing the output; only result.json ends the job.
+        result["status"] = "running"
+    return result
 
 
 def brief(result: dict) -> dict:

@@ -31,9 +31,11 @@ $J result <job_id> --outcome     # only status, error and the output path
 ```
 
 Statuses: `completed`, `no_result` (schema given but nothing submitted, or no text and no
-structured result at all; agy's `denied_actions` stay in the result), `failed` (non-zero exit,
-no `agent_settled`, or final `stopReason` error/aborted), `cancelled`, `timeout`
-(`max_minutes`, default 60).
+structured result at all; agy's `denied_actions` stay in the result), `failed` (the engine did
+not start, non-zero exit, no `agent_settled`, final `stopReason` error/aborted, or `output`
+could not be written), `cancelled`, `timeout` (`max_minutes`, default 60). Every status but
+`completed` carries an `error`. A job is over only once its `result.json` exists: until then
+`status` and `wait` report it `running`, so `output` is on disk when `wait` returns.
 
 Two spec fields make `fleet-job` write what a stage must keep, so no one copies it by hand:
 

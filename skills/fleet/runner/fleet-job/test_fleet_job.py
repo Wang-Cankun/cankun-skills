@@ -25,6 +25,7 @@ case "${FAKE_MODE:-ok}" in
   denied)  echo 'jetski: no output produced'
            echo '{"conversation_id":"conv-1","status":"SUCCESS","response":"","denied_actions":[{"action":"write_file"}]}' ;;
   empty)   echo '{"conversation_id":"conv-1","status":"SUCCESS","response":""}' ;;
+  prose)   echo '{"conversation_id":"conv-1","status":"SUCCESS","response":"I would run git diff","denied_actions":[{"action":"run_command"}]}' ;;
   error)   echo '{"conversation_id":"conv-1","status":"ERROR","response":""}' ;;
   nojson)  echo 'not json' ;;
 esac
@@ -215,6 +216,66 @@ class FleetJobTest(unittest.TestCase):
                               env=self.env, capture_output=True, text=True)
         self.assertEqual(json.loads(done.stdout),
                          {"status": "failed", "error": "agy status ERROR", "output": str(self.root / "o.md")})
+
+    def fleet(self, *args, env=None):
+        return subprocess.run([sys.executable, SCRIPT, *args], env=env or self.env,
+                              capture_output=True, text=True)
+
+    def finished_job(self, supervisor_pid):
+        # A job whose engine has exited but whose result.json is not yet published.
+        jdir = self.root / "jobs" / "20260101-000000-j-abc123"
+        jdir.mkdir(parents=True)
+        (jdir / "spec.json").write_text(json.dumps(
+            {"engine": "agy", "cwd": str(self.root), "output": str(self.root / "o.md")}))
+        (jdir / "state.json").write_text(json.dumps(
+            {"status": "finished", "exit_code": 0, "supervisor_pid": supervisor_pid}))
+        (jdir / "events.jsonl").write_text('{"conversation_id":"c","status":"SUCCESS","response":"hi"}\n')
+        return jdir
+
+    def test_wait_does_not_end_before_the_supervisor_publishes_the_output(self):
+        jdir = self.finished_job(os.getpid())
+        done = self.fleet("wait", jdir.name, "--timeout", "0")
+        self.assertEqual((done.returncode, json.loads(done.stdout)["status"]), (3, "running"))
+        self.assertFalse((self.root / "o.md").exists())
+
+    def test_a_job_whose_supervisor_died_before_publishing_is_finalized(self):
+        dead = subprocess.Popen(["true"])
+        dead.wait()
+        jdir = self.finished_job(dead.pid)
+        done = self.fleet("result", jdir.name, "--outcome")
+        self.assertEqual(json.loads(done.stdout),
+                         {"status": "completed", "error": None, "output": str(self.root / "o.md")})
+        self.assertEqual((self.root / "o.md").read_text(), "hi")
+
+    def test_an_engine_that_cannot_start_still_writes_the_output(self):
+        empty = self.root / "empty"
+        empty.mkdir()
+        spec_file = self.root / "spec.json"
+        spec_file.write_text(json.dumps({"cwd": str(self.root), "engine": "agy", "prompt": "q",
+                                         "output": "o.md"}))
+        env = dict(self.env, PATH=str(empty))
+        job_id = json.loads(self.fleet("start", "--spec", spec_file, env=env).stdout)["job_id"]
+        self.assertEqual(self.fleet("wait", job_id, "--timeout", "30", env=env).returncode, 0)
+        outcome = json.loads(self.fleet("result", job_id, "--outcome", env=env).stdout)
+        self.assertEqual((outcome["status"], outcome["output"]), ("failed", str(self.root / "o.md")))
+        self.assertIn("agy", outcome["error"])
+        self.assertTrue((self.root / "o.md").read_text().startswith("status: failed\nerror: "))
+        self.assertIn("agy", (self.root / "o.md").read_text())
+
+    def test_an_output_that_cannot_be_written_fails_the_job(self):
+        (self.root / "taken").mkdir()
+        result, _ = self.job({"engine": "agy", "prompt": "q", "output": "taken"})
+        self.assertEqual((result["status"], result["output"]), ("failed", None))
+        self.assertIn("cannot write output", result["error"])
+
+    def test_every_status_but_completed_says_why(self):
+        schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}}
+        result, _ = self.job({"engine": "agy", "prompt": "q", "schema": schema}, "prose")
+        self.assertEqual(result["status"], "no_result")
+        self.assertIn("run_command", result["error"])
+        result, _ = self.job({"engine": "pi", "prompt": "q", "schema": schema})
+        self.assertEqual(result["status"], "no_result")
+        self.assertIn("submit_result", result["error"])
 
 
 if __name__ == "__main__":
