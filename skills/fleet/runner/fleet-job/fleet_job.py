@@ -55,13 +55,14 @@ TOOL_PRESETS = {
 TERMINAL = {"completed", "failed", "no_result", "cancelled", "timeout"}
 ENDED = {"cancelled": "job cancelled", "timeout": "job ran past max_minutes"}
 ENGINES = ("pi", "omp", "agy")
-# omp has glob where Pi has ls, and web_search is its only web tool. ast_grep is left out: omp
-# rejects it at start ("unavailable in this session") unless the user's settings enable it.
+# omp has glob where Pi has ls, and web_search is its only web tool. ast_grep and find are left
+# out: omp rejects a tool at start ("unavailable in this session") unless the machine enables it,
+# and find is a semantic search that needs a configured judge model.
 # "full" passes no --tools, so omp offers every tool its settings enable.
 OMP_PRESETS = {
-    "readonly": ["read", "grep", "find", "glob"],
-    "research": ["read", "grep", "find", "glob", "web_search"],
-    "write": ["read", "grep", "find", "glob", "edit", "write", "bash"],
+    "readonly": ["read", "grep", "glob"],
+    "research": ["read", "grep", "glob", "web_search"],
+    "write": ["read", "grep", "glob", "edit", "write", "bash"],
     "full": None,
 }
 AGY_DEFAULT_MODEL = "gemini-4-argon-high"

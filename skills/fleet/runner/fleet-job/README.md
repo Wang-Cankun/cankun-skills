@@ -76,7 +76,7 @@ job with no answer. `thinking` becomes agy's `--effort`. Pi-only fields (`append
 omp runs as `omp -p --mode json --session-dir <job dir>/session --no-skills --no-rules
 --no-extensions --no-title --no-lsp --model <model> [--thinking <level>] [--tools <list>] --
 <prompt>`, in the job's `cwd`, with stdin from `/dev/null`. Context files (`AGENTS.md` and the
-like) stay on, as for Pi. Its presets are `readonly` (read, grep, find, glob), `research` (plus
+like) stay on, as for Pi. Its presets are `readonly` (read, grep, glob), `research` (plus
 `web_search`) and `write` (`readonly` plus edit, write, bash); `full` passes no `--tools`, so the
 job gets every tool omp's settings enable. A list passes through; a tool that omp's settings
 disable (`ast_grep` by default) makes omp refuse to start, and the job `failed` with that

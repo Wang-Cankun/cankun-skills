@@ -156,12 +156,12 @@ class FleetJobTest(unittest.TestCase):
         self.assertEqual(args, ["-p", "--mode", "json", "--session-dir", str(Path(result["dir"]) / "session"),
                                 "--no-skills", "--no-rules", "--no-extensions", "--no-title", "--no-lsp",
                                 "--model", "openai-codex/gpt-6.1-sol", "--thinking", "low",
-                                "--tools", "read,grep,find,glob", "--", "look"])
+                                "--tools", "read,grep,glob", "--", "look"])
         self.assertEqual(Path(f"{self.calls}.stdin").read_text().strip(), "closed")
 
     def test_omp_tool_presets(self):
-        for tools, expected in (("research", "read,grep,find,glob,web_search"),
-                                ("write", "read,grep,find,glob,edit,write,bash"),
+        for tools, expected in (("research", "read,grep,glob,web_search"),
+                                ("write", "read,grep,glob,edit,write,bash"),
                                 ("read,grep", "read,grep")):
             with self.subTest(tools=tools):
                 _, args = self.job({**self.OMP, "prompt": "q", "tools": tools})
@@ -206,7 +206,7 @@ class FleetJobTest(unittest.TestCase):
         schema = {"type": "object", "properties": {"verdict": {"type": "string"}}}
         self.env["FAKE_SUBMIT"] = "1"
         result, args = self.job({**self.OMP, "prompt": "q", "schema": schema})
-        self.assertEqual(args[args.index("--tools") + 1], "read,grep,find,glob,submit_result")
+        self.assertEqual(args[args.index("--tools") + 1], "read,grep,glob,submit_result")
         self.assertTrue(args[args.index("-e") + 1].endswith("submit_result.ts"))
         self.assertEqual((result["status"], result["structured"]), ("completed", {"verdict": "take"}))
 
