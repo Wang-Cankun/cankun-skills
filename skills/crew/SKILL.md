@@ -102,7 +102,10 @@ herdr agent prompt <name> "<prompt>" --wait --timeout <ms>
 herdr agent read <name> --source recent-unwrapped --lines <n>
 ```
 
-Any kind `herdr agent start --help` lists can sit in a crew. Name agents for what they hold
+Any kind `herdr agent start --help` lists can sit in a crew. Herdr sees an agent work through
+its integration: before seating a kind, `herdr integration status` must show it `current`, else
+`herdr integration install <kind>` (agy's is `antigravity-cli`). Without it the agent reads
+`idle` while it works, so a `--wait` fails or returns early. Name agents for what they hold
 (`side-provenance`, `table-gpt`); the name is how other windows find them. Pass the user's
 launch preferences after `--`, and confirm the model on the agent's status line at startup,
 since the kind alone selects no model. A new folder may open a trust dialog: read the pane and

@@ -45,13 +45,6 @@ slash command on itself. To reset one: `/clear` for Claude and agy, `/new` for P
   `agent_prompt_stalled`, and `herdr agent get` shows `idle`. Send
   `herdr agent send-keys <name> Enter`. A further `agent prompt` reaches Pi as a follow-up.
 
-## omp
-
-- Herdr does not see omp working (Herdr 0.9.5, omp 18.13.3): `herdr agent get` shows `idle`
-  while the pane reads "Working…". `herdr agent prompt --wait` therefore fails with
-  `agent_prompt_stalled` although omp took the prompt. Send without `--wait`, and wait on the
-  file the prompt names, ending with a `DONE` line.
-
 ## agy
 
 - `--dangerously-skip-permissions` lets it write files and run commands without asking: the
