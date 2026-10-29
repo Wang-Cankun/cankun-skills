@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fake pi and agy CLIs pin each engine's invocation and how its output becomes a job status."""
+"""Fake omp, pi and agy CLIs pin each engine's invocation and how its output becomes a job status."""
 
 import json
 import os
@@ -40,6 +40,30 @@ echo '{"type":"agent_settled"}'
 """
 
 
+# Stdin is recorded as "closed" when it reads end-of-file at once: omp waits forever on a pipe.
+FAKE_OMP = r"""#!/bin/bash
+printf '%s\n' "$@" > "$FAKE_CALLS"
+if read -r -t 2 _line; then echo "stdin had data" > "$FAKE_CALLS.stdin"; else echo "closed" > "$FAKE_CALLS.stdin"; fi
+echo '{"type":"session","id":"omp-session"}'
+echo '{"type":"agent_start"}'
+text="omp reply"; stop=stop; extra=""
+case "${FAKE_MODE:-ok}" in
+  empty)   text="" ;;
+  aborted) stop=aborted; extra=',"errorMessage":"Request was aborted"' ;;
+  error)   stop=error; extra=',"errorMessage":"429 rate limited"' ;;
+  crash)   echo "omp: model unavailable" >&2; exit 1 ;;
+  cut)     echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"half"}],"stopReason":"stop"}}'; exit 0 ;;
+esac
+echo '{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"q"}]}}'
+echo '{"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"gpt-6.1-sol","content":[{"type":"text","text":"early"}],"stopReason":"toolUse","usage":{"input":100,"output":10,"cacheRead":50,"cost":{"total":0.01}}}}'
+if [[ -n "$FAKE_SUBMIT" ]]; then
+  echo '{"type":"tool_execution_end","toolName":"submit_result","result":{"content":[],"details":{"verdict":"take"}},"isError":false}'
+fi
+echo '{"type":"message_end","message":{"role":"assistant","provider":"openai-codex","model":"gpt-6.1-sol","content":[{"type":"text","text":"'"$text"'"}],"stopReason":"'"$stop"'","usage":{"input":20,"output":5,"cacheRead":70,"cost":{"total":0.02}}'"$extra"'}}'
+echo '{"type":"agent_end","messages":[]}'
+"""
+
+
 def prompt_of(args):
     # The fake CLI writes one argument per line, so a multi-line prompt spans lines.
     return "\n".join(args[args.index("-p") + 1:])
@@ -52,7 +76,7 @@ class FleetJobTest(unittest.TestCase):
         self.root = Path(temp.name).resolve()
         bin_dir = self.root / "bin"
         bin_dir.mkdir()
-        for name, body in (("agy", FAKE_AGY), ("pi", FAKE_PI)):
+        for name, body in (("agy", FAKE_AGY), ("pi", FAKE_PI), ("omp", FAKE_OMP)):
             (bin_dir / name).write_text(body)
             (bin_dir / name).chmod(0o755)
         self.calls = self.root / "calls"
@@ -125,6 +149,72 @@ class FleetJobTest(unittest.TestCase):
         self.assertEqual(args[-3:], ["-p", "--", "build it"])
         self.assertEqual((result["engine"], result["model"]), ("pi", "route/gpt-6.1-sol"))
 
+    OMP = {"engine": "omp", "model": "openai-codex/gpt-6.1-sol"}
+
+    def test_omp_invocation_is_pinned_and_stdin_is_closed(self):
+        result, args = self.job({**self.OMP, "prompt": "look", "thinking": "low", "tools": "readonly"})
+        self.assertEqual(args, ["-p", "--mode", "json", "--session-dir", str(Path(result["dir"]) / "session"),
+                                "--no-skills", "--no-rules", "--no-extensions", "--no-title", "--no-lsp",
+                                "--model", "openai-codex/gpt-6.1-sol", "--thinking", "low",
+                                "--tools", "read,grep,find,glob", "--", "look"])
+        self.assertEqual(Path(f"{self.calls}.stdin").read_text().strip(), "closed")
+
+    def test_omp_tool_presets(self):
+        for tools, expected in (("research", "read,grep,find,glob,web_search"),
+                                ("write", "read,grep,find,glob,edit,write,bash"),
+                                ("read,grep", "read,grep")):
+            with self.subTest(tools=tools):
+                _, args = self.job({**self.OMP, "prompt": "q", "tools": tools})
+                self.assertEqual(args[args.index("--tools") + 1], expected)
+        _, args = self.job({**self.OMP, "prompt": "q", "tools": "full"})
+        self.assertNotIn("--tools", args)
+
+    def test_omp_result_sums_usage_and_names_the_answering_model(self):
+        result, _ = self.job({**self.OMP, "prompt": "q"})
+        self.assertEqual((result["engine"], result["status"], result["text"], result["model"]),
+                         ("omp", "completed", "omp reply", "openai-codex/gpt-6.1-sol"))
+        self.assertEqual(result["tokens"], {"input": 120, "output": 15, "cacheRead": 120, "cacheWrite": 0})
+        self.assertAlmostEqual(result["cost_usd"], 0.03)
+        self.assertEqual(result["session_id"], "omp-session")
+
+    def test_omp_failures_carry_their_reason(self):
+        for mode, error in (("error", "429 rate limited"), ("aborted", "Request was aborted"),
+                            ("crash", "omp: model unavailable"), ("cut", "omp exited before agent_end")):
+            with self.subTest(mode=mode):
+                result, _ = self.job({**self.OMP, "prompt": "q"}, mode)
+                self.assertEqual(result["status"], "failed")
+                self.assertIn(error, result["error"])
+
+    def test_omp_empty_answer_is_no_result(self):
+        result, _ = self.job({**self.OMP, "prompt": "q"}, "empty")
+        self.assertEqual((result["status"], result["error"]), ("no_result", "omp returned nothing"))
+
+    def test_omp_requires_a_model_and_refuses_pi_only_fields(self):
+        self.assertEqual(self.refused({"engine": "omp", "prompt": "q"}).returncode, 2)
+        for spec in ({"no_extensions": True}, {"approve": True}):
+            with self.subTest(spec=spec):
+                self.assertEqual(self.refused({**self.OMP, "prompt": "q", **spec}).returncode, 2)
+
+    def test_omp_passes_extensions_and_the_system_prompt_suffix(self):
+        _, args = self.job({**self.OMP, "prompt": "q", "extensions": ["x.ts"], "append_system_prompt": "be brief"})
+        self.assertEqual(args[args.index("-e") + 1], "x.ts")
+        self.assertEqual(args[args.index("--append-system-prompt") + 1], "be brief")
+
+    # Probed on omp 18.13.3: it registers submit_result from submit_result.ts and reports the
+    # call in tool_execution_end, as Pi does. It has no agent_before_settle, so nothing reminds.
+    def test_omp_schema_is_supported_through_submit_result(self):
+        schema = {"type": "object", "properties": {"verdict": {"type": "string"}}}
+        self.env["FAKE_SUBMIT"] = "1"
+        result, args = self.job({**self.OMP, "prompt": "q", "schema": schema})
+        self.assertEqual(args[args.index("--tools") + 1], "read,grep,find,glob,submit_result")
+        self.assertTrue(args[args.index("-e") + 1].endswith("submit_result.ts"))
+        self.assertEqual((result["status"], result["structured"]), ("completed", {"verdict": "take"}))
+
+    def test_omp_schema_without_a_submission_is_no_result(self):
+        schema = {"type": "object", "properties": {"verdict": {"type": "string"}}}
+        result, _ = self.job({**self.OMP, "prompt": "q", "schema": schema})
+        self.assertEqual(result["status"], "no_result")
+        self.assertIn("submit_result", result["error"])
 
     def git(self, repo, *args):
         done = subprocess.run(["git", "-C", repo, "-c", "user.name=t", "-c", "user.email=t@t",

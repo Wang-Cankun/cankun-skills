@@ -1,14 +1,14 @@
 ---
 name: fleet
-compatibility: Requires Claude Code's Workflow tool. GPT stages need Pi with its ponytail package, Gemini stages need agy, and both run through the bundled fleet-runner subagent and fleet-job tool (install with `scripts/install-runner.sh`).
+compatibility: Requires Claude Code's Workflow tool. GPT and Gemini stages need omp (GPT can run on Pi with its ponytail package, Gemini on agy), and all run through the bundled fleet-runner subagent and fleet-job tool (install with `scripts/install-runner.sh`).
 metadata:
   group: models
   summary: >-
     Claude Code Workflows whose stages each run on the model the stage needs:
-    Claude Opus, Sonnet or Haiku natively, GPT through Pi, Gemini through agy.
-    The session designs the stages and accepts each result before anything
-    relies on it.
-description: "Workflows whose stages run on any of the user's models: Claude natively, GPT through Pi and Gemini through agy, with this session designing the stages and accepting each result. Use when the user invokes /fleet, asks for a workflow across models, or names GPT, Gemini, Pi, Codex or agy workers for the work."
+    Claude Opus, Sonnet or Haiku natively, GPT and Gemini through omp (or GPT
+    through Pi, Gemini through agy). The session designs the stages and
+    accepts each result before anything relies on it.
+description: "Workflows whose stages run on any of the user's models: Claude natively, GPT and Gemini through omp (or Pi and agy), with this session designing the stages and accepting each result. Use when the user invokes /fleet, asks for a workflow across models, or names GPT, Gemini, omp, Pi, Codex or agy workers for the work."
 ---
 
 # Fleet
@@ -51,33 +51,38 @@ stage's model, by full version, in its label (`review:gemini-4-argon-high`).
 | Model | Stage |
 | --- | --- |
 | Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 | `agent(prompt, {model: 'opus' \| 'sonnet' \| 'haiku', effort})`; `isolation: 'worktree'` when stages edit in parallel |
-| GPT-6.1 Sol, GPT-6 Luna | `agentType: 'fleet-runner'` with a job spec: `engine: 'pi'`, `model` the roster's route for this machine, `thinking: 'xhigh'` |
-| Gemini 4 Argon | `agentType: 'fleet-runner'` with `engine: 'agy'`, `model: 'gemini-4-argon-high'` (or `-medium`, `-low`) |
+| GPT-6.1 Sol, GPT-6 Luna | `agentType: 'fleet-runner'` with a job spec: `engine: 'omp'`, `model: 'openai-codex/gpt-6.1-sol'` (or `openai-codex/gpt-6-luna`), `thinking: 'xhigh'`; `engine: 'pi'` instead, with `model` the roster's route, when the job needs Pi's packages, such as an implementer held to ponytail |
+| Gemini 4 Argon | `agentType: 'fleet-runner'` with `engine: 'omp'`, `model: 'google-antigravity/gemini-4-argon'`, `thinking: 'high'`; `readonly` is a real tool allowlist with no shell. Or `engine: 'agy'`, `model: 'gemini-4-argon-high'` (or `-medium`, `-low`) |
+
+A machine without omp uses the roster's route: Pi for GPT, agy for Gemini.
 
 - Job spec fields: [runner/fleet-runner.md](runner/fleet-runner.md). Open each runner stage's
   prompt with "The user invoked /fleet for this run; <model> workers are requested."
 - Before the run, `scripts/preflight.sh <route>` for each GPT or Gemini route it uses
-  (`agy/gemini-4-argon-high` for Gemini) sends one tiny request; for GPT it prints the account
-  that served it. When it exits non-zero, or names an account the user has not approved for
-  this work, stop and tell the user. `FLEET_DENY_ACCOUNT` names an account that must never
-  serve the run.
+  (`omp/openai-codex/gpt-6.1-sol`, `omp/google-antigravity/gemini-4-argon`, or
+  `agy/gemini-4-argon-high`) sends one tiny request and prints the account that served it.
+  When it exits non-zero, or names an account the user has not approved for this work, stop
+  and tell the user. `FLEET_DENY_ACCOUNT` names an account that must never serve the run.
 - Tool presets: `readonly` and `research` read only; `write` adds edits and a shell, `full`
   adds web, browser and subagent tools as well.
-  agy has one switch for them: plan mode for the read presets, where every write is denied,
-  and all permissions, shell included, for `write` and `full`, so a writing Gemini stage gets
-  its own worktree as `cwd`. Take a Gemini stage's result as prose (`text`), and have a Claude
+  omp takes a real tool allowlist, so a `readonly` omp job has no shell and cannot write. agy
+  has one switch for them: plan mode for the read presets, where every write is denied, and
+  all permissions, shell included, for `write` and `full`, so a writing Gemini stage gets its
+  own worktree as `cwd`. Take a Gemini stage's result as prose (`text`), and have a Claude
   stage or this session put it into a schema when one is needed: agy's `structured_output` once
   came back empty beside a correct prose answer, emitted while it waited on a subagent of its
   own.
-- A GPT job can fan out on its own: `research` and `full` give it web search and fetch, a
-  browser, codemode and pi-subagents' `subagent` tool. For broad work send one job per area and
-  tell it to split the area across subagents.
-- Pi's ponytail extension puts ponytail into every GPT job's system prompt as the worker's
+- A Pi job can fan out on its own: `research` and `full` give it web search and fetch, a
+  browser, codemode and pi-subagents' `subagent` tool. An omp job gets `web_search` from
+  `research`, and `full` gives it every tool omp's settings enable. For broad work send one
+  job per area and tell it to split the area across subagents.
+- Pi's ponytail extension puts ponytail into every Pi job's system prompt as the worker's
   standard for what to build and what never to cut. After a GPT worker commits code, run a
   separate GPT job on the diff with `/skill:ponytail-review` (the prompt starts with
   `/skill:ponytail-review ` and the opt-in sentence on the same line: Pi expands a skill
   command only at the start of a prompt with text after it), have the worker fix its must-fix
-  items, then accept. A session reviewing its own code repeats its blind spots.
+  items, then accept. Review a ponytail-held implementer's commit with a Pi job: omp jobs run with
+  `--no-skills`. A session reviewing its own code repeats its blind spots.
 - Every stage sees only its prompt and the files it reads, never this conversation, and builds
   on every sentence as written: a claim about the code, a library or a data file that you did
   not check becomes code that depends on it. Point stages at paths in the repository or

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a Pi (GPT) or agy (Gemini) agent as a background worker and collect its result.
+"""Run an omp, Pi (GPT) or agy (Gemini) agent as a background worker and collect its result.
 
 Usage:
   fleet_job.py start --spec SPEC.json         # or flags: --engine --model --prompt-file --tools ...
@@ -9,15 +9,15 @@ Usage:
   fleet_job.py cancel JOB
   fleet_job.py list
 
-Spec (JSON): engine (pi, the default, or agy), prompt | prompt_file, model (Pi: its configured
-default otherwise; agy: gemini-4-argon-high), thinking, tools (preset name: readonly, research,
-write, full; Pi also takes a list), cwd, schema | schema_file, max_minutes (default 60), name,
-output (a file the job writes its outcome to), diff ({base, dir, parts}: diff files `start` writes).
-Pi only: append_system_prompt, extensions (list), no_extensions, session (default true),
-approve (true/false/null).
+Spec (JSON): engine (pi, the default, omp or agy), prompt | prompt_file, model (omp: required,
+provider/id; Pi: its configured default otherwise; agy: gemini-4-argon-high), thinking, tools
+(preset name: readonly, research, write, full; omp and Pi also take a list), cwd, schema |
+schema_file, max_minutes (default 60), name, output (a file the job writes its outcome to), diff
+({base, dir, parts}: diff files `start` writes). omp and Pi: append_system_prompt, extensions
+(list). Pi only: no_extensions, session (default true), approve (true/false/null).
 
 Jobs live in $FLEET_JOB_HOME (default ~/.claude/fleet-jobs/<job-id>/): spec.json, prompt.md,
-events.jsonl (the engine's JSON output), stderr.log, state.json, result.json, session/ (Pi).
+events.jsonl (the engine's JSON output), stderr.log, state.json, result.json, session/ (omp, Pi).
 """
 from __future__ import annotations
 
@@ -54,7 +54,16 @@ TOOL_PRESETS = {
 }
 TERMINAL = {"completed", "failed", "no_result", "cancelled", "timeout"}
 ENDED = {"cancelled": "job cancelled", "timeout": "job ran past max_minutes"}
-ENGINES = ("pi", "agy")
+ENGINES = ("pi", "omp", "agy")
+# omp has glob where Pi has ls, and web_search is its only web tool. ast_grep is left out: omp
+# rejects it at start ("unavailable in this session") unless the user's settings enable it.
+# "full" passes no --tools, so omp offers every tool its settings enable.
+OMP_PRESETS = {
+    "readonly": ["read", "grep", "find", "glob"],
+    "research": ["read", "grep", "find", "glob", "web_search"],
+    "write": ["read", "grep", "find", "glob", "edit", "write", "bash"],
+    "full": None,
+}
 AGY_DEFAULT_MODEL = "gemini-4-argon-high"
 # agy has one switch where Pi has a tool list: plan mode denies every write, and skipping
 # permissions approves everything, the shell included.
@@ -62,6 +71,7 @@ AGY_READ_ONLY = ("readonly", "research")
 AGY_EFFORT = {"off": "low", "minimal": "low", "low": "low", "medium": "medium", "high": "high",
               "xhigh": "xhigh", "max": "max"}
 PI_ONLY = ("append_system_prompt", "extensions", "no_extensions", "approve")
+OMP_REFUSED = ("no_extensions", "approve")
 
 
 def now() -> str:
@@ -157,11 +167,20 @@ def build_spec(args) -> dict:
         if tools in AGY_READ_ONLY:
             spec["prompt"] = f"{spec['prompt']}\n\n{AGY_READ_ONLY_NOTICE}"
     else:
+        if engine == "omp":
+            if not spec.get("model"):
+                die("omp needs a model (provider/id): its configured default can be any model")
+            given = [key for key in OMP_REFUSED if spec.get(key) not in (None, [], "")]
+            if given:
+                die(f"omp does not support: {', '.join(given)}")
+        presets = OMP_PRESETS if engine == "omp" else TOOL_PRESETS
         if isinstance(tools, str):
-            tools = TOOL_PRESETS.get(tools, tools.split(","))
-        tools = [t for t in tools if t]
-        if schema is not None and "submit_result" not in tools:
-            tools.append("submit_result")
+            tools = presets[tools] if tools in presets else tools.split(",")
+        # None is omp's "full": no --tools, so every tool, submit_result included.
+        if tools is not None:
+            tools = [t for t in tools if t]
+            if schema is not None and "submit_result" not in tools:
+                tools.append("submit_result")
     spec["tools"] = tools
     spec["cwd"] = str(Path(spec.get("cwd") or os.getcwd()).expanduser().resolve())
     if not Path(spec["cwd"]).is_dir():
@@ -210,6 +229,23 @@ def pi_command(spec: dict, jdir: Path) -> list[str]:
     return cmd
 
 
+def omp_command(spec: dict, jdir: Path) -> list[str]:
+    cmd = ["omp", "-p", "--mode", "json", "--session-dir", str(jdir / "session"), "--no-skills",
+           "--no-rules", "--no-extensions", "--no-title", "--no-lsp", "--model", spec["model"]]
+    if spec.get("thinking"):
+        cmd += ["--thinking", spec["thinking"]]
+    if spec["tools"] is not None:
+        cmd += ["--tools", ",".join(spec["tools"])]
+    for ext in spec.get("extensions", []):
+        cmd += ["-e", str(Path(ext).expanduser())]
+    if spec.get("schema") is not None:
+        cmd += ["-e", str(SUBMIT_EXTENSION)]
+    if spec.get("append_system_prompt"):
+        cmd += ["--append-system-prompt", spec["append_system_prompt"]]
+    cmd += ["--", spec["prompt"]]
+    return cmd
+
+
 def agy_command(spec: dict, jdir: Path) -> list[str]:
     cmd = ["agy"]
     cmd += ["--mode", "plan"] if spec["tools"] in AGY_READ_ONLY else ["--dangerously-skip-permissions"]
@@ -225,7 +261,8 @@ def agy_command(spec: dict, jdir: Path) -> list[str]:
 
 
 def command(spec: dict, jdir: Path) -> list[str]:
-    return agy_command(spec, jdir) if spec.get("engine") == "agy" else pi_command(spec, jdir)
+    builders = {"agy": agy_command, "omp": omp_command, "pi": pi_command}
+    return builders[spec.get("engine", "pi")](spec, jdir)
 
 
 # ---------------------------------------------------------------- event parsing
@@ -258,7 +295,7 @@ def summarize(jdir: Path) -> dict:
     spec = read_json(jdir / "spec.json", {})
     if spec.get("engine") == "agy":
         return summarize_agy(jdir, spec)
-    return summarize_pi(jdir, spec)
+    return summarize_pi(jdir, spec)  # omp prints Pi's events
 
 
 def summarize_agy(jdir: Path, spec: dict) -> dict:
@@ -324,6 +361,9 @@ def summarize_agy(jdir: Path, spec: dict) -> dict:
 
 
 def summarize_pi(jdir: Path, spec: dict) -> dict:
+    engine = spec.get("engine", "pi")
+    # omp has no agent_settled: a run ends with agent_end and the exit.
+    settle_event = "agent_end" if engine == "omp" else "agent_settled"
     state = read_json(jdir / "state.json", {})
     settled = False
     last_assistant = None
@@ -339,7 +379,7 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
         kind = ev.get("type")
         if kind == "session":
             session_id = ev.get("id")
-        elif kind == "agent_settled":
+        elif kind == settle_event:
             settled = True
         elif kind == "message_end" and ev.get("message", {}).get("role") == "assistant":
             last_assistant = ev["message"]
@@ -363,6 +403,9 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
     error_message = (last_assistant or {}).get("errorMessage") or retries_failed
     exit_code = state.get("exit_code")
     text = text_of(last_assistant) if last_assistant else ""
+    stderr_tail = ""
+    if (jdir / "stderr.log").exists():
+        stderr_tail = (jdir / "stderr.log").read_text(errors="replace")[-2000:]
 
     if state.get("status") in ("cancelled", "timeout"):
         status = state["status"]
@@ -373,29 +416,26 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
         status, error_message = "failed", state.get("error")
     elif exit_code not in (0, None):
         status = "failed"
-        error_message = error_message or f"pi exited {exit_code}"
+        error_message = error_message or stderr_tail.strip()[-500:] or f"{engine} exited {exit_code}"
     elif not settled:
         status = "failed"
-        error_message = error_message or "Pi exited before agent_settled"
+        error_message = error_message or f"{engine} exited before {settle_event}"
     elif stop_reason in ("error", "aborted"):
         status = "failed"
-        error_message = error_message or f"pi stopped: {stop_reason}"
+        error_message = error_message or f"{engine} stopped: {stop_reason}"
     elif structured is None and not text.strip():
         status = "no_result"
-        error_message = error_message or "pi returned nothing"
+        error_message = error_message or f"{engine} returned nothing"
     elif spec.get("schema") is not None and structured is None:
         status = "no_result"
-        error_message = error_message or "pi answered without calling submit_result"
+        error_message = error_message or f"{engine} answered without calling submit_result"
     else:
         status = "completed"
 
     sessions = sorted((jdir / "session").glob("**/*.jsonl")) if (jdir / "session").exists() else []
-    stderr_tail = ""
-    if status == "failed" and (jdir / "stderr.log").exists():
-        stderr_tail = (jdir / "stderr.log").read_text(errors="replace")[-2000:]
     return {
         "job_id": jdir.name,
-        "engine": "pi",
+        "engine": engine,
         "status": status,
         "model": actual_model or spec.get("model"),
         "requested_model": spec.get("model"),
@@ -414,7 +454,7 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
         "session_id": session_id,
         "session_file": str(sessions[-1]) if sessions else None,
         "dir": str(jdir),
-        "stderr_tail": stderr_tail,
+        "stderr_tail": stderr_tail if status == "failed" else "",
     }
 
 
@@ -626,7 +666,7 @@ def main() -> None:
     p.add_argument("--engine", choices=ENGINES)
     p.add_argument("--model")
     p.add_argument("--thinking")
-    p.add_argument("--tools", help="preset (readonly, research, write, full); Pi also takes a comma list")
+    p.add_argument("--tools", help="preset (readonly, research, write, full); omp and Pi also take a comma list")
     p.add_argument("--cwd")
     p.add_argument("--name")
     p.add_argument("--output", help="file the job writes its outcome to (relative to --cwd)")
