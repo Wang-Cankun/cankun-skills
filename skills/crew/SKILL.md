@@ -1,6 +1,6 @@
 ---
 name: crew
-compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1) and the CLIs of the chosen models (Claude Code, Pi, Codex, agy); python3 for the optional ledger and watcher.
+compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1) and the CLIs of the chosen models (Claude Code, Pi, Codex, omp, agy); python3 for the optional ledger and watcher.
 metadata:
   group: models
   personal: true

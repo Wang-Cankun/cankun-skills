@@ -9,7 +9,7 @@ false of the next.
 | --- | --- |
 | Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 | `--kind claude -- --model claude-opus-5-5 --effort xhigh` (or `claude-sonnet-5-5`, `claude-haiku-5-5`) |
 | GPT-6.1 Sol, GPT-6 Luna | `--kind pi -- --provider <provider> --model <id> --thinking xhigh`, splitting the roster's route for this machine at its first `/` (`magpie/codex/gpt-6.1-sol` is `--provider magpie --model codex/gpt-6.1-sol`) |
-| Gemini 4 Argon | `--kind agy -- --model gemini-4-argon-high --dangerously-skip-permissions` (or `-medium`, `-low`) |
+| Gemini 4 Argon | `--kind omp -- --model google-antigravity/gemini-4-argon --thinking high` (or `medium`, `low`); on a machine without omp, `--kind agy -- --model gemini-4-argon-high --dangerously-skip-permissions` (or `-medium`, `-low`) |
 | Codex | `--kind codex`; see below |
 
 Pi reads a `provider/id` model as a hint and can fall back to another provider that lists the
@@ -18,8 +18,8 @@ this machine can bill elsewhere or be refused at the first prompt. Self-hosted m
 when the user enables one for the task.
 
 To compact a resident, send `herdr agent prompt <name> /compact --wait`; an agent cannot run a
-slash command on itself. To reset one: `/clear` for Claude and agy, `/new` for Pi, `/new` or
-`/clear` for Codex.
+slash command on itself. To reset one: `/clear` for Claude and agy, `/new` for Pi and omp,
+`/new` or `/clear` for Codex.
 
 ## Claude
 
@@ -44,6 +44,13 @@ slash command on itself. To reset one: `/clear` for Claude and agy, `/new` for P
 - A prompt can stay in Pi's input box: `herdr agent prompt --wait` then fails with
   `agent_prompt_stalled`, and `herdr agent get` shows `idle`. Send
   `herdr agent send-keys <name> Enter`. A further `agent prompt` reaches Pi as a follow-up.
+
+## omp
+
+- Herdr does not see omp working (Herdr 0.9.5, omp 18.13.3): `herdr agent get` shows `idle`
+  while the pane reads "Working…". `herdr agent prompt --wait` therefore fails with
+  `agent_prompt_stalled` although omp took the prompt. Send without `--wait`, and wait on the
+  file the prompt names, ending with a `DONE` line.
 
 ## agy
 

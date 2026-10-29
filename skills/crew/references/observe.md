@@ -5,7 +5,7 @@ Optional tools for a team or table whose cost or progress you want to see. Paths
 Measure the run with `scripts/crew-ledger.py` (Python 3.9+, standard library only).
 Put a roles spec in `<run dir>/roles.txt`, one `NAME TOOL SELECTOR` per line; use shell quoting
 for paths with spaces and `#` for comments. Tools are `claude`, `codex`, and `pi`; an agent of
-another kind, such as `agy`, has no reader, so its usage is missing from the totals. Select by `session=ID`
+another kind, such as `omp` or `agy`, has no reader, so its usage is missing from the totals. Select by `session=ID`
 (an unambiguous prefix works) or `cwd=/absolute/worktree`. Include the coordinator and any
 replacement sessions. Keep roles disjoint; Claude session accounting includes its subagents
 and workflows. Record the run's UTC start time in the card. For example:
