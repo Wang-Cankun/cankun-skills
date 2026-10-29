@@ -18,6 +18,10 @@ and other windows reach it by name. This session is the **coordinator**. It desi
 the task in front of it and reshapes it as the work changes; this skill holds the rules every
 crew keeps and how to seat each model, not a workflow.
 
+Read the user's crew preferences (`~/.codex/agent-notes/crew.md`, when present) before
+designing the crew: they set the coordinator's role, the flow of each unit and the
+review policy, and win over this skill where they differ.
+
 **The user decides**: whether to open a crew; which models join, when the user names them; the
 points the user settles personally; anything destructive, outward-facing, or costly beyond what
 the card allows. Invoking this skill authorizes opening the panes the card lists.

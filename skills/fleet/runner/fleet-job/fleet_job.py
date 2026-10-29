@@ -4,14 +4,15 @@
 Usage:
   fleet_job.py start --spec SPEC.json         # or flags: --engine --model --prompt-file --tools ...
   fleet_job.py wait JOB [--timeout SECONDS]   # exit 0 when finished, 3 while still running
-  fleet_job.py result JOB [--text | --structured]
+  fleet_job.py result JOB [--text | --structured | --outcome]
   fleet_job.py status JOB
   fleet_job.py cancel JOB
   fleet_job.py list
 
 Spec (JSON): engine (pi, the default, or agy), prompt | prompt_file, model (Pi: its configured
 default otherwise; agy: gemini-4-argon-high), thinking, tools (preset name: readonly, research,
-write, full; Pi also takes a list), cwd, schema | schema_file, max_minutes (default 60), name.
+write, full; Pi also takes a list), cwd, schema | schema_file, max_minutes (default 60), name,
+output (a file the job writes its outcome to), diff ({base, dir, parts}: diff files `start` writes).
 Pi only: append_system_prompt, extensions (list), no_extensions, session (default true),
 approve (true/false/null).
 
@@ -34,6 +35,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 JOBS_HOME = Path(os.environ.get("FLEET_JOB_HOME", Path.home() / ".claude" / "fleet-jobs"))
 SUBMIT_EXTENSION = HERE / "submit_result.ts"
+AGY_READ_ONLY_NOTICE = (
+    "You are in read-only mode: you cannot run shell commands or write files, and any attempt "
+    "ends this job with no answer. Read the files you need with your read tools, starting from "
+    "the paths this prompt names."
+)
 
 TOOL_PRESETS = {
     "readonly": ["read", "grep", "find", "ls"],
@@ -79,6 +85,16 @@ def write_json(path: Path, value) -> None:
     tmp.replace(path)
 
 
+def atomic_write(path: Path, data: str | bytes) -> None:
+    # A unique temporary name: two jobs that prepare the same directory must not share one.
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{secrets.token_hex(4)}.tmp")
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+    tmp.write_bytes(data)
+    tmp.replace(path)
+
+
 def job_dir(job: str) -> Path:
     path = Path(job) if os.sep in job else JOBS_HOME / job
     if not (path / "spec.json").exists():
@@ -105,7 +121,7 @@ def build_spec(args) -> dict:
     spec = read_json(Path(args.spec), None) if args.spec else {}
     if spec is None:
         die(f"cannot read spec: {args.spec}")
-    for key in ("engine", "model", "thinking", "cwd", "name", "prompt_file", "schema_file"):
+    for key in ("engine", "model", "thinking", "cwd", "name", "prompt_file", "schema_file", "output"):
         value = getattr(args, key, None)
         if value is not None:
             spec[key] = value
@@ -137,6 +153,8 @@ def build_spec(args) -> dict:
         if given:
             die(f"agy does not support: {', '.join(given)}")
         spec.setdefault("model", AGY_DEFAULT_MODEL)
+        if tools in AGY_READ_ONLY:
+            spec["prompt"] = f"{spec['prompt']}\n\n{AGY_READ_ONLY_NOTICE}"
     else:
         if isinstance(tools, str):
             tools = TOOL_PRESETS.get(tools, tools.split(","))
@@ -147,6 +165,14 @@ def build_spec(args) -> dict:
     spec["cwd"] = str(Path(spec.get("cwd") or os.getcwd()).expanduser().resolve())
     if not Path(spec["cwd"]).is_dir():
         die(f"cwd does not exist: {spec['cwd']}")
+    cwd = Path(spec["cwd"])
+    if spec.get("output"):
+        spec["output"] = str(cwd / Path(spec["output"]).expanduser())
+    diff = spec.get("diff")
+    if diff is not None:
+        if not isinstance(diff, dict) or not diff.get("base") or not diff.get("dir"):
+            die("diff needs base and dir")
+        diff["dir"] = str(cwd / Path(diff["dir"]).expanduser())
     spec.setdefault("session", True)
     spec.setdefault("max_minutes", 60)
     return spec
@@ -255,8 +281,8 @@ def summarize_agy(jdir: Path, spec: dict) -> dict:
     elif final.get("status") != "SUCCESS":
         status, error = "failed", f"agy status {final.get('status')}"
     elif not response.strip() and structured is None:
-        status = "failed"
-        error = f"plan mode denied {', '.join(denied)}" if denied else "empty response"
+        status = "no_result"
+        error = "agy returned nothing" + (f"; denied: {', '.join(denied)}" if denied else "")
     elif spec.get("schema") is not None and structured is None:
         status = "no_result"
     else:
@@ -330,6 +356,7 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
     stop_reason = last_assistant.get("stopReason") if last_assistant else None
     error_message = (last_assistant or {}).get("errorMessage") or retries_failed
     exit_code = state.get("exit_code")
+    text = text_of(last_assistant) if last_assistant else ""
 
     if state.get("status") in ("cancelled", "timeout"):
         status = state["status"]
@@ -342,6 +369,9 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
         error_message = error_message or "Pi exited before agent_settled"
     elif stop_reason in ("error", "aborted"):
         status = "failed"
+    elif structured is None and not text.strip():
+        status = "no_result"
+        error_message = error_message or "pi returned nothing"
     elif spec.get("schema") is not None and structured is None:
         status = "no_result"
     else:
@@ -363,7 +393,7 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
         "exit_code": exit_code,
         "stop_reason": stop_reason,
         "error": error_message,
-        "text": text_of(last_assistant) if last_assistant else "",
+        "text": text,
         "structured": structured,
         "tool_calls": tool_calls,
         "tool_errors": tool_errors,
@@ -379,8 +409,29 @@ def summarize_pi(jdir: Path, spec: dict) -> dict:
 # ---------------------------------------------------------------- commands
 
 
+def write_diff(spec: dict) -> None:
+    diff = spec["diff"]
+    out = Path(diff["dir"])
+
+    def git(*options: str, pathspecs: list[str] = ()) -> bytes:
+        proc = subprocess.run(["git", "-C", spec["cwd"], "diff", *options, f"{diff['base']}...HEAD",
+                               *(["--", *pathspecs] if pathspecs else [])], capture_output=True)
+        if proc.returncode:
+            die(proc.stderr.decode(errors="replace").strip() or f"git diff failed ({proc.returncode})", 1)
+        return proc.stdout
+
+    # Every diff is read before any file is written, so a git failure leaves nothing half done.
+    files = {"stat.txt": git("--stat"), "full.diff": git()}
+    for name, pathspecs in (diff.get("parts") or {}).items():
+        files[name] = git(pathspecs=pathspecs)
+    for name, data in files.items():
+        atomic_write(out / name, data)
+
+
 def cmd_start(args) -> None:
     spec = build_spec(args)
+    if spec.get("diff") is not None:
+        write_diff(spec)
     JOBS_HOME.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     label = "".join(c if c.isalnum() or c in "-_" else "-" for c in (spec.get("name") or "job"))[:40]
@@ -404,7 +455,8 @@ def cmd_start(args) -> None:
         state = read_json(jdir / "state.json", {})
         if state.get("status") == "running" and state.get("pid") and (jdir / "events.jsonl").exists():
             break
-        if state.get("status") in TERMINAL:
+        # A job that ends before the first poll is "finished", which TERMINAL does not name.
+        if state.get("status") in TERMINAL | {"finished"}:
             break
         time.sleep(0.2)
     state = read_json(jdir / "state.json", {})
@@ -444,7 +496,32 @@ def cmd_supervise(args) -> None:
     state.update({"exit_code": exit_code, "finished_at": now(),
                   "status": "cancelled" if cancelled else "timeout" if timed_out else "finished"})
     write_json(jdir / "state.json", state)
-    write_json(jdir / "result.json", summarize(jdir))
+    finalize(jdir)
+
+
+def finalize(jdir: Path) -> None:
+    result = summarize(jdir)
+    spec = read_json(jdir / "spec.json", {})
+    if spec.get("output"):
+        try:
+            write_outcome(Path(spec["output"]), result, spec.get("schema") is not None)
+            result["output"] = spec["output"]
+        except OSError as exc:
+            result["output"], result["output_error"] = None, str(exc)
+    # result.json appears last: waiters treat it as the sign that the job is over.
+    write_json(jdir / "result.json", result)
+
+
+def write_outcome(path: Path, result: dict, schema: bool) -> None:
+    if result["status"] == "completed":
+        text = (json.dumps(result["structured"], indent=2, ensure_ascii=False) + "\n") if schema \
+            else result["text"]
+    elif schema:
+        text = json.dumps({"status": result["status"], "error": result["error"]},
+                          indent=2, ensure_ascii=False) + "\n"
+    else:
+        text = f"status: {result['status']}\nerror: {result['error'] or ''}\n"
+    atomic_write(path, text)
 
 
 def current_status(jdir: Path) -> dict:
@@ -453,14 +530,14 @@ def current_status(jdir: Path) -> dict:
             and not (jdir / "result.json").exists():
         state.update({"status": "finished", "exit_code": state.get("exit_code", -1), "finished_at": now()})
         write_json(jdir / "state.json", state)
-        write_json(jdir / "result.json", summarize(jdir))
+        finalize(jdir)
     if (jdir / "result.json").exists():
         return read_json(jdir / "result.json")
     return summarize(jdir)
 
 
 def brief(result: dict) -> dict:
-    keys = ("job_id", "engine", "status", "model", "name", "stop_reason", "error", "cost_usd", "tool_calls", "dir")
+    keys = ("job_id", "engine", "status", "model", "name", "stop_reason", "error", "output", "cost_usd", "tool_calls", "dir")
     out = {k: result.get(k) for k in keys}
     out["has_structured"] = result.get("structured") is not None
     return out
@@ -490,6 +567,8 @@ def cmd_result(args) -> None:
         print(result.get("text", ""))
     elif args.structured:
         print(json.dumps(result.get("structured"), indent=2, ensure_ascii=False))
+    elif args.outcome:
+        print(json.dumps({key: result.get(key) for key in ("status", "error", "output")}, ensure_ascii=False))
     else:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     if result["status"] not in TERMINAL:
@@ -529,6 +608,7 @@ def main() -> None:
     p.add_argument("--tools", help="preset (readonly, research, write, full); Pi also takes a comma list")
     p.add_argument("--cwd")
     p.add_argument("--name")
+    p.add_argument("--output", help="file the job writes its outcome to (relative to --cwd)")
     p.add_argument("--prompt")
     p.add_argument("--prompt-file", dest="prompt_file")
     p.add_argument("--schema-file", dest="schema_file")
@@ -553,6 +633,7 @@ def main() -> None:
     group = p.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true")
     group.add_argument("--structured", action="store_true")
+    group.add_argument("--outcome", action="store_true", help="only status, error and the output path")
     p.set_defaults(func=cmd_result)
 
     p = sub.add_parser("list")

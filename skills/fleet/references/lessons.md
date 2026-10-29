@@ -37,9 +37,12 @@ Things that went wrong in real runs with GPT and Gemini stages, each with what w
 - **Gemini's schema output can disagree with its answer.** Asked to list directories with a
   schema, Gemini 4 Argon started a subagent of its own, then answered correctly in prose while
   `structured_output` held an empty list. Read the `text`; structure it in a Claude stage.
-- **A blind second ruling.** Gemini 4 Argon ruled on GPT-6.1 Sol's 13 review findings without
-  seeing the coordinator's verdicts and matched an independent code check on 11, adding two
-  real issues. Withhold your own verdicts from the ruling stage so it does not anchor on them.
+- **Finders, not voters.** A second family adds most as an independent finder. Across the
+  Ecan rethink, Gemini 4 Argon voting on GPT-6.1 Sol's 29 findings kept 17, all real, and
+  dropped 12, 4 of them real; its own 10 findings on the same diffs held 7. Run both
+  families on the same diff in parallel, each blind to the other, and let one Claude stage
+  rule on both lists. When one finding needs a second look, withhold your verdict so it
+  does not anchor on it.
 - **Look before trusting the checks.** A slice that passed 800 tests was unusable at first
   sight of its screen. Before reading test results, look at one realistic result as its user
   would see it. Process grows into its own goal (checksums, smoke test plus dry run plus matrix
@@ -53,7 +56,12 @@ Things that went wrong in real runs with GPT and Gemini stages, each with what w
   nothing, and the sixth left every hash "unverified". Give any job that must run a command a
   preset with bash (`write` or `full`). agy in plan mode runs no commands either: a review that
   asked for some came back with 78 bytes. Name the files to read, or run it with a writing
-  preset in its own worktree.
+  preset in its own worktree. `fleet-job` now adds that warning to every read-only agy prompt
+  and reports an empty answer as `no_result`.
 - **Records**: a Herdr-pane worker reports no cost, and files in a session scratchpad have been
   deleted mid-session; keep worker output in the worktree's `.work/`. Text for `gh` goes
   through `--body-file`; an inline `--body` with backticks runs the commands.
+- **Let the tool write what a stage must keep.** A Haiku runner asked to save a job's
+  findings to a file returned them but wrote nothing, and another hand-copied a long result
+  and broke its quoting. `fleet-job` writes the result (`output`) and the review's diff
+  (`diff`) itself.

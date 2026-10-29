@@ -23,6 +23,10 @@ here the work that accepts: what the task is and what done means, and whether a 
 before anything relies on it (a merge, a reported number, a decision). How deep each acceptance
 goes is your judgement, from what a wrong acceptance would cost. UI look stays with Claude.
 
+Read the user's crew preferences (`~/.codex/agent-notes/crew.md`, when present) before
+writing the script: they set the coordinator's role, the flow of each unit and the
+review policy, and win over this skill where they differ.
+
 ## Choosing models
 
 Read the user's model roster (`~/.codex/agent-notes/models.md`, when present) before writing
