@@ -40,6 +40,11 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   name, model, pane and worktree, who may commit, merge or push, the budget and round cap when
   they matter, and what goes to the user. Show the card before starting unless the user already
   said go, and update it whenever the crew changes.
+- **Stop rules with a floor.** A lane's stop rule names a minimum sample and both a count and a
+  rate (more than 3 failures and more than 3% after 30 calls), and the lane classifies each
+  failure before counting it: a provider refusal, a malformed answer and a bug in its own
+  checker call for different rulings. Rules without a floor stopped one lane three times, twice
+  on a single failure or a bug in its own checker.
 - **Independent lanes.** Parallel lanes touch separate files; an agent that edits works in its
   own worktree and branch. The coordinator orders dependent work and says which lane waits.
   Worktrees still share the machine: the card gives each lane its own ports or a turn at a
@@ -49,7 +54,9 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   run against its goal. Throughput work goes to the model the project's rules name.
 - **Evidence over reports.** A result counts when the coordinator can see it: a commit, a file,
   a finished check's log. Another family's findings are claims: check each against the code or
-  source and record the ruling beside it before another agent acts on it.
+  source and record the ruling beside it before another agent acts on it. When the claims are
+  many, have each carry `path:line`, check the quotes and numbers against those lines with a
+  script, and read what it flags.
 - **Paths, not pastes.** Every model works on the repository or worktree itself; a copy of the
   material is only for a model that cannot read it, since copies go stale and hide the rest.
   Messages carry file paths. An answer longer than a few lines goes to a
@@ -57,8 +64,12 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   Agent-tool subagent, whose return lands in your own context.
 - **Arm a wait.** A resident never messages back. After each prompt whose answer you need, arm a
   wait that notifies you: the prompt with `--wait` in the background, or a background loop until
-  the expected file exists and `herdr agent get` shows `idle` or `done`. Tell the user you are
-  waiting on it.
+  the expected file is new or rewritten since the prompt and `herdr agent get` shows `idle` or
+  `done`, since a status file a lane reuses across stages already exists (`scripts/crew-watch.sh`
+  checks both). Size the loop's limit to the work, as one synthesis ran 70 minutes; a loop that
+  reaches it says so, and you re-arm it. Track each wait by the PID you recorded when you armed
+  it, since a `pgrep -f` pattern also matches the loop's own command line. Tell the user what you
+  are waiting on.
 - **Address by roster.** Reach an agent by a name or pane that `herdr agent list` or the card
   shows; when they leave the target open, ask the user.
 - **Fresh context when it pays.** Compact or reset an agent whose context has grown large or
@@ -66,9 +77,12 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   the card: it records there what is in flight and which waits are armed, stops its own
   watchers, and the fresh session starts from the card and re-arms them.
 - **The user at decisions.** Bring each decision when it arises, with the options and a
-  recommendation; report progress at milestones, quietly otherwise.
+  recommendation; report progress at milestones, quietly otherwise, naming each running seat
+  and armed wait by what it does or waits for.
 - **Close what you opened** once its work is merged or recorded. Side agents stay until the user
-  retires them.
+  retires them. When the user stops a crew, cancel the seats that just started, let a seat near
+  its end finish without new model calls, start nothing new, and record on the card, per seat,
+  what finished, what was cancelled and what is left undone.
 
 Shapes that have worked, to combine or change as the work goes:
 
@@ -78,6 +92,9 @@ Shapes that have worked, to combine or change as the work goes:
   reasons, positions attributed in `thread.md` and the user's settled points kept apart. It
   ends when all agree, handing the understanding back as `common-ground` does, or at the card's
   round cap, bringing the user each standing disagreement;
+- two families reading the same material blind to each other, then the coordinator checking
+  both readings' citations and merging them into an outline whose claims it settles, from which
+  one of them writes;
 - an executor and a reviewer from another family, trading `handoff-<unit>.md` and
   `review-<unit>.md` (`accept` or `fix`; later rounds `-r2`);
 - parallel lanes under one coordinator, each landing its own units ([how lanes ran](references/seating.md#lanes)).
