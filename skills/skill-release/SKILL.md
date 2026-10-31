@@ -96,7 +96,8 @@ Per skill being released:
   publish surface inside the write boundary);
 - scripts carry the executable bit **in git** (`git ls-files -s` shows `100755`);
 - every file the SKILL.md points to exists;
-- examples are free of secrets and machine-local paths;
+- examples are free of secrets and machine-local paths, and `scripts/check-private.sh` passes
+  (it also checks the private tokens listed on this machine, outside the repository);
 - a model-invoked `description` carries trigger branches (or the skill sets
   `disable-model-invocation: true` and keeps a one-line human description);
 - `metadata.group` is one of the four keys in step 2;
