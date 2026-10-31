@@ -25,9 +25,9 @@ success is judged from their JSON output, not the exit code: the event stream of
 J=~/.claude/tools/fleet-job/fleet_job.py
 $J start --name review-01 --thinking xhigh \
    --tools readonly --cwd ~/repo --prompt-file prompt.md --schema-file schema.json
-$J start --name build-01 --engine omp --model openai-codex/gpt-6.1-sol --thinking xhigh \
+$J start --name build-01 --engine omp --model openai-codex/<id> --thinking xhigh \
    --tools write --cwd ~/repo-worktree --prompt-file prompt.md
-$J start --name whole-run --engine agy --model gemini-4-argon-high \
+$J start --name whole-run --engine agy --model <id from agy models> \
    --tools readonly --cwd ~/repo --prompt-file prompt.md
 $J wait <job_id> --timeout 540   # exit 0 finished, 3 still running
 $J result <job_id>               # full JSON; --text or --structured for one field
@@ -63,7 +63,7 @@ Tool presets: `readonly` (read, grep, find, ls), `research` (plus `web_search`,
 available only when the preset or list names it. Tools are an allowlist, not a sandbox: `bash` can write anywhere, so
 give write-capable jobs a worktree as `cwd`. Installed Pi packages load normally.
 `--model` is optional for Pi: without it Pi uses its configured default, and `result` reports
-the model that actually answered; agy defaults to `gemini-4-argon-high`. Run Claude models as
+the model that actually answered. omp and agy need `--model`. Run Claude models as
 native Claude Code agents instead.
 
 agy takes a preset, not a tool list: `readonly` and `research` run in plan mode, where every

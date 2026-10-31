@@ -10,7 +10,8 @@ Usage:
   fleet_job.py list
 
 Spec (JSON): engine (pi, the default, omp or agy), prompt | prompt_file, model (omp: required,
-provider/id; Pi: its configured default otherwise; agy: gemini-4-argon-high), thinking, tools
+provider/id; Pi: provider/id, its configured default otherwise; agy: required, an id from
+`agy models`), thinking, tools
 (preset name: readonly, research, write, full; omp and Pi also take a list), cwd, schema |
 schema_file, max_minutes (default 60), name, output (a file the job writes its outcome to), diff
 ({base, dir, parts}: diff files `start` writes). omp and Pi: append_system_prompt, extensions
@@ -65,7 +66,6 @@ OMP_PRESETS = {
     "write": ["read", "grep", "glob", "edit", "write", "bash"],
     "full": None,
 }
-AGY_DEFAULT_MODEL = "gemini-4-argon-high"
 # agy has one switch where Pi has a tool list: plan mode denies every write, and skipping
 # permissions approves everything, the shell included.
 AGY_READ_ONLY = ("readonly", "research")
@@ -164,7 +164,8 @@ def build_spec(args) -> dict:
         given = [key for key in PI_ONLY if spec.get(key) not in (None, [], "")]
         if given:
             die(f"agy does not support: {', '.join(given)}")
-        spec.setdefault("model", AGY_DEFAULT_MODEL)
+        if not spec.get("model"):
+            die("agy needs a model (an id from `agy models`)")
         if tools in AGY_READ_ONLY:
             spec["prompt"] = f"{spec['prompt']}\n\n{AGY_READ_ONLY_NOTICE}"
     else:

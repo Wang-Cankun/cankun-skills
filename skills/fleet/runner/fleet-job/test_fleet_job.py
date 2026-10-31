@@ -105,41 +105,44 @@ class FleetJobTest(unittest.TestCase):
                               env=self.env, capture_output=True, text=True)
 
     def test_agy_read_only_runs_in_plan_mode_with_the_prompt_last(self):
-        result, args = self.job({"engine": "agy", "prompt": "review it", "thinking": "xhigh"})
-        self.assertEqual(args[:args.index("-p") + 1], ["--mode", "plan", "--model", "gemini-4-argon-high",
+        result, args = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "review it", "thinking": "xhigh"})
+        self.assertEqual(args[:args.index("-p") + 1], ["--mode", "plan", "--model", "gemini-test-high",
                                                        "--effort", "xhigh", "--output-format", "json", "-p"])
         self.assertTrue(prompt_of(args).startswith("review it\n\n"))
         self.assertEqual((result["status"], result["text"], result["session_id"]), ("completed", "agy reply", "conv-1"))
         self.assertEqual(result["tokens"], {"input": 1200, "output": 34, "cacheRead": 500, "cacheWrite": 0})
 
     def test_agy_write_preset_skips_permissions(self):
-        _, args = self.job({"engine": "agy", "prompt": "fix it", "tools": "write"})
+        _, args = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "fix it", "tools": "write"})
         self.assertIn("--dangerously-skip-permissions", args)
         self.assertNotIn("plan", args)
 
     def test_agy_schema_returns_structured_output(self):
         schema = {"type": "object", "properties": {"verdict": {"type": "string"}}}
-        result, args = self.job({"engine": "agy", "prompt": "rule", "schema": schema})
+        result, args = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "rule", "schema": schema})
         self.assertEqual(args[args.index("--json-schema") + 1], str(Path(result["dir"]) / "schema.json"))
         self.assertEqual((result["status"], result["structured"]), ("completed", {"verdict": "take"}))
 
     def test_agy_failures_carry_their_reason(self):
         for mode, error in (("error", "agy status ERROR"), ("nojson", "agy printed no JSON result")):
             with self.subTest(mode=mode):
-                result, _ = self.job({"engine": "agy", "prompt": "q"}, mode)
+                result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q"}, mode)
                 self.assertEqual((result["status"], result["error"]), ("failed", error))
+
+    def test_agy_needs_a_model(self):
+        self.assertEqual(self.refused({"engine": "agy", "prompt": "q"}).returncode, 2)
 
     def test_agy_refuses_what_only_pi_supports(self):
         for spec in ({"tools": ["read", "bash"]}, {"extensions": ["x.ts"]}, {"append_system_prompt": "x"},
                      {"approve": False}):
             with self.subTest(spec=spec):
-                self.assertEqual(self.refused({"engine": "agy", "prompt": "q", **spec}).returncode, 2)
+                self.assertEqual(self.refused({"engine": "agy", "model": "gemini-test-high", "prompt": "q", **spec}).returncode, 2)
 
     def test_pi_model_is_pinned_to_its_provider(self):
-        _, args = self.job({"prompt": "q", "model": "magpie/codex/gpt-6-luna", "tools": "write"})
+        _, args = self.job({"prompt": "q", "model": "proxy/codex/gpt-test", "tools": "write"})
         self.assertEqual(args[args.index("--tools") + 1], "read,grep,find,ls,edit,write,bash")
         self.assertEqual(args[args.index("--provider"):args.index("--provider") + 4],
-                         ["--provider", "magpie", "--model", "codex/gpt-6-luna"])
+                         ["--provider", "proxy", "--model", "codex/gpt-test"])
 
     def test_pi_is_the_default_engine(self):
         schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}}
@@ -239,13 +242,13 @@ class FleetJobTest(unittest.TestCase):
     def test_output_holds_a_schema_jobs_structured_result(self):
         schema = {"type": "object", "properties": {"note": {"type": "string"}}}
         self.env["FAKE_STRUCTURED"] = '{"note":"caf\u00e9"}'
-        result, _ = self.job({"engine": "agy", "prompt": "rule", "schema": schema, "output": "out/rule.json"})
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "rule", "schema": schema, "output": "out/rule.json"})
         path = self.root / "out" / "rule.json"
         self.assertEqual(result["output"], str(path))
         self.assertEqual(path.read_text(), '{\n  "note": "caf\u00e9"\n}\n')
 
     def test_output_holds_a_text_jobs_text_as_it_is(self):
-        for spec in ({"engine": "agy"}, {"engine": "pi"}):
+        for spec in ({"engine": "agy", "model": "gemini-test-high"}, {"engine": "pi"}):
             with self.subTest(engine=spec["engine"]):
                 result, _ = self.job({"prompt": "q", "output": "text.md", **spec})
                 reply = "agy reply" if spec["engine"] == "agy" else "pi reply"
@@ -253,17 +256,17 @@ class FleetJobTest(unittest.TestCase):
                 self.assertEqual(result["output"], str(self.root / "text.md"))
 
     def test_output_of_a_failed_job_names_the_status_and_error(self):
-        result, _ = self.job({"engine": "agy", "prompt": "q", "output": "text.md"}, "error")
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "output": "text.md"}, "error")
         self.assertEqual((self.root / "text.md").read_text(), "status: failed\nerror: agy status ERROR\n")
         schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}}
-        self.job({"engine": "agy", "prompt": "q", "schema": schema, "output": "failed.json"}, "error")
+        self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "schema": schema, "output": "failed.json"}, "error")
         self.assertEqual(json.loads((self.root / "failed.json").read_text()),
                          {"status": "failed", "error": "agy status ERROR"})
 
     def test_diff_writes_stat_full_and_each_part(self):
         repo = self.repo()
         diff = {"base": "main", "dir": "review", "parts": {"src.diff": ["src"], "docs.diff": ["docs"]}}
-        self.job({"engine": "agy", "prompt": "q", "cwd": str(repo), "diff": diff})
+        self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "cwd": str(repo), "diff": diff})
         out = repo / "review"
         self.assertIn("2 files changed", (out / "stat.txt").read_text())
         full = (out / "full.diff").read_text()
@@ -284,24 +287,24 @@ class FleetJobTest(unittest.TestCase):
     def test_read_only_agy_prompt_warns_about_shell_and_writes(self):
         for tools, warned in (("readonly", True), ("research", True), ("write", False)):
             with self.subTest(tools=tools):
-                _, args = self.job({"engine": "agy", "prompt": "review it", "tools": tools})
+                _, args = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "review it", "tools": tools})
                 self.assertEqual("read-only mode" in prompt_of(args), warned)
                 self.assertTrue(prompt_of(args).startswith("review it"))
 
     def test_an_empty_answer_is_no_result_for_each_engine(self):
         for engine in ("pi", "agy"):
             with self.subTest(engine=engine):
-                result, _ = self.job({"engine": engine, "prompt": "q"}, "empty")
+                result, _ = self.job({"engine": engine, "prompt": "q", **({"model": "gemini-test-high"} if engine == "agy" else {})}, "empty")
                 self.assertEqual(result["status"], "no_result")
                 self.assertIn("returned nothing", result["error"])
 
     def test_an_empty_agy_answer_carries_its_denied_actions(self):
-        result, _ = self.job({"engine": "agy", "prompt": "q"}, "denied")
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q"}, "denied")
         self.assertEqual((result["status"], result["denied_actions"]), ("no_result", ["write_file"]))
         self.assertIn("write_file", result["error"])
 
     def test_result_outcome_prints_only_status_error_and_output_path(self):
-        result, _ = self.job({"engine": "agy", "prompt": "q", "output": "o.md"}, "error")
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "output": "o.md"}, "error")
         done = subprocess.run([sys.executable, SCRIPT, "result", result["job_id"], "--outcome"],
                               env=self.env, capture_output=True, text=True)
         self.assertEqual(json.loads(done.stdout),
@@ -316,7 +319,7 @@ class FleetJobTest(unittest.TestCase):
         jdir = self.root / "jobs" / "20260101-000000-j-abc123"
         jdir.mkdir(parents=True)
         (jdir / "spec.json").write_text(json.dumps(
-            {"engine": "agy", "cwd": str(self.root), "output": str(self.root / "o.md")}))
+            {"engine": "agy", "model": "gemini-test-high", "cwd": str(self.root), "output": str(self.root / "o.md")}))
         (jdir / "state.json").write_text(json.dumps(
             {"status": "finished", "exit_code": 0, "supervisor_pid": supervisor_pid}))
         (jdir / "events.jsonl").write_text('{"conversation_id":"c","status":"SUCCESS","response":"hi"}\n')
@@ -341,8 +344,8 @@ class FleetJobTest(unittest.TestCase):
         empty = self.root / "empty"
         empty.mkdir()
         spec_file = self.root / "spec.json"
-        spec_file.write_text(json.dumps({"cwd": str(self.root), "engine": "agy", "prompt": "q",
-                                         "output": "o.md"}))
+        spec_file.write_text(json.dumps({"cwd": str(self.root), "engine": "agy", "model": "gemini-test-high",
+                                         "prompt": "q", "output": "o.md"}))
         env = dict(self.env, PATH=str(empty))
         job_id = json.loads(self.fleet("start", "--spec", spec_file, env=env).stdout)["job_id"]
         self.assertEqual(self.fleet("wait", job_id, "--timeout", "30", env=env).returncode, 0)
@@ -354,13 +357,13 @@ class FleetJobTest(unittest.TestCase):
 
     def test_an_output_that_cannot_be_written_fails_the_job(self):
         (self.root / "taken").mkdir()
-        result, _ = self.job({"engine": "agy", "prompt": "q", "output": "taken"})
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "output": "taken"})
         self.assertEqual((result["status"], result["output"]), ("failed", None))
         self.assertIn("cannot write output", result["error"])
 
     def test_every_status_but_completed_says_why(self):
         schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}}
-        result, _ = self.job({"engine": "agy", "prompt": "q", "schema": schema}, "prose")
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "schema": schema}, "prose")
         self.assertEqual(result["status"], "no_result")
         self.assertIn("run_command", result["error"])
         result, _ = self.job({"engine": "pi", "prompt": "q", "schema": schema})

@@ -71,7 +71,7 @@ def main():
         print(f"{name:44} {model:26} {turns if turns is not None else '':>5} {u['input']:>9} {u['output']:>8} "
               f"{u['cache_read']:>10} {u['cache_write']:>9} {total:>10} {f'{cost:.2f}' if cost is not None else '':>6}")
     jobs = sum(c for *_, c in rows if c is not None)
-    print(f"Pi jobs' cost_usd (API-equivalent; billed to the ChatGPT subscription; agy reports none): {jobs:.2f}")
+    print(f"fleet jobs' cost_usd (API-equivalent, as Pi and omp report it; agy reports none): {jobs:.2f}")
 
 
 if __name__ == "__main__":

@@ -37,8 +37,8 @@ Things that went wrong in real runs with GPT and Gemini stages, each with what w
 - **Gemini's schema output can disagree with its answer.** Asked to list directories with a
   schema, Gemini 4 Argon started a subagent of its own, then answered correctly in prose while
   `structured_output` held an empty list. Read the `text`; structure it in a Claude stage.
-- **Finders, not voters.** A second family adds most as an independent finder. Across the
-  Ecan rethink, Gemini 4 Argon voting on GPT-6.1 Sol's 29 findings kept 17, all real, and
+- **Finders, not voters.** A second family adds most as an independent finder. Across one
+  large rewrite, Gemini 4 Argon voting on GPT-6.1 Sol's 29 findings kept 17, all real, and
   dropped 12, 4 of them real; its own 10 findings on the same diffs held 7. Run both
   families on the same diff in parallel, each blind to the other, and let one Claude stage
   rule on both lists. When one finding needs a second look, withhold your verdict so it

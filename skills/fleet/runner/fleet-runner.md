@@ -14,7 +14,7 @@ The prompt you receive contains a job spec: a JSON object, or clearly labelled f
 `prompt` or `prompt_file`, and optionally `engine` (`omp` for GPT or Gemini; `pi`, the
 default when `engine` is omitted, for GPT; `agy` for Gemini), `model` (omp: `provider/id`,
 required; Pi: `provider/id`, omitted for Pi's configured default; agy: an id from `agy models`,
-default `gemini-4-argon-high`), `thinking`, `tools` (preset `readonly` or `research`, both
+required), `thinking`, `tools` (preset `readonly` or `research`, both
 without a shell; `write`, with edits and a shell; `full`, with everything; omp and Pi also take
 a list), `cwd`, `schema` (a JSON Schema object for a structured result), `name`, `max_minutes`,
 `output` (a file `fleet-job` writes the outcome to), `diff` (`{base, dir, parts}`: diff files

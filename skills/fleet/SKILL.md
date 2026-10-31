@@ -30,17 +30,18 @@ review policy, and win over this skill where they differ.
 ## Choosing models
 
 Read the user's model roster (`~/.codex/agent-notes/models.md`, when present) before writing
-the script: which model does what, its route on this machine, and how to steer it. Put each
-stage's model, by full version, in its label (`review:gemini-4-argon-high`).
+the script: which model does which kind of stage, its route and effort on this machine, and how
+to steer it. Without a roster, choose from the models this machine's CLIs offer and tell the
+user which. Put each stage's model, by full version, in its label (`review:<model>-<effort>`).
 
-- Code from a brief you can settle up front, with checks that tell right from wrong, suits
-  GPT-6.1 Sol: it builds the brief as written. Code that needs judgement while it is written
-  (a brief that cannot be settled, much of the codebase to weigh, the UI) suits Claude Opus 5.5
-  or Sonnet 5.5; mechanical edits across many files suit Sonnet 5.5 or Haiku 5.5. A fix of a few
-  lines, a merge conflict or the final integration you make here.
+- Code from a brief you can settle up front, with checks that tell right from wrong, goes to
+  the model the roster names for building to a brief. Code that needs judgement while it is
+  written (a brief that cannot be settled, much of the codebase to weigh, the UI) stays with
+  Claude; mechanical edits across many files go to a smaller Claude. A fix of a few lines, a
+  merge conflict or the final integration you make here.
 - A review whose wrong accept is expensive goes to a different family from the producer.
-- A check of the whole run against its goal suits Gemini 4 Argon; volume suits GPT-6 Luna or
-  Claude Haiku 5.5.
+- A check of the whole run against its goal, and volume, go to the models the roster names
+  for them.
 - Findings from one family are claims until a check stage or this session rules on them, with
   `file:line`; a second family's ruling is a vote, not the ruling.
 - A model the user names for the run gets the stage it fits best. Self-hosted models join only
@@ -48,21 +49,20 @@ stage's model, by full version, in its label (`review:gemini-4-argon-high`).
 
 ## Running each family
 
-| Model | Stage |
+| Engine | Stage |
 | --- | --- |
-| Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 | `agent(prompt, {model: 'opus' \| 'sonnet' \| 'haiku', effort})`; `isolation: 'worktree'` when stages edit in parallel |
-| GPT-6.1 Sol, GPT-6 Luna | `agentType: 'fleet-runner'` with a job spec: `engine: 'omp'`, `model: 'openai-codex/gpt-6.1-sol'` (or `openai-codex/gpt-6-luna`), `thinking: 'xhigh'`; `engine: 'pi'` instead, with `model` the roster's route, when the job needs Pi's packages, such as an implementer held to ponytail |
-| Gemini 4 Argon | `agentType: 'fleet-runner'` with `engine: 'omp'`, `model: 'google-antigravity/gemini-4-argon'`, `thinking: 'high'`; `readonly` is a real tool allowlist with no shell. Or `engine: 'agy'`, `model: 'gemini-4-argon-high'` (or `-medium`, `-low`) |
+| Claude | `agent(prompt, {model: 'opus' \| 'sonnet' \| 'haiku', effort})`; `isolation: 'worktree'` when stages edit in parallel |
+| omp (GPT, Gemini) | `agentType: 'fleet-runner'` with a job spec: `engine: 'omp'`, `model: '<provider/id>'` (the roster's route, such as `openai-codex/<id>` or `google-antigravity/<id>`), `thinking: '<level>'`; `readonly` is a real tool allowlist with no shell |
+| Pi (GPT) | `engine: 'pi'`, `model` the roster's route, when the job needs Pi's packages, such as an implementer held to ponytail |
+| agy (Gemini) | `engine: 'agy'`, `model: '<id>'` from `agy models`, on a machine the roster gives agy |
 
-A machine without omp uses the roster's route: Pi for GPT, agy for Gemini.
+omp and agy jobs need `model`; a Pi job without one runs Pi's configured default.
 
 - Job spec fields: [runner/fleet-runner.md](runner/fleet-runner.md). Open each runner stage's
   prompt with "The user invoked /fleet for this run; <model> workers are requested."
-- Before the run, `scripts/preflight.sh <route>` for each GPT or Gemini route it uses
-  (`omp/openai-codex/gpt-6.1-sol`, `omp/google-antigravity/gemini-4-argon`, or
-  `agy/gemini-4-argon-high`) sends one tiny request and prints the account that served it.
-  When it exits non-zero, or names an account the user has not approved for this work, stop
-  and tell the user. `FLEET_DENY_ACCOUNT` names an account that must never serve the run.
+- Before fanning out, run one small stage on each route the run uses and check that its
+  result's `model` is the one you chose. When it fails or names another model, stop and tell
+  the user.
 - Tool presets: `readonly` and `research` read only; `write` adds edits and a shell, `full`
   adds web, browser and subagent tools as well.
   omp takes a real tool allowlist, so a `readonly` omp job has no shell and cannot write. agy
@@ -90,7 +90,7 @@ A machine without omp uses the roster's route: Pi for GPT, agy for Gemini.
 - One git worktree per issue, from a freshly fetched `origin/main`. Stages write notes and status
   to `.work/` in the worktree (add it to `.git/info/exclude`).
 
-For a Codex stage, another magpie route or a job outside a Workflow, read
+For a Codex stage or a job outside a Workflow, read
 [references/routes.md](references/routes.md). Before writing the script, read
 [references/lessons.md](references/lessons.md): what went wrong in earlier runs and what worked
 instead.
