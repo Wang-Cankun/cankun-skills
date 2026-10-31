@@ -107,6 +107,31 @@ case "\${FAKE_PI_MODE:-ok}" in
 esac
 `;
 
+const FAKE_OMP = `#!/bin/bash
+if [[ -n "$FAKE_OMP_CALLS" ]]; then
+  printf '%q ' "$@" >> "$FAKE_OMP_CALLS"
+  printf '\\n' >> "$FAKE_OMP_CALLS"
+fi
+[[ "$1" == "--version" ]] && { echo omp/18.14.1; exit 0; }
+session="omp-session-1"; model="google-antigravity/gemini-4-argon"; prev=""
+for a in "$@"; do
+  [[ "$prev" == "--resume" ]] && session="$a"
+  [[ "$prev" == "--model" ]] && model="$a"
+  prev="$a"
+done
+provider="\${model%%/*}"; model_id="\${model#*/}"
+case "\${FAKE_OMP_MODE:-ok}" in
+  ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"reading\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":1000,\\"output\\":10}}}"
+       echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"omp-fake-reply\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":2456,\\"output\\":68}}}" ;;
+  nosession) echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"reply"}]}}' ;;
+  drift) echo '{"type":"session","id":"other-session"}'
+       echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"r"}]}}' ;;
+  failed) echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
+       echo '{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"half"}],"stopReason":"error","errorMessage":"quota"}}' ;;
+esac
+`;
+
 const FAKE_AGY = `#!/bin/bash
 if [[ -n "$FAKE_AGY_CALLS" ]]; then
   printf '%q ' "$@" >> "$FAKE_AGY_CALLS"
@@ -126,6 +151,7 @@ esac
 `;
 
 fs.writeFileSync(path.join(BIN, "agy"), FAKE_AGY, { mode: 0o755 });
+fs.writeFileSync(path.join(BIN, "omp"), FAKE_OMP, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "claude"), FAKE_CLAUDE, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "codex"), FAKE_CODEX, { mode: 0o755 });
 fs.writeFileSync(path.join(BIN, "oracle"), FAKE_ORACLE, { mode: 0o755 });
@@ -274,6 +300,35 @@ function check(name, cond, detail = "") {
   }
 }
 
+// 1c-omp. Gemini 4 Argon through omp: read tools only, the id omp reports, resumed by --resume.
+{
+  const home = freshHome();
+  const calls = path.join(home, "omp-calls");
+  const r1 = await confer(["open", "omp", "-t", "argon", "q"], { home, env: { FAKE_OMP_CALLS: calls } });
+  check("omp open exits 0 with the last assistant text", r1.code === 0 && r1.stdout.includes("omp-fake-reply") && !r1.stdout.includes("reading"), r1.stderr);
+  check("omp stores the session id omp reports", reg(home).argon?.session === "omp-session-1");
+  check("omp provenance in ← header", tx(home, "argon").includes("· google-antigravity/gemini-4-argon/high · 3.5k→78tok"), tx(home, "argon"));
+  const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1).replaceAll("\\,", ",");
+  check("omp opens with read tools on Gemini 4 Argon, high", openArgs.includes("--tools read,grep,glob") && openArgs.includes("--no-context-files") && openArgs.includes("--model google-antigravity/gemini-4-argon --thinking high") && !openArgs.includes("--resume"), openArgs);
+  const r2 = await confer(["reply", "argon", "again"], { home, env: { FAKE_OMP_CALLS: calls } });
+  const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("omp reply resumes the session", r2.code === 0 && replyArgs.includes("--resume omp-session-1") && reg(home).argon?.rounds === 2, `${r2.stderr} ${replyArgs}`);
+  const own = await confer(["open", "omp", "-t", "sol", "q"], { home, env: { FAKE_OMP_CALLS: calls, CONFER_OMP_ARGS: "--model openai-codex/gpt-6.1-sol --thinking xhigh" } });
+  const ownArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("CONFER_OMP_ARGS picks the model and thinking once", own.code === 0 && ownArgs.split("--model").length === 2 && ownArgs.split("--thinking").length === 2 && tx(home, "sol").includes("· openai-codex/gpt-6.1-sol/xhigh ·"), ownArgs);
+  const kept = await confer(["reply", "sol", "again"], { home, env: { FAKE_OMP_CALLS: calls, CONFER_OMP_ARGS: "--thinking low" } });
+  const keptArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("omp reply stays on the thread's model and thinking", kept.code === 0 && keptArgs.includes("--model openai-codex/gpt-6.1-sol --thinking xhigh") && keptArgs.split("--thinking").length === 2, keptArgs);
+
+  for (const [mode, expected] of [["nosession", "no session event"], ["failed", "stopReason error: quota"]]) {
+    const h = freshHome();
+    const r = await confer(["open", "omp", "-t", mode, "q"], { home: h, env: { FAKE_OMP_MODE: mode } });
+    check(`omp ${mode} fails with its reason`, r.code === 1 && r.stderr.includes(expected), r.stderr);
+  }
+  const drift = await confer(["reply", "argon", "q"], { home, env: { FAKE_OMP_MODE: "drift" } });
+  check("omp changed session id fails closed", drift.code === 1 && drift.stderr.includes("conflicting session ids"), drift.stderr);
+}
+
 // 1c-agy. Gemini through agy runs in plan mode, so writes are denied, and resumes by conversation id.
 {
   const home = freshHome();
@@ -290,6 +345,9 @@ function check(name, cond, detail = "") {
   const own = await confer(["open", "agy", "-t", "flash", "q"], { home, env: { FAKE_AGY_CALLS: calls, CONFER_AGY_ARGS: "--model gemini-3.8-flash-high --effort high" } });
   const ownArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("CONFER_AGY_ARGS picks the model once", own.code === 0 && ownArgs.split("--model").length === 2 && tx(home, "flash").includes("· gemini-3.8-flash-high/high ·"), ownArgs);
+  const kept = await confer(["reply", "flash", "again"], { home, env: { FAKE_AGY_CALLS: calls } });
+  const keptArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("agy reply stays on the thread's model and effort", kept.code === 0 && keptArgs.includes("--model gemini-3.8-flash-high --effort high") && keptArgs.split("--model").length === 2, keptArgs);
 
   for (const [mode, expected] of [["denied", "plan mode denied write_file"], ["error", "status ERROR"], ["badjson", "unparseable JSON"]]) {
     const h = freshHome();

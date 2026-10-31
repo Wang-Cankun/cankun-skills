@@ -29,6 +29,12 @@ const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
 const PI_READ_TOOLS = "read,grep,find,ls";
 const CLAUDE_DENIED_TOOLS = "Edit,Write,NotebookEdit,Bash";
 const AGY_MODEL = "gemini-4-argon-high";
+const OMP_SESSION_DIR = path.join(CONFER_HOME, "omp-sessions");
+// omp has glob where Pi has ls.
+const OMP_READ_TOOLS = "read,grep,glob";
+const OMP_MODEL = "google-antigravity/gemini-4-argon";
+const OMP_THINKING = "high";
+const OMP_THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "xhigh"]);
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
 const PREAMBLE =
@@ -440,13 +446,76 @@ const providers = {
       return { reply, session: sessionId, piModel: selectedModel ?? model, meta: { model, parts } };
     },
   },
+  omp: {
+    defaultFanout: false,
+    // omp is a fork of Pi's coding agent and prints Pi's JSON events, but it names its own session
+    // ids: the first round reads the id from the session event, later rounds --resume it.
+    async ask(prompt, session, modelOverride) {
+      let extra = splitArgs(process.env.CONFER_OMP_ARGS);
+      // A reply stays on the model and thinking its thread recorded ("provider/id/thinking").
+      if (modelOverride) {
+        const parts = modelOverride.split("/");
+        const thinking = OMP_THINKING_LEVELS.has(parts.at(-1)) ? parts.pop() : null;
+        extra = [...dropFlags(extra, ["--model", "--thinking"]), "--model", parts.join("/"), ...(thinking ? ["--thinking", thinking] : [])];
+      }
+      const flag = (name, fallback) => {
+        const i = extra.indexOf(name);
+        return i >= 0 ? extra[i + 1] ?? fallback : fallback;
+      };
+      fs.mkdirSync(OMP_SESSION_DIR, { recursive: true });
+      const args = [
+        "-p", "--mode", "json",
+        "--session-dir", OMP_SESSION_DIR,
+        "--no-skills", "--no-rules", "--no-context-files", "--no-extensions", "--no-title", "--no-lsp",
+        "--tools", OMP_READ_TOOLS,
+        ...(extra.includes("--model") ? [] : ["--model", OMP_MODEL]),
+        ...(extra.includes("--thinking") ? [] : ["--thinking", OMP_THINKING]),
+        ...(session ? ["--resume", session] : []),
+        ...extra,
+        "--", prompt,
+      ];
+      const r = await runOrThrow("omp", "omp", args);
+      let reportedSession = null, message = null, usage = null;
+      for (const line of r.stdout.split("\n")) {
+        if (!line.trim()) continue;
+        let evt;
+        try { evt = JSON.parse(line); }
+        catch { throw new ProviderError("omp", `malformed JSONL event: ${line.slice(0, 200)}`); }
+        if (evt.type === "session" && evt.id) reportedSession = evt.id;
+        if (evt.type === "message_end" && evt.message?.role === "assistant") {
+          message = evt.message;
+          const u = evt.message.usage;
+          if (u) usage = { input: (usage?.input ?? 0) + (u.input ?? 0), output: (usage?.output ?? 0) + (u.output ?? 0) };
+        }
+      }
+      if (!reportedSession) throw new ProviderError("omp", "no session event with id (protocol error)");
+      if (session && reportedSession !== session)
+        throw new ProviderError("omp", `conflicting session ids: ${session} vs ${reportedSession}`);
+      if (["error", "aborted", "length"].includes(message?.stopReason))
+        throw new ProviderError("omp", `round did not finish (stopReason ${message.stopReason}${message.errorMessage ? `: ${message.errorMessage}` : ""})`);
+      const reply = message?.content?.filter((c) => c.type === "text").map((c) => c.text).join("") ?? "";
+      if (!reply.trim()) throw new ProviderError("omp", "no assistant text in response (protocol error)");
+      const model = message.provider && message.model ? `${message.provider}/${message.model}` : flag("--model", OMP_MODEL);
+      const label = `${model}/${flag("--thinking", OMP_THINKING)}`;
+      const parts = [
+        label,
+        usage ? `${fmtTok(usage.input ?? 0)}→${fmtTok(usage.output ?? 0)}tok` : null,
+      ].filter(Boolean);
+      return { reply, session: reportedSession, meta: { model: label, parts } };
+    },
+  },
   agy: {
     defaultFanout: false,
     // Verified against agy 1.4.9: print mode approves file writes unless --mode plan, where a
     // write is auto-denied and the round ends with an empty response; reads still work.
     // -p must come last, directly before the prompt, or agy takes the next flag as the prompt.
-    async ask(prompt, session) {
-      const extra = splitArgs(process.env.CONFER_AGY_ARGS);
+    async ask(prompt, session, modelOverride) {
+      let extra = splitArgs(process.env.CONFER_AGY_ARGS);
+      // A reply stays on the model and effort its thread recorded ("model" or "model/effort").
+      if (modelOverride) {
+        const [model, effort] = modelOverride.split("/");
+        extra = [...dropFlags(extra, ["--model", "--effort"]), "--model", model, ...(effort ? ["--effort", effort] : [])];
+      }
       const mi = extra.findIndex((a) => a === "--model");
       const model = mi >= 0 ? extra[mi + 1] ?? AGY_MODEL : AGY_MODEL;
       const args = [
@@ -644,7 +713,16 @@ async function cmdReply(args) {
 
 function resumeModel(thread) {
   if (thread.provider === "pi") return thread.piModel ?? thread.model;
-  if (thread.provider === "oracle") return thread.model;
+  if (["oracle", "omp", "agy"].includes(thread.provider)) return thread.model;
+}
+
+function dropFlags(args, names) {
+  const kept = [];
+  for (let i = 0; i < args.length; i++) {
+    if (names.includes(args[i])) i++;
+    else kept.push(args[i]);
+  }
+  return kept;
 }
 
 async function cmdAll(args) {
@@ -751,8 +829,8 @@ const HELP = `confer.mjs — consult a peer AI model, with resumable threads
   list | show <thread>                   registry / full transcript
   doctor [--live [provider]]             check CLIs; live defaults to claude+codex
 env: CONFER_TIMEOUT (s, default ${DEFAULT_TIMEOUT_SECONDS}) · CONFER_ORACLE_TIMEOUT (s, default ${DEFAULT_ORACLE_TIMEOUT_SECONDS})
-     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_AGY_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
-defaults: pi on Pi's default model; agy: ${AGY_MODEL}; oracle: ${ORACLE_MODEL}. Environment > saved config > built-in defaults.
+     CONFER_CLAUDE_ARGS / CONFER_CODEX_ARGS / CONFER_OMP_ARGS / CONFER_AGY_ARGS / CONFER_ORACLE_ARGS · CONFER_PROVIDER · CONFER_PI_MODEL · CONFER_HOME
+defaults: pi on Pi's default model; omp: ${OMP_MODEL}/${OMP_THINKING}; agy: ${AGY_MODEL}; oracle: ${ORACLE_MODEL}. Environment > saved config > built-in defaults.
 Peers other than Oracle run read-only in the caller's working directory and read the repository there.`;
 
 const [cmd, ...rest] = process.argv.slice(2);

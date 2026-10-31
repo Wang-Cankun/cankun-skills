@@ -14,7 +14,8 @@ future host from one deployment; harness differences are absorbed by SKILL.md (p
 | claude | `claude -p --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `claude -p --resume <id> --output-format json --disallowedTools Edit,Write,NotebookEdit,Bash -- "<prompt>"` | `.session_id` in the JSON result (refreshed every round) | Claude Code 2.1.218 |
 | codex | `codex exec --sandbox read-only --skip-git-repo-check --json --output-last-message <f> -- "<prompt>"` | `codex exec --sandbox read-only --skip-git-repo-check resume <id> --json --output-last-message <f> -- "<prompt>"` | `thread_id` of the `{"type":"thread.started"}` JSONL event | codex-cli 0.145.0 |
 | pi | `pi --mode json --print --tools read,grep,find,ls --no-context-files --no-skills --no-extensions [--model <provider/model>] --session-dir <dir> --session-id <id> "<prompt>"` | same flags with `--session <id>` | Confer-generated UUID confirmed by Pi's `session` JSONL event | Pi 0.85.1 |
-| agy | `agy --mode plan --model gemini-4-argon-high --output-format json -p "<prompt>"` | same flags plus `--conversation <id>` before `-p` | `conversation_id` in the JSON result (stable across rounds) | agy 1.4.9 |
+| omp | `omp -p --mode json --session-dir <dir> --no-skills --no-rules --no-context-files --no-extensions --no-title --no-lsp --tools read,grep,glob --model <provider/id> --thinking <level> -- "<prompt>"` | same flags plus `--resume <id>` | omp's `session` JSONL event (its own id, stable across rounds) | omp 18.14.1 |
+| agy | `agy --mode plan --model <model> --output-format json -p "<prompt>"` | same flags plus `--conversation <id>` before `-p` | `conversation_id` in the JSON result (stable across rounds) | agy 1.4.9 |
 | oracle | `oracle --engine browser --model gpt-6-pro --browser-thinking-time pro --browser-timeout 60m --wait --no-notify --browser-archive never --write-output <f> --prompt "<prompt>"` | same flags plus `--followup <id>` | stdout `Session: <id>` or `Reattach via: oracle session <id>` | Oracle >= 0.21.1 required |
 
 Caveats (each verified against the real CLI, not assumed):
@@ -44,11 +45,20 @@ Caveats (each verified against the real CLI, not assumed):
   Only the read tools are enabled (`read,grep,find,ls`); context files, skills and extensions stay
   disabled. With tools a round spans several assistant messages: the reply is the last one's text,
   and usage is summed over all of them.
-- **agy is Gemini 4 Argon, read-only by plan mode**: print mode approves file writes unless
+- **omp is read-only by tool list**: omp is a fork of Pi's coding agent and
+  prints Pi's JSON events. Its read tools are `read,grep,glob` (`find` is a semantic search that
+  exists only where a judge model is configured, and omp refuses to start with a tool it lacks).
+  omp names the session itself, so a new round reads the id from the `session` event and a reply
+  passes `--resume <id>`. `CONFER_OMP_ARGS` passes `--model` and `--thinking`; the thread records
+  both and `reply` reuses them, whatever the environment says later.
+- **agy is read-only by plan mode**: print mode approves file writes unless
   `--mode plan`, where a write is auto-denied (the JSON lists it under `denied_actions`) and the
   round ends with an empty `response`; confer reports that as a denial, not a reply. `-p` must come
   last, directly before the prompt, or agy takes the next flag as the prompt. `CONFER_AGY_ARGS`
-  passes `--model` and `--effort`; the default model is `gemini-4-argon-high`.
+  passes `--model` and `--effort`; the thread records both and `reply` reuses them.
+- **Built-in defaults** for each provider's model are constants at the top of `confer.mjs`;
+  `confer.mjs --help` prints them. Which model to choose is the caller's decision (the SKILL.md
+  step 1), not this file's.
 - **Pi is the default consultant**: `ask` without a provider uses `CONFER_PROVIDER`, then
   `config provider`, then `pi`. Explicit `ask <provider>` and `open <provider>` win over defaults.
   Use `--` before a prompt beginning with a provider name or option-like text.
@@ -79,13 +89,13 @@ Caveats (each verified against the real CLI, not assumed):
   that Chrome is running on another profile (`SingletonLock` names a live pid): quit it and retry. `--wait`, `--no-notify`, and `--browser-archive never` keep output
   deterministic and avoid retained prompt archives.
 - Default overrides: `CONFER_PROVIDER`, `CONFER_PI_MODEL`; extra flags:
-  `CONFER_CLAUDE_ARGS` / `CONFER_CODEX_ARGS` / `CONFER_ORACLE_ARGS`
+  `CONFER_CLAUDE_ARGS` / `CONFER_CODEX_ARGS` / `CONFER_OMP_ARGS` / `CONFER_AGY_ARGS` / `CONFER_ORACLE_ARGS`
   (whitespace-split; **no glob
   expansion**, unlike the old bash — args containing spaces remain unsupported).
 
 ## Runtime contract
 
-- **Timeout**: Claude, Codex, and Pi calls get `CONFER_TIMEOUT` seconds (default 1200). Oracle gets
+- **Timeout**: every provider but Oracle gets `CONFER_TIMEOUT` seconds (default 1200). Oracle gets
   `CONFER_ORACLE_TIMEOUT` seconds (default 3900) around a pinned 60-minute browser timeout. On expiry
   the child's whole **process group** is SIGTERMed, then SIGKILLed after 2s — descendants included.
 - **Exit codes**: `0` success; `1` error. `all` exits `0` if ≥1 provider succeeded (failures named on
@@ -102,13 +112,14 @@ Caveats (each verified against the real CLI, not assumed):
   appends `✗` with the error. A `→` with neither `←` nor `✗` means the process died mid-call: the peer
   context may be one round ahead of the registry — a documented ambiguity, not silently repaired.
 - **Provenance** (best-effort, audit-oriented): each `←` header carries ` · <model> · <cost/tokens> ·
-  <duration>` where available, e.g. `(2026-07-24 09:00 · claude-fable-5 · $0.36 · 12s)` or
-  `(… · gpt-5.6-sol/xhigh · 23.7k→5tok)`; the registry keeps the last round's `model` (additive key).
+  <duration>` where available, e.g. `(2026-07-24 09:00 · <claude model> · $0.36 · 12s)` or
+  `(… · <provider/id>/<thinking> · 23.7k→5tok)`; the registry keeps the last round's `model` (additive key).
   Sources: claude = `modelUsage` (dominant entry) + `total_cost_usd` (API-equivalent — notional on a
   subscription) + `duration_ms`; codex = `$CODEX_HOME/config.toml` `model`/`model_reasoning_effort`
   (`-m` / `-c model_reasoning_effort=` in `CONFER_CODEX_ARGS` take precedence) + `turn.completed`
-  usage tokens — the codex event stream itself names no model; Pi = provider/model and usage from
-  the final assistant `message_end` event; Oracle = selected Pro model label (`gpt-6/pro` for new threads) +
+  usage tokens — the codex event stream itself names no model; Pi and omp = provider/model and usage
+  from the assistant `message_end` events (omp adds the thinking level); agy = model, `--effort` when
+  given, usage and duration from the JSON result; Oracle = selected Pro model label (`gpt-6/pro` for new threads) +
   adapter wall time. Oracle provenance intentionally excludes browser profile, account, and cost.
   Missing fields degrade to a shorter header; rounds written before this feature keep the old format.
 
@@ -118,7 +129,8 @@ Caveats (each verified against the real CLI, not assumed):
 - Registry `~/.confer/threads.json`: `{name: {provider, session, rounds, model?, piModel?, created, updated}}`
 - Transcripts `~/.confer/threads/<name>.md`: every round, both directions, timestamped. Plaintext —
   the reason for the no-secrets guardrail.
-- Pi sessions `~/.confer/pi-sessions/`: provider-side JSONL context used by `reply`.
+- Pi and omp sessions `~/.confer/pi-sessions/`, `~/.confer/omp-sessions/`: provider-side JSONL
+  context used by `reply`.
 - Thread names: `[A-Za-z0-9_-]+`, enforced on `open`/`reply`/`show`.
 - Override the state root with `CONFER_HOME` (tests always do; never point tests at the real registry).
 
@@ -135,7 +147,7 @@ Caveats (each verified against the real CLI, not assumed):
 
 ## Tests
 
-`bun scripts/confer-test.mjs` — deterministic, zero live calls: fake Claude, Codex, Pi, and Oracle CLIs
+`bun scripts/confer-test.mjs` — deterministic, zero live calls: fake Claude, Codex, Pi, omp, agy and Oracle CLIs
 on a prepended PATH, fresh `CONFER_HOME` per case. Covers default Pi routing, saved provider/Pi preferences, model continuity, version/output/
 session gates, child-session refresh, provider-specific timeout, fan-out isolation, total-failure
 exit, process-tree timeout kill (heartbeat grandchild), malformed output, concurrent same-thread
