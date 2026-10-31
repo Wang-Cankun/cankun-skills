@@ -1,16 +1,17 @@
 # Seating
 
 How to start each model in a Herdr pane, keep its context fresh, and how lanes ran. Which model
-does what, and what to watch for, is the user's model roster (`~/.codex/agent-notes/models.md`,
-when present); name every model by its full version, since a note about one version can be
-false of the next.
+sits where, by which CLI and route on this machine, and at what effort is the user's model roster
+(`~/.codex/agent-notes/models.md`, when present); name every model by its full version, since a
+note about one version can be false of the next.
 
-| Model | Seat |
+| CLI | Seat |
 | --- | --- |
-| Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 | `--kind claude -- --model claude-opus-5-5 --effort xhigh` (or `claude-sonnet-5-5`, `claude-haiku-5-5`) |
-| GPT-6.1 Sol, GPT-6 Luna | `--kind pi -- --provider <provider> --model <id> --thinking xhigh`, splitting the roster's route for this machine at its first `/` (`magpie/codex/gpt-6.1-sol` is `--provider magpie --model codex/gpt-6.1-sol`) |
-| Gemini 4 Argon | `--kind omp -- --model google-antigravity/gemini-4-argon --thinking high` (or `medium`, `low`); on a machine without omp, `--kind agy -- --model gemini-4-argon-high --dangerously-skip-permissions` (or `-medium`, `-low`) |
-| Codex | `--kind codex`; see below |
+| claude | `--kind claude -- --model <alias> --effort <level>` (aliases `opus`, `sonnet`, `haiku`; a full id only where the roster says an alias resolves wrongly) |
+| omp | `--kind omp -- --model <provider/id> --thinking <level>`, with the roster's route (`openai-codex/<id>`, `google-antigravity/<id>`) |
+| pi | `--kind pi -- --provider <provider> --model <id> --thinking <level>`, splitting the roster's route for this machine at its first `/` (`openai-codex/<id>` is `--provider openai-codex --model <id>`) |
+| agy | `--kind agy -- --model <model> --dangerously-skip-permissions` |
+| codex | `--kind codex`; see below |
 
 Pi reads a `provider/id` model as a hint and can fall back to another provider that lists the
 same id, so a GPT seat names its provider apart. A GPT id on a route the roster does not give
