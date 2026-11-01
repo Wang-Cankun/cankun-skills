@@ -39,9 +39,8 @@ Things that went wrong in real runs with GPT and Gemini stages, each with what w
   `structured_output` held an empty list. Read the `text`; structure it in a Claude stage.
 - **Finders, not voters.** A second family adds most as an independent finder. Across one
   large rewrite, Gemini 4 Argon voting on GPT-6.1 Sol's 29 findings kept 17, all real, and
-  dropped 12, 4 of them real; its own 10 findings on the same diffs held 7. Run both
-  families on the same diff in parallel, each blind to the other, and let one Claude stage
-  rule on both lists. When one finding needs a second look, withhold your verdict so it
+  dropped 12, 4 of them real; its own 10 findings on the same diffs held 7. Have Gemini
+  find on its own, blind to other reviews, and let one Claude stage rule on its list. When one finding needs a second look, withhold your verdict so it
   does not anchor on it.
 - **Look before trusting the checks.** A slice that passed 800 tests was unusable at first
   sight of its screen. Before reading test results, look at one realistic result as its user

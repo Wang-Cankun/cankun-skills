@@ -77,12 +77,9 @@ omp and agy jobs need `model`; a Pi job without one runs Pi's configured default
   `research`, and `full` gives it every tool omp's settings enable. For broad work send one
   job per area and tell it to split the area across subagents.
 - Pi's ponytail extension puts ponytail into every Pi job's system prompt as the worker's
-  standard for what to build and what never to cut. After a GPT worker commits code, run a
-  separate GPT job on the diff with `/skill:ponytail-review` (the prompt starts with
-  `/skill:ponytail-review ` and the opt-in sentence on the same line: Pi expands a skill
-  command only at the start of a prompt with text after it), have the worker fix its must-fix
-  items, then accept. Review a ponytail-held implementer's commit with a Pi job: omp jobs run with
-  `--no-skills`. A session reviewing its own code repeats its blind spots.
+  standard for what to build and what never to cut. A GPT worker's commit is reviewed like any
+  other, by the user's review policy, never by GPT: a session reviewing its own code repeats its
+  blind spots.
 - Every stage sees only its prompt and the files it reads, never this conversation, and builds
   on every sentence as written: a claim about the code, a library or a data file that you did
   not check becomes code that depends on it. Point stages at paths in the repository or
