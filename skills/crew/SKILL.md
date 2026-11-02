@@ -1,20 +1,20 @@
 ---
 name: crew
-compatibility: Requires Herdr (run from inside a Herdr pane, HERDR_ENV=1) and the CLIs of the chosen models (Claude Code, Pi, Codex, omp, agy); python3 for the optional ledger and watcher.
+compatibility: Requires Herdr's herdr-core (`hc`), run from a terminal it manages ($HC_TERMINAL_ID set), and the CLIs of the chosen models (Claude Code, Pi, Codex, omp, agy); python3 for the optional ledger and burn check.
 metadata:
   group: models
   personal: true
   summary: >-
-    Resident agents of any model family in Herdr panes, orchestrated by the
+    Resident agents of any model family in Herdr terminals, orchestrated by the
     session that opens them: general rules for sizing, routing and accepting
     work, and how to seat each model.
-description: "Run resident agents of any model family in Herdr panes, with this session as coordinator: it chooses how many agents, which models and how work and review flow, from general rules and the user's model roster. Use when the user invokes /crew or asks for side agents, several models working or discussing together, or a coordinator in Herdr."
+description: "Run resident agents of any model family in Herdr terminals, with this session as coordinator: it chooses how many agents, which models and how work and review flow, from general rules and the user's model roster. Use when the user invokes /crew or asks for side agents, several models working or discussing together, or a coordinator in Herdr."
 ---
 
 # Crew
 
-A crew is resident agents in Herdr panes: each keeps its context across turns, and the user
-and other windows reach it by name. This session is the **coordinator**. It designs the crew for
+A crew is resident agents in Herdr terminals (`hc`): each keeps its context across turns, and the
+user and other windows reach it by name. This session is the **coordinator**. It designs the crew for
 the task in front of it and reshapes it as the work changes; this skill holds the rules every
 crew keeps and how to seat each model, not a workflow.
 
@@ -24,7 +24,7 @@ review policy, and win over this skill where they differ.
 
 **The user decides**: whether to open a crew; which models join, when the user names them; the
 points the user settles personally; anything destructive, outward-facing, or costly beyond what
-the card allows. Invoking this skill authorizes opening the panes the card lists.
+the card allows. Invoking this skill authorizes starting the agents the card lists.
 
 ## Rules for any crew
 
@@ -36,8 +36,8 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   the job it fits best; when none fits, say so before seating it.
 - **One coordinator.** It holds the goal and finish line, assigns work, accepts results and
   merges. It keeps the card at `.work/crew/<run>/card.md`, with `.work/` in `.git/info/exclude`
-  unless the repository already ignores it: goal and finish line, its own pane, each agent's
-  name, model, pane and worktree, who may commit, merge or push, the budget and round cap when
+  unless the repository already ignores it: goal and finish line, its own address (`$HC_TERMINAL_ID`, written out), each
+  agent's name, model, address and worktree, who may commit, merge or push, the budget and round cap when
   they matter, and what goes to the user. Show the card before starting unless the user already
   said go, and update it whenever the crew changes.
 - **Stop rules with a floor.** A lane's stop rule names a minimum sample and both a count and a
@@ -62,26 +62,29 @@ the card allows. Invoking this skill authorizes opening the panes the card lists
   Messages carry file paths. An answer longer than a few lines goes to a
   file the reply names. Residents write at full length; a length limit belongs only to an
   Agent-tool subagent, whose return lands in your own context.
-- **Arm a wait.** A resident never messages back. After each prompt whose answer you need, arm a
-  wait that notifies you: the prompt with `--wait` in the background, or a background loop until
-  the expected file is new or rewritten since the prompt and `herdr agent get` shows `idle` or
-  `done`, since a status file a lane reuses across stages already exists (`scripts/crew-watch.sh`
-  checks both). Size the loop's limit to the work, as one synthesis ran 70 minutes; a loop that
-  reaches it says so, and you re-arm it. Track each wait by the PID you recorded when you armed
-  it, since a `pgrep -f` pattern also matches the loop's own command line. Tell the user what you
-  are waiting on.
-- **Address by roster.** Reach an agent by a name or pane that `herdr agent list` or the card
-  shows; when they leave the target open, ask the user.
+- **Report and wait.** Every brief ends with the report line, the coordinator's address written
+  out (`hc send t3 "<result or blocker>"`), since a resident that expands `$HC_TERMINAL_ID`
+  gets its own. A report arrives as the coordinator's next input, tagged `<hc from=...>`; it
+  is a claim, and the file it names is the result. Between reports, `hc wait --children any`
+  waits on the seats this session started and `hc wait <name>` on any other (an inherited seat,
+  a side agent). A wait returns `reason: timeout` every 180 seconds by default: a check-in,
+  where you run the burn check when the card sets a budget, then wait again. hc tells the parent
+  when a child is blocked, errors or exits; read its screen then. Tell the user what you are
+  waiting on.
+- **Address by roster.** Reach an agent by a name or address that `hc ls` or the card shows;
+  when they leave the target open, ask the user.
 - **Fresh context when it pays.** Compact or reset an agent whose context has grown large or
   whose next work is unrelated. A coordinator whose own context is filling hands over through
-  the card: it records there what is in flight and which waits are armed, stops its own
-  watchers, and the fresh session starts from the card and re-arms them.
+  the card: it records there what is in flight, and the fresh session starts from the card.
+  When that session runs in a new terminal, it sends each seat its new report line and waits on
+  them by name, and only seats started with `--outlive-parent` survived the handover; a
+  `/compact` or `/clear` in the same terminal keeps the address and the children.
 - **The user at decisions.** Bring each decision when it arises, with the options and a
   recommendation; report progress at milestones, quietly otherwise, naming each running seat
-  and armed wait by what it does or waits for.
-- **Close what you opened** once its work is merged or recorded. Side agents stay until the user
-  retires them. When the user stops a crew, cancel the seats that just started, let a seat near
-  its end finish without new model calls, start nothing new, and record on the card, per seat,
+  and each wait by what it does or waits for.
+- **Close what you opened** once its work is merged or recorded (`hc kill <name>`, then
+  `hc rm <name>`). Side agents stay until the user retires them. When the user stops a crew,
+  cancel the seats that just started, let a seat near its end finish without new model calls, start nothing new, and record on the card, per seat,
   what finished, what was cancelled and what is left undone.
 
 Shapes that have worked, to combine or change as the work goes:
@@ -104,31 +107,40 @@ Shapes that have worked, to combine or change as the work goes:
 Before choosing models, read the user's model roster (`~/.codex/agent-notes/models.md`, when
 present): which model does what, what to give it and what to watch for. Name each model by its
 full version (GPT-6.1 Sol, Gemini 4 Argon) on the card. When the project's rules name who works
-and who reviews, they decide. To start each one in a pane: [references/seating.md](references/seating.md).
+and who reviews, they decide. To start each one: [references/seating.md](references/seating.md).
 
-## Herdr
+## Herdr (hc)
 
-Check `test "${HERDR_ENV:-}" = 1`. `herdr --help` and its group help are the syntax authority;
-the `herdr` skill covers pane mechanics.
+`hc --skill` is the manual and `hc <command> --help` the syntax authority; `herdr-app --skill`
+covers the window. Check `test -n "${HC_TERMINAL_ID:-}"` and record that address on the card.
 
 ```bash
-herdr pane split --pane <source-pane> --direction right --cwd "<cwd>" --no-focus
-herdr agent start <name> --kind <kind> --pane <pane-id> -- <native-args...>
-herdr worktree create --cwd "<repo>" --branch "<branch>" --base "<base>" --label "<name>" --no-focus
-herdr agent prompt <name> "<prompt>" --wait --timeout <ms>
-herdr agent read <name> --source recent-unwrapped --lines <n>
+git worktree add -b "<branch>" "<worktree>" "<base>"
+hc run --bg --name <name> --cwd "<worktree>" [--outlive-parent] -- <cli> <launch args...>
+hc wait <name>                # until it is idle; then read its status line
+hc send <name> "<prompt>"
+hc wait --children any        # or: hc wait <name>
+hc read --lines <n> <name>    # --lines 0: the visible screen
+hc kill <name>; hc rm <name>
 ```
 
-Any kind `herdr agent start --help` lists can sit in a crew. Herdr sees an agent work through
-its integration: before seating a kind, `herdr integration status` must show it `current`, else
-`herdr integration install <kind>` (agy's is `antigravity-cli`). Without it the agent reads
-`idle` while it works, so a `--wait` fails or returns early. Name agents for what they hold
-(`side-provenance`, `table-gpt`); the name is how other windows find them. Pass the user's
-launch preferences after `--`, and confirm the model on the agent's status line at startup,
-since the kind alone selects no model. A new folder may open a trust dialog: read the pane and
-answer it under the user's trust choices before the first prompt. Prime a side agent with what
-it holds and have it confirm what it read and its as-of (a commit, plus "uncommitted changes"
-when the tree is dirty). To see cost and progress, use the optional ledger and watcher in
+A seat ends with the session that started it unless it has `--outlive-parent`: give that to a
+side agent and to any seat that should outlive this session (a handover, a pause for the user).
+hc starts the program directly, not through the shell, so the shell's functions and aliases do
+not apply: pass the user's launch preferences (permission mode, model, effort) as arguments
+([seating](references/seating.md)). Start the seat without its task, so it cannot run before you
+check it: when `hc wait <name>` returns, read the screen. A new folder may show a trust dialog,
+answered under the user's trust choices (`hc keys <name> down enter`); once the seat is idle,
+confirm the model and effort on its status line, then send the first task. Read before
+resending, since a failed send may still have arrived. hc reads
+the status (idle, working, done, blocked, error) that Claude Code, Codex, Pi and omp report; for
+a CLI that reports none, `hc wait <name>` waits for its exit, so rely on its report and its
+screen. Name agents for what they hold (`side-provenance`, `table-gpt`); the name is how other
+windows find them. Prime a side agent with what it holds and have it confirm what it read and
+its as-of (a commit, plus "uncommitted changes" when the tree is dirty). For the user to watch a
+seat: `herdr-app do terminal.peek --terminal <address>`, or `herdr-app do terminal.keep
+--terminal <address>` to give it a tab. To
+see cost and progress, use the optional ledger and burn check in
 [references/observe.md](references/observe.md).
 
 ## Use a different skill when

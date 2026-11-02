@@ -1,7 +1,7 @@
 interface:
   display_name: "Crew"
   short_description: "Resident agents of any model in Herdr, you coordinate"
-  default_prompt: "Use $crew to coordinate resident agents in Herdr panes for this, choosing the agents and models the work needs."
+  default_prompt: "Use $crew to coordinate resident agents in Herdr for this, choosing the agents and models the work needs."
 
 policy:
   allow_implicit_invocation: false
