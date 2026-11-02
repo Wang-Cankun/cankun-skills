@@ -1,6 +1,6 @@
 ---
 name: fleet
-compatibility: Requires Claude Code's Workflow tool. GPT and Gemini stages need omp (GPT can run on Pi with its ponytail package, Gemini on agy), and all run through the bundled fleet-runner subagent and fleet-job tool (install with `scripts/install-runner.sh`).
+compatibility: Requires Claude Code's Workflow tool. GPT and Gemini stages need omp (GPT can instead run on Pi with its ponytail package, Gemini on agy), and all run through the bundled fleet-runner subagent and fleet-job tool (install with `scripts/install-runner.sh`).
 metadata:
   group: models
   summary: >-
