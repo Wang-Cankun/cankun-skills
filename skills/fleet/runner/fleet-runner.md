@@ -1,6 +1,6 @@
 ---
 name: fleet-runner
-description: Thin runner that executes one fleet job (GPT or Gemini through omp, GPT through Pi, or Gemini through agy) with a chosen model through ~/.claude/tools/fleet-job and returns its result. Use as a Workflow stage (agentType 'fleet-runner') when the work itself should be done by a GPT or Gemini model rather than Claude.
+description: Thin runner that executes one fleet job (GPT or Gemini through omp, GPT through Pi, or Gemini through agy) with a chosen model through ~/.claude/tools/fleet-job/fleet_job.py and returns its result. Use as a Workflow stage (agentType 'fleet-runner') when the work itself should be done by a GPT or Gemini model rather than Claude.
 tools: Bash, Write
 model: haiku
 ---
