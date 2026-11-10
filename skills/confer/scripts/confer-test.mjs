@@ -113,7 +113,7 @@ if [[ -n "$FAKE_OMP_CALLS" ]]; then
   printf '\\n' >> "$FAKE_OMP_CALLS"
 fi
 [[ "$1" == "--version" ]] && { echo omp/18.14.1; exit 0; }
-session="omp-session-1"; model="antigravity-acp/gemini-4-argon"; prev=""
+session="omp-session-1"; model="antigravity-acp/gemini-4-carbon"; prev=""
 for a in "$@"; do
   [[ "$prev" == "--resume" ]] && session="$a"
   [[ "$prev" == "--model" ]] && model="$a"
@@ -300,16 +300,16 @@ function check(name, cond, detail = "") {
   }
 }
 
-// 1c-omp. Gemini 4 Argon through omp: read tools only, the id omp reports, resumed by --resume.
+// 1c-omp. Gemini 4 Carbon through omp: read tools only, the id omp reports, resumed by --resume.
 {
   const home = freshHome();
   const calls = path.join(home, "omp-calls");
   const r1 = await confer(["open", "omp", "-t", "argon", "q"], { home, env: { FAKE_OMP_CALLS: calls } });
   check("omp open exits 0 with the last assistant text", r1.code === 0 && r1.stdout.includes("omp-fake-reply") && !r1.stdout.includes("reading"), r1.stderr);
   check("omp stores the session id omp reports", reg(home).argon?.session === "omp-session-1");
-  check("omp provenance in ← header", tx(home, "argon").includes("· antigravity-acp/gemini-4-argon/high · 3.5k→78tok"), tx(home, "argon"));
+  check("omp provenance in ← header", tx(home, "argon").includes("· antigravity-acp/gemini-4-carbon/high · 3.5k→78tok"), tx(home, "argon"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1).replaceAll("\\,", ",");
-  check("omp opens with read tools on Gemini 4 Argon, high", openArgs.includes("--tools read,grep,glob") && openArgs.includes("--no-context-files") && openArgs.includes("--model antigravity-acp/gemini-4-argon --thinking high") && !openArgs.includes("--resume"), openArgs);
+  check("omp opens with read tools on Gemini 4 Carbon, high", openArgs.includes("--tools read,grep,glob") && openArgs.includes("--no-context-files") && openArgs.includes("--model antigravity-acp/gemini-4-carbon --thinking high") && !openArgs.includes("--resume"), openArgs);
   const plugins = path.join(home, "plugins.json");
   fs.writeFileSync(plugins, JSON.stringify({ plugins: { "omp-antigravity-acp-provider@s": [{ installPath: "/old" }, { installPath: "/acp" }], "other@x": [{ installPath: "/other" }] } }));
   await confer(["open", "omp", "-t", "acp", "q"], { home, env: { FAKE_OMP_CALLS: calls, CONFER_OMP_PLUGINS: plugins } });
@@ -342,9 +342,9 @@ function check(name, cond, detail = "") {
   const r1 = await confer(["open", "agy", "-t", "argon", "q"], { home, env: { FAKE_AGY_CALLS: calls } });
   check("agy open exits 0", r1.code === 0 && r1.stdout.includes("agy-fake-reply"), r1.stderr);
   check("agy stores conversation id", reg(home).argon?.session === "agy-conv-1");
-  check("agy provenance in ← header", tx(home, "argon").includes("· gemini-4-argon-high · 3.5k→78tok · 12s"), tx(home, "argon"));
+  check("agy provenance in ← header", tx(home, "argon").includes("· gemini-4-carbon-high · 3.5k→78tok · 12s"), tx(home, "argon"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
-  check("agy opens read-only with the prompt last", openArgs.startsWith("--mode plan --model gemini-4-argon-high --output-format json -p "), openArgs);
+  check("agy opens read-only with the prompt last", openArgs.startsWith("--mode plan --model gemini-4-carbon-high --output-format json -p "), openArgs);
   const r2 = await confer(["reply", "argon", "again"], { home, env: { FAKE_AGY_CALLS: calls } });
   const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("agy reply resumes the conversation", r2.code === 0 && replyArgs.includes("--conversation agy-conv-1") && reg(home).argon?.rounds === 2, `${r2.stderr} ${replyArgs}`);

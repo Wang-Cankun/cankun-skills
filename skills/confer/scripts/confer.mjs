@@ -28,11 +28,11 @@ const ORACLE_MODEL_LABEL = "gpt-6/pro";
 const PI_SESSION_DIR = path.join(CONFER_HOME, "pi-sessions");
 const PI_READ_TOOLS = "read,grep,find,ls";
 const CLAUDE_DENIED_TOOLS = "Edit,Write,NotebookEdit,Bash";
-const AGY_MODEL = "gemini-4-argon-high";
+const AGY_MODEL = "gemini-4-carbon-high";
 const OMP_SESSION_DIR = path.join(CONFER_HOME, "omp-sessions");
 // omp has glob where Pi has ls.
 const OMP_READ_TOOLS = "read,grep,glob";
-const OMP_MODEL = "antigravity-acp/gemini-4-argon";
+const OMP_MODEL = "antigravity-acp/gemini-4-carbon";
 const OMP_THINKING = "high";
 // --no-extensions also drops installed plugins, so a provider a plugin adds (antigravity-acp) is
 // "not found" unless the plugin whose name carries the provider is loaded with -e.
