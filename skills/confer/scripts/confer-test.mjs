@@ -113,7 +113,7 @@ if [[ -n "$FAKE_OMP_CALLS" ]]; then
   printf '\\n' >> "$FAKE_OMP_CALLS"
 fi
 [[ "$1" == "--version" ]] && { echo omp/18.14.1; exit 0; }
-session="omp-session-1"; model="google-antigravity/gemini-4-argon"; prev=""
+session="omp-session-1"; model="antigravity-acp/gemini-4-argon"; prev=""
 for a in "$@"; do
   [[ "$prev" == "--resume" ]] && session="$a"
   [[ "$prev" == "--model" ]] && model="$a"
@@ -168,7 +168,7 @@ function confer(args, { home, env = {}, timeoutMs = 20000 } = {}) {
   return new Promise((resolve) => {
     const child = spawn("bun", [MJS, ...args], {
       // CODEX_HOME defaults to ROOT (no config.toml) so provenance stays hermetic
-      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, CONFER_PROVIDER: "", CONFER_PI_MODEL: "", ...env },
+      env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, CONFER_PROVIDER: "", CONFER_PI_MODEL: "", CONFER_OMP_PLUGINS: path.join(ROOT, "no-plugins.json"), ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     const out = [], err = [];
@@ -307,9 +307,15 @@ function check(name, cond, detail = "") {
   const r1 = await confer(["open", "omp", "-t", "argon", "q"], { home, env: { FAKE_OMP_CALLS: calls } });
   check("omp open exits 0 with the last assistant text", r1.code === 0 && r1.stdout.includes("omp-fake-reply") && !r1.stdout.includes("reading"), r1.stderr);
   check("omp stores the session id omp reports", reg(home).argon?.session === "omp-session-1");
-  check("omp provenance in ← header", tx(home, "argon").includes("· google-antigravity/gemini-4-argon/high · 3.5k→78tok"), tx(home, "argon"));
+  check("omp provenance in ← header", tx(home, "argon").includes("· antigravity-acp/gemini-4-argon/high · 3.5k→78tok"), tx(home, "argon"));
   const openArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1).replaceAll("\\,", ",");
-  check("omp opens with read tools on Gemini 4 Argon, high", openArgs.includes("--tools read,grep,glob") && openArgs.includes("--no-context-files") && openArgs.includes("--model google-antigravity/gemini-4-argon --thinking high") && !openArgs.includes("--resume"), openArgs);
+  check("omp opens with read tools on Gemini 4 Argon, high", openArgs.includes("--tools read,grep,glob") && openArgs.includes("--no-context-files") && openArgs.includes("--model antigravity-acp/gemini-4-argon --thinking high") && !openArgs.includes("--resume"), openArgs);
+  const plugins = path.join(home, "plugins.json");
+  fs.writeFileSync(plugins, JSON.stringify({ plugins: { "omp-antigravity-acp-provider@s": [{ installPath: "/old" }, { installPath: "/acp" }], "other@x": [{ installPath: "/other" }] } }));
+  await confer(["open", "omp", "-t", "acp", "q"], { home, env: { FAKE_OMP_CALLS: calls, CONFER_OMP_PLUGINS: plugins } });
+  const acpArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
+  check("omp loads the plugin that adds the antigravity-acp provider", acpArgs.includes("-e /acp") && !acpArgs.includes("/old") && !acpArgs.includes("/other"), acpArgs);
+  check("omp loads no plugin for a built-in provider", !openArgs.includes(" -e "), openArgs);
   const r2 = await confer(["reply", "argon", "again"], { home, env: { FAKE_OMP_CALLS: calls } });
   const replyArgs = fs.readFileSync(calls, "utf8").trim().split("\n").at(-1);
   check("omp reply resumes the session", r2.code === 0 && replyArgs.includes("--resume omp-session-1") && reg(home).argon?.rounds === 2, `${r2.stderr} ${replyArgs}`);

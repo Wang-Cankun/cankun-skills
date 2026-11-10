@@ -81,7 +81,8 @@ class FleetJobTest(unittest.TestCase):
             (bin_dir / name).chmod(0o755)
         self.calls = self.root / "calls"
         self.env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}",
-                        FLEET_JOB_HOME=str(self.root / "jobs"), FAKE_CALLS=str(self.calls))
+                        FLEET_JOB_HOME=str(self.root / "jobs"), FAKE_CALLS=str(self.calls),
+                        FLEET_OMP_PLUGINS=str(self.root / "plugins.json"))
 
     def job(self, spec, mode="ok"):
         spec_file = self.root / "spec.json"
@@ -197,6 +198,16 @@ class FleetJobTest(unittest.TestCase):
         for spec in ({"no_extensions": True}, {"approve": True}):
             with self.subTest(spec=spec):
                 self.assertEqual(self.refused({**self.OMP, "prompt": "q", **spec}).returncode, 2)
+
+    def test_omp_loads_the_plugin_that_adds_its_provider(self):
+        registry = Path(self.env["FLEET_OMP_PLUGINS"])
+        registry.write_text(json.dumps({"plugins": {
+            "omp-antigravity-acp-provider@sencha": [{"installPath": "/old"}, {"installPath": "/acp"}],
+            "other@x": [{"installPath": "/other"}]}}))
+        _, args = self.job({"engine": "omp", "model": "antigravity-acp/gemini-4-carbon", "prompt": "q"})
+        self.assertEqual([args[i + 1] for i, a in enumerate(args) if a == "-e"], ["/acp"])
+        _, args = self.job({**self.OMP, "prompt": "q"})
+        self.assertNotIn("-e", args)
 
     def test_omp_passes_extensions_and_the_system_prompt_suffix(self):
         _, args = self.job({**self.OMP, "prompt": "q", "extensions": ["x.ts"], "append_system_prompt": "be brief"})

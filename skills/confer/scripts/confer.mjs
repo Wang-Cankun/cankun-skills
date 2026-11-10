@@ -32,8 +32,19 @@ const AGY_MODEL = "gemini-4-argon-high";
 const OMP_SESSION_DIR = path.join(CONFER_HOME, "omp-sessions");
 // omp has glob where Pi has ls.
 const OMP_READ_TOOLS = "read,grep,glob";
-const OMP_MODEL = "google-antigravity/gemini-4-argon";
+const OMP_MODEL = "antigravity-acp/gemini-4-argon";
 const OMP_THINKING = "high";
+// --no-extensions also drops installed plugins, so a provider a plugin adds (antigravity-acp) is
+// "not found" unless the plugin whose name carries the provider is loaded with -e.
+const OMP_PLUGINS = process.env.CONFER_OMP_PLUGINS || path.join(os.homedir(), ".omp", "plugins", "installed_plugins.json");
+function ompProviderPlugins(model) {
+  const provider = model.split("/")[0];
+  let plugins;
+  try { plugins = JSON.parse(fs.readFileSync(OMP_PLUGINS, "utf8")).plugins ?? {}; } catch { return []; }
+  return Object.entries(plugins)
+    .filter(([name, entries]) => entries?.length && name.split("@")[0].includes(provider))
+    .flatMap(([, entries]) => ["-e", entries.at(-1).installPath]);
+}
 const OMP_THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "xhigh"]);
 const NAME_RE = /^[A-Za-z0-9_-]+$/;
 
@@ -470,6 +481,7 @@ const providers = {
         "--tools", OMP_READ_TOOLS,
         ...(extra.includes("--model") ? [] : ["--model", OMP_MODEL]),
         ...(extra.includes("--thinking") ? [] : ["--thinking", OMP_THINKING]),
+        ...ompProviderPlugins(flag("--model", OMP_MODEL)),
         ...(session ? ["--resume", session] : []),
         ...extra,
         "--", prompt,

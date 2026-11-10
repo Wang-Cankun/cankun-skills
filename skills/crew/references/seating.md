@@ -10,7 +10,7 @@ The command after `hc run ... --`:
 | CLI | Seat |
 | --- | --- |
 | claude | `claude --model <alias> --effort <level>` plus the user's permission mode (aliases `opus`, `sonnet`, `haiku`; a full id only where the roster says an alias resolves wrongly) |
-| omp | `omp --model <provider/id> --thinking <level>`, with the roster's route (`openai-codex/<id>`, `google-antigravity/<id>`) |
+| omp | `omp --model <provider/id> --thinking <level>`, with the roster's route (`openai-codex/<id>`, `antigravity-acp/<id>`) |
 | pi | `pi --provider <provider> --model <id> --thinking <level>`, splitting the roster's route for this machine at its first `/` (`openai-codex/<id>` is `--provider openai-codex --model <id>`) |
 | agy | `agy --model <model> --dangerously-skip-permissions` |
 | codex | `codex --no-daemon`; see below |

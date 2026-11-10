@@ -36,6 +36,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 JOBS_HOME = Path(os.environ.get("FLEET_JOB_HOME", Path.home() / ".claude" / "fleet-jobs"))
 SUBMIT_EXTENSION = HERE / "submit_result.ts"
+OMP_PLUGINS = Path(os.environ.get("FLEET_OMP_PLUGINS", Path.home() / ".omp" / "plugins" / "installed_plugins.json"))
 AGY_READ_ONLY_NOTICE = (
     "You are in read-only mode: you cannot run shell commands or write files, and any attempt "
     "ends this job with no answer. Read the files you need with your read tools, starting from "
@@ -231,9 +232,23 @@ def pi_command(spec: dict, jdir: Path) -> list[str]:
     return cmd
 
 
+def omp_provider_plugins(model: str) -> list[str]:
+    """--no-extensions also drops installed plugins, so a provider a plugin adds (antigravity-acp)
+    is "not found" unless the plugin whose name carries the provider is loaded with -e."""
+    provider = model.split("/", 1)[0]
+    try:
+        plugins = json.loads(OMP_PLUGINS.read_text()).get("plugins", {})
+    except (OSError, ValueError):
+        return []
+    return [entries[-1]["installPath"] for name, entries in plugins.items()
+            if entries and provider in name.split("@", 1)[0]]
+
+
 def omp_command(spec: dict, jdir: Path) -> list[str]:
     cmd = ["omp", "-p", "--mode", "json", "--session-dir", str(jdir / "session"), "--no-skills",
            "--no-rules", "--no-extensions", "--no-title", "--no-lsp", "--model", spec["model"]]
+    for plugin in omp_provider_plugins(spec["model"]):
+        cmd += ["-e", plugin]
     if spec.get("thinking"):
         cmd += ["--thinking", spec["thinking"]]
     if spec["tools"] is not None:

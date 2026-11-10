@@ -52,7 +52,7 @@ user which. Put each stage's model, by full version, in its label (`review:<mode
 | Engine | Stage |
 | --- | --- |
 | Claude | `agent(prompt, {model: 'opus' \| 'sonnet' \| 'haiku', effort})`; `isolation: 'worktree'` when stages edit in parallel |
-| omp (GPT, Gemini) | `agentType: 'fleet-runner'` with a job spec: `engine: 'omp'`, `model: '<provider/id>'` (the roster's route, such as `openai-codex/<id>` or `google-antigravity/<id>`), `thinking: '<level>'`; `readonly` is a real tool allowlist with no shell |
+| omp (GPT, Gemini) | `agentType: 'fleet-runner'` with a job spec: `engine: 'omp'`, `model: '<provider/id>'` (the roster's route, such as `openai-codex/<id>` or `antigravity-acp/<id>`), `thinking: '<level>'`; `readonly` is a real tool allowlist with no shell |
 | Pi (GPT) | `engine: 'pi'`, `model` the roster's route, when the job needs Pi's packages, such as an implementer held to ponytail |
 | agy (Gemini) | `engine: 'agy'`, `model: '<id>'` from `agy models`, on a machine the roster gives agy |
 
