@@ -8,12 +8,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const MJS = path.join(import.meta.dir, "confer.mjs");
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), "confer-test-"));
 const BIN = path.join(ROOT, "bin");
 fs.mkdirSync(BIN);
+// Outside Git, so a provider that writes into its working directory touches only this folder.
+const WORK = path.join(ROOT, "work");
+fs.mkdirSync(WORK);
 
 const FAKE_CLAUDE = `#!/bin/bash
 if [[ -n "$FAKE_CLAUDE_CALLS" ]]; then
@@ -120,6 +123,9 @@ for a in "$@"; do
   prev="$a"
 done
 provider="\${model%%/*}"; model_id="\${model#*/}"
+[[ -n "$FAKE_OMP_PWD" ]] && { pwd -P; ls; } > "$FAKE_OMP_PWD"
+# Like the real antigravity-acp provider (ecan#942): its skill lands in the working directory.
+[[ "$provider" == "antigravity-acp" ]] && { mkdir -p skills/system/run-workflow; echo skill > skills/system/run-workflow/SKILL.md; }
 case "\${FAKE_OMP_MODE:-ok}" in
   ok)  echo "{\\"type\\":\\"session\\",\\"id\\":\\"$session\\"}"
        echo "{\\"type\\":\\"message_end\\",\\"message\\":{\\"role\\":\\"assistant\\",\\"content\\":[{\\"type\\":\\"text\\",\\"text\\":\\"reading\\"}],\\"provider\\":\\"$provider\\",\\"model\\":\\"$model_id\\",\\"usage\\":{\\"input\\":1000,\\"output\\":10}}}"
@@ -164,9 +170,10 @@ function freshHome() {
   return h;
 }
 
-function confer(args, { home, env = {}, timeoutMs = 20000 } = {}) {
+function confer(args, { home, env = {}, timeoutMs = 20000, cwd = WORK } = {}) {
   return new Promise((resolve) => {
     const child = spawn("bun", [MJS, ...args], {
+      cwd,
       // CODEX_HOME defaults to ROOT (no config.toml) so provenance stays hermetic
       env: { ...process.env, PATH: `${BIN}:${process.env.PATH}`, CONFER_HOME: home, CODEX_HOME: ROOT, CONFER_PROVIDER: "", CONFER_PI_MODEL: "", CONFER_OMP_PLUGINS: path.join(ROOT, "no-plugins.json"), ...env },
       stdio: ["ignore", "pipe", "pipe"],
@@ -333,6 +340,43 @@ function check(name, cond, detail = "") {
   }
   const drift = await confer(["reply", "argon", "q"], { home, env: { FAKE_OMP_MODE: "drift" } });
   check("omp changed session id fails closed", drift.code === 1 && drift.stderr.includes("conflicting session ids"), drift.stderr);
+}
+
+// 1c-omp-scratch. antigravity-acp writes skills/system/ into its working directory (ecan#942):
+// in Git the round runs in a scratch worktree of HEAD, outside Git the folder is removed after.
+{
+  const home = freshHome();
+  const gitIn = (dir, ...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd: dir, encoding: "utf8" });
+  const repo = fs.mkdtempSync(path.join(ROOT, "repo-"));
+  fs.mkdirSync(path.join(repo, "sub"));
+  fs.writeFileSync(path.join(repo, "sub", "code.txt"), "committed");
+  gitIn(repo, "init", "-q"); gitIn(repo, "add", "."); gitIn(repo, "commit", "-qm", "init");
+  const pwdFile = path.join(home, "omp-pwd");
+  const sub = path.join(repo, "sub");
+  const r = await confer(["open", "omp", "-t", "scratch", "q"], { home, cwd: sub, env: { FAKE_OMP_PWD: pwdFile } });
+  const [peerDir, ...listing] = fs.readFileSync(pwdFile, "utf8").trim().split("\n");
+  check("antigravity omp in Git runs in a scratch checkout of HEAD, in the same subfolder", r.code === 0 && peerDir !== fs.realpathSync(sub) && peerDir.endsWith("/sub") && listing.includes("code.txt"), `${r.stderr} ${peerDir} ${listing}`);
+  check("the caller's checkout stays clean", gitIn(repo, "status", "--porcelain").stdout === "", gitIn(repo, "status", "--porcelain").stdout);
+  check("the scratch worktree is gone after the round", !fs.existsSync(peerDir) && gitIn(repo, "worktree", "list").stdout.trim().split("\n").length === 1, gitIn(repo, "worktree", "list").stdout);
+  const again = await confer(["reply", "scratch", "q"], { home, cwd: sub, env: { FAKE_OMP_PWD: pwdFile } });
+  check("a reply runs in a scratch checkout too", again.code === 0 && gitIn(repo, "status", "--porcelain").stdout === "", again.stderr);
+
+  const failing = await confer(["open", "omp", "-t", "scratchfail", "q"], { home, cwd: repo, env: { FAKE_OMP_MODE: "failed" } });
+  check("a failed round still removes the scratch worktree", failing.code === 1 && gitIn(repo, "worktree", "list").stdout.trim().split("\n").length === 1 && gitIn(repo, "status", "--porcelain").stdout === "", gitIn(repo, "worktree", "list").stdout);
+
+  fs.writeFileSync(path.join(sub, "code.txt"), "edited");
+  const calls = path.join(home, "omp-dirty-calls");
+  const dirty = await confer(["open", "omp", "-t", "dirty", "q"], { home, cwd: repo, env: { FAKE_OMP_CALLS: calls } });
+  check("uncommitted changes refuse the round before omp runs, naming them", dirty.code === 1 && dirty.stderr.includes("sub/code.txt") && dirty.stderr.includes("agy") && !fs.existsSync(calls), dirty.stderr);
+  const sol = await confer(["open", "omp", "-t", "inplace", "q"], { home, cwd: repo, env: { FAKE_OMP_PWD: pwdFile, CONFER_OMP_ARGS: "--model openai-codex/gpt-6.1-sol" } });
+  check("another omp model runs in place, uncommitted changes and all", sol.code === 0 && fs.readFileSync(pwdFile, "utf8").split("\n")[0] === fs.realpathSync(repo), sol.stderr);
+
+  const plain = fs.mkdtempSync(path.join(ROOT, "plain-"));
+  const out = await confer(["open", "omp", "-t", "plain", "q"], { home, cwd: plain, env: { FAKE_OMP_PWD: pwdFile } });
+  check("outside Git it runs in place and removes the skills folder it left", out.code === 0 && fs.readFileSync(pwdFile, "utf8").split("\n")[0] === fs.realpathSync(plain) && !fs.existsSync(path.join(plain, "skills")), out.stderr);
+  fs.mkdirSync(path.join(plain, "skills", "system", "mine"), { recursive: true });
+  await confer(["open", "omp", "-t", "plain2", "q"], { home, cwd: plain });
+  check("outside Git a skills/system/ that was there before is kept", fs.existsSync(path.join(plain, "skills", "system", "mine")));
 }
 
 // 1c-agy. Gemini through agy runs in plan mode, so writes are denied, and resumes by conversation id.

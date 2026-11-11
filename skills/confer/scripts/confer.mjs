@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const CONFER_HOME = process.env.CONFER_HOME || path.join(os.homedir(), ".confer");
 const REG = path.join(CONFER_HOME, "threads.json");
@@ -281,11 +281,11 @@ const fmtTok = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 // stdin ignored (prompts travel via argv); on timeout SIGTERM the group,
 // grace 2s, then SIGKILL; settle exactly once.
 
-function run(cmd, args, { timeoutMs = TIMEOUT_MS } = {}) {
+function run(cmd, args, { timeoutMs = TIMEOUT_MS, cwd } = {}) {
   return new Promise((resolve, reject) => {
     let child;
     try {
-      child = spawn(cmd, args, { detached: true, stdio: ["ignore", "pipe", "pipe"] });
+      child = spawn(cmd, args, { cwd, detached: true, stdio: ["ignore", "pipe", "pipe"] });
     } catch (e) { return reject(e); }
     let settled = false, timedOut = false;
     const out = [], err = [];
@@ -308,10 +308,10 @@ function run(cmd, args, { timeoutMs = TIMEOUT_MS } = {}) {
   });
 }
 
-async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS } = {}) {
+async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS, cwd } = {}) {
   let r;
   try {
-    r = await run(cmd, args, { timeoutMs });
+    r = await run(cmd, args, { timeoutMs, cwd });
   } catch (e) {
     if (e.code === "ENOENT") throw new ProviderError(provider, `'${cmd}' CLI not found (run: confer.mjs doctor)`);
     throw new ProviderError(provider, e.message);
@@ -321,6 +321,49 @@ async function runOrThrow(provider, cmd, args, { timeoutMs = TIMEOUT_MS } = {}) 
   if (r.code !== 0)
     throw new ProviderError(provider, `exited ${r.code}`, { exitCode: r.code, stderr: (r.stderr.trim() || r.stdout.trim()) });
   return r;
+}
+
+// omp's antigravity-acp provider writes Antigravity's own skill into skills/system/ of its
+// working directory a few seconds into every session, whatever tools it is given, and no setting
+// stops it (Wang-Cankun/ecan#942). In a Git checkout the peer runs in a detached scratch worktree
+// of HEAD, so the caller's checkout is never dirty while a round runs; uncommitted changes would
+// be invisible there, so they refuse the round. Outside Git the folder is removed afterwards.
+const WRITES_CWD_SKILLS = (provider, model) => provider === "omp" && model.startsWith("antigravity-acp/");
+
+function git(cwd, args) {
+  const r = spawnSync("git", args, { cwd, encoding: "utf8" });
+  return r.status === 0 ? r.stdout.trimEnd() : null;
+}
+
+async function inPeerDir(provider, model, run) {
+  if (!WRITES_CWD_SKILLS(provider, model)) return run(undefined);
+  const cwd = process.cwd();
+  const top = git(cwd, ["rev-parse", "--show-toplevel"]);
+  if (top === null) {
+    const skills = path.join(cwd, "skills"), system = path.join(skills, "system");
+    const had = { skills: fs.existsSync(skills), system: fs.existsSync(system) };
+    try { return await run(cwd); }
+    finally {
+      if (!had.system) fs.rmSync(system, { recursive: true, force: true });
+      if (!had.skills) try { fs.rmdirSync(skills); } catch {}
+    }
+  }
+  const changed = git(top, ["status", "--porcelain"]);
+  if (changed) {
+    const files = changed.split("\n").slice(0, 5).map((l) => l.slice(3)).join(", ");
+    throw new ProviderError(provider, `${model} writes skills/system/ into its working directory, so confer runs it in a scratch worktree of HEAD, where these uncommitted changes are missing: ${files}. Commit them, or reach Gemini through agy, which runs in place.`);
+  }
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "confer-peer-"));
+  if (git(top, ["worktree", "add", "--detach", "--quiet", scratch, "HEAD"]) === null) {
+    fs.rmSync(scratch, { recursive: true, force: true });
+    throw new ProviderError(provider, `could not add a scratch worktree of ${top} at HEAD`);
+  }
+  try { return await run(path.join(scratch, path.relative(top, cwd))); }
+  finally {
+    git(top, ["worktree", "remove", "--force", scratch]);
+    fs.rmSync(scratch, { recursive: true, force: true });
+    git(top, ["worktree", "prune"]);
+  }
 }
 
 // ---- provider adapters -----------------------------------------------------
@@ -486,7 +529,7 @@ const providers = {
         ...extra,
         "--", prompt,
       ];
-      const r = await runOrThrow("omp", "omp", args);
+      const r = await inPeerDir("omp", flag("--model", OMP_MODEL), (cwd) => runOrThrow("omp", "omp", args, { cwd }));
       let reportedSession = null, message = null, usage = null;
       for (const line of r.stdout.split("\n")) {
         if (!line.trim()) continue;

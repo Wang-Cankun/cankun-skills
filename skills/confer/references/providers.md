@@ -34,7 +34,8 @@ Caveats (each verified against the real CLI, not assumed):
   `--dangerously-skip-permissions`.
 - **Every peer but Oracle reads the caller's repository**: each CLI is spawned in the caller's
   working directory, so a peer opens the files it needs instead of receiving copies. Run confer
-  from the repository or worktree the question is about.
+  from the repository or worktree the question is about. omp on an `antigravity-acp` model is the
+  exception below.
 - **Pi uses local model configuration without local agent behavior**: with no model chosen,
   `--model` is left out and Pi runs its own default. A chosen model is a full `provider/model`
   identifier (`CONFER_PI_MODEL`, then `config pi-model`); a bare id is refused, because Pi
@@ -51,6 +52,13 @@ Caveats (each verified against the real CLI, not assumed):
   omp names the session itself, so a new round reads the id from the `session` event and a reply
   passes `--resume <id>`. `CONFER_OMP_ARGS` passes `--model` and `--thinking`; the thread records
   both and `reply` reuses them, whatever the environment says later.
+  On an `antigravity-acp` model, Antigravity writes its own skill into `skills/system/` of the
+  working directory a few seconds into every round, whatever the tool list, and no setting stops
+  it (Wang-Cankun/ecan#942). In a Git checkout confer runs that round in a detached scratch
+  worktree of HEAD, in the same subfolder, and removes it afterwards, so the caller's checkout is
+  never dirty mid-round; uncommitted changes refuse the round, since the peer would not see them.
+  Outside Git the round runs in place and the `skills/system/` it left is removed. agy runs the
+  same Gemini models without the write.
 - **agy is read-only by plan mode**: print mode approves file writes unless
   `--mode plan`, where a write is auto-denied (the JSON lists it under `denied_actions`) and the
   round ends with an empty `response`; confer reports that as a denial, not a reply. `-p` must come
