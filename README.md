@@ -12,7 +12,7 @@ Skills are grouped as on [cankun.me/skills](https://cankun.me/skills), by what y
 
 | Skill | What it does | Install |
 | ----- | ------------ | ------- |
-| [ambition](./skills/ambition) | Rethink a clear task through speed, altitude, depth and range, recommend the version worth doing and rewrite the prompt for it. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ambition` |
+| [ambition](./skills/ambition) | Widen the thinking on a task through speed, altitude, depth and range, and say what the wider view changes. | `npx skills@latest add Wang-Cankun/cankun-skills --skill ambition` |
 | [common-ground](./skills/common-ground) | Rebuild a shared understanding with the user when they have lost the thread or an explanation did not land. | `npx skills@latest add Wang-Cankun/cankun-skills --skill common-ground` |
 | [known-unknowns](./skills/known-unknowns) | Use the Rumsfeld matrix to articulate tacit judgment, connect dormant knowledge, and explore blind spots. | `npx skills@latest add Wang-Cankun/cankun-skills --skill known-unknowns` |
 | [taste](./skills/taste) | Improves work that is correct but unsatisfying, using the principles of Paul Graham's "Taste for Makers": diagnose, find the organising idea, revise, test. | `npx skills@latest add Wang-Cankun/cankun-skills --skill taste` |

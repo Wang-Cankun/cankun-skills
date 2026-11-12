@@ -2,8 +2,8 @@
 name: ambition
 metadata:
   group: thinking
-  summary: Rethink a clear task through speed, altitude, depth and range, recommend the version worth doing and rewrite the prompt for it.
-description: "Rethink a clear task through four kinds of ambition (speed, altitude, depth, range), recommend the version worth doing and rewrite the prompt for it. Use when a task may be aimed too low, when the user asks to think bigger, go deeper or aim higher (更有野心, 拔高, 做深), or before committing substantial work to an ask that names an artifact rather than the outcome behind it. Skip small or fully specified tasks, and requests that only want it faster."
+  summary: Widen the thinking on a task through speed, altitude, depth and range, and say what the wider view changes.
+description: "Widen the thinking on a task through four kinds of ambition (speed, altitude, depth, range): what a higher, deeper or wider view sees that the current framing misses. Use when the user asks to think bigger, go deeper or aim higher (更有野心, 拔高, 做深), or when a task may be aimed too low. Skip small or fully specified tasks, and requests that only want it faster."
 ---
 
 # Ambition
@@ -13,69 +13,38 @@ It sorts ambition into four kinds:
 
 - **Speed**: the same work in less time.
 - **Altitude**: aim at the outcome beyond the task.
-- **Depth**: do the task the way a field-leading expert would, down to the raw data and tools.
+- **Depth**: see the task the way a field-leading expert would, down to the raw data and tools.
 - **Range**: draw on fields the task does not obviously need.
 
-They are lenses on one task, not a menu: the recommendation combines whichever earn their place.
+They are lenses on one task. The reply is thinking: it widens how the user sees the task, and
+the user decides what, if anything, to act on.
 
 ## Think it through
 
-Start from a task whose purpose is clear; if it is not, settle the purpose first. Write the
-reply as a short argument applied to this task, in this order.
+Write the reply as a short argument applied to this task, in this order.
 
 1. **Turn the noun into a verb.** The deliverable is a noun: a deck, a pipeline, release notes.
    Say what it must do, to whom: a quarterly review is getting busy people to believe a
-   cause-and-effect story and decide under uncertainty. Done when the sentence names the person
-   and the change in them, and the original format is no longer the only answer. When the verb
-   shows the real problem is elsewhere, open the reply with that reframe in one sentence.
-2. **Speed as the reference.** One line: what doing the task as given, faster, would produce,
-   and what it leaves unsolved. The other three lenses are measured against it.
-3. **Altitude, depth, range.** A lens earns a short paragraph only when it changes what gets
-   done, and then names the concrete data, tool, field or step. Put the remaining lenses
-   together in one line that says why they are not used.
-   - **Altitude.** Ask what should happen after the deliverable, then what that serves. Climb
-     to an outcome the agent can act on and check. It fits work headed for a meeting or a
-     decision, and fits creative work less. A recurring task can become a standing
-     responsibility once the agent can observe the problem and verify its own fixes.
-   - **Depth.** It fits when the value lies in doing this one thing exceptionally well; it asks
-     for a deeper version, not a bigger one. Say what a top practitioner would do here that the
-     user is not asking for, name the rawest material they would start from instead of the
-     digested version, and the methods and instruments they would use; new vocabulary is not a
-     new method. When the task rests on a belief the raw data can test, try to reproduce the
-     belief from it.
+   cause-and-effect story and decide under uncertainty. When the verb shows the real problem is
+   elsewhere, open the reply with that reframe in one sentence.
+2. **Speed as the reference.** One line: what the task as framed now reaches, and what it
+   leaves unseen. The other lenses are measured against it.
+3. **Altitude, depth, range.** A lens earns a short paragraph only when it shows something the
+   current framing misses, named concretely: the data, the field, the outcome. Put the
+   remaining lenses together in one line that says why they add nothing here.
+   - **Altitude.** Ask what the deliverable is for, then what that serves. Say what the higher
+     outcome reveals about the task: a different question, a different audience, a standing
+     problem behind a one-off request.
+   - **Depth.** A deeper view, not a bigger one. Say what a top practitioner would do here that
+     the user is not asking for, the rawest material they would start from instead of the
+     digested version, the methods and instruments they would use, and how they would know it
+     was right. New vocabulary is not a new method.
    - **Range.** From the verb, find the fields that do that action well, beyond the obvious one.
-     For each, name what its people would actually do here (an editor cuts what does not change
-     the decision), including one field whose trade is finding what is wrong, applied to the
-     result itself (a forensic accountant traces each number to its record). Ask for their
-     work, not their voices.
-4. **Write the full version, then recommend.** Combine the lenses that earned their place into
-   the full ambitious version and write it out; cutting it is the user's call, so they need to
-   see it. Then recommend the version whose gain is worth its cost now, the full one or a cut
-   of it, say why it beats the reference, and name what a cut leaves out and the evidence that
-   would justify the rest later. When the two are the same, write one. Adding deliverables
-   without raising what they show is bigger, not more ambitious. Put the extra work on the
-   agent: a version that needs hours of the user's time, such as labelling or reviewing, costs
-   more than one the agent can run itself. Write the versions as assignments people can meet:
-   - a specific, hard target, with a number where one fits; difficulty is a reason to look for
-     the route, not to lower the target;
-   - a precedent when one exists: someone who has done the equivalent;
-   - room to fail: a new way runs beside the old one before replacing it, and the first step is
-     small enough to lose;
-   - the data and tool access it needs that is not at hand, as a request rather than a reason to
-     aim lower.
-5. **Name the judge.** Say what, other than the model or the user, would show the result is
-   right: a check the agent can run itself (a test, held-out data, a reproduction, a diff
-   against the source) or a real recipient acting on it. Size it to the cost of being wrong:
-   one line for reversible work; for work that reaches people who cannot judge it or cannot
-   be undone (published, data changed), add a first proof point and what would falsify the
-   version.
-6. **Rewrite the prompt.** Write the recommended version as the prompt the user would send to
-   ask for exactly that: the target, the raw material, the methods and the judge, ready to
-   run as one message.
-
-Then take the cheapest first step that tests the recommendation. Start it when it is
-reversible and inside the task already given; otherwise wait for the user's yes. In an
-unattended run, do the task as given and attach the recommendation.
+     For each, name what its people would actually see or do here (an editor cuts what does not
+     change the decision), including one field whose trade is finding what is wrong (a forensic
+     accountant traces each number to its record). Their work, not their voices.
+4. **What it changes.** A few lines: what the wider view shows that the task as framed misses,
+   and which of the user's current assumptions it questions. Then hand the turn back.
 
 ## Examples
 
@@ -83,19 +52,15 @@ A light task, where one lens is enough:
 
 > **Task:** email a collaborator asking for their RNA-seq data.
 >
-> **Verb:** get the files you can actually reanalyse, with one reply from a busy person.
+> **Verb:** get files you can actually reanalyse, with one reply from a busy person.
 >
-> **Speed:** a polite request, sent in a minute; it usually returns their normalised table.
+> **Speed:** a polite request usually returns their normalised table.
 >
-> **Depth:** ask for raw counts plus the sample sheet and the pipeline version, listed by name,
-> so their processing choices do not become yours. **Altitude, range:** not used; one email
-> is the whole job.
+> **Depth:** an analyst would want the raw counts, the sample sheet and the pipeline version,
+> so the collaborator's processing choices do not silently become yours. **Altitude, range:**
+> nothing here; one email is the whole job.
 >
-> **Judge:** the files load and reproduce their reported gene counts.
->
-> **Prompt:** "Ask Dana for the raw count matrix, the sample sheet and the pipeline version
-> behind their RNA-seq data, each by name." **First step:** the email goes to a person, so:
-> send?
+> **What it changes:** the ask is for inputs you can redo the analysis from, not for "the data".
 
 A task others will rely on:
 
@@ -104,23 +69,16 @@ A task others will rely on:
 > **Reframe:** the notes are for people deciding whether to upgrade, so the risk lies in
 > breaking changes that the PR titles hide.
 >
-> **Verb:** let users decide in a few minutes whether to upgrade, and migrate without surprises.
+> **Speed:** a draft from merged PR titles; vague titles hide breaking changes.
 >
-> **Speed:** a draft from merged PR titles in minutes; vague titles hide breaking changes.
+> **Depth:** a maintainer would read the public-API diff between 2.3 and 2.4, not the titles,
+> and would trust the notes once a real project upgrades by following them alone.
 >
-> **Depth:** diff the public API between 2.3 and 2.4 instead of reading titles, and run two
-> sample projects' test suites against 2.4.
+> **Range:** a support engineer sees which open issues touch the changed APIs; a tester reads the
+> migration guide literally and finds where it breaks.
 >
-> **Range:** a support engineer maps open issues to the changed APIs; a tester follows the
-> migration guide literally on the sample projects and records where it breaks.
+> **Altitude:** behind the notes is the cost of every user's upgrade; a codemod would remove
+> most of it.
 >
-> **Altitude:** a codemod that performs the migration for users.
->
-> **Full version:** notes built from the API diff, a migration guide proven on the two samples,
-> and the codemod. **Recommendation:** all but the codemod, which pays off only if the trial
-> migrations repeat the same mechanical edit across projects. **Judge:** both samples upgrade
-> by following the notes alone.
->
-> **Prompt:** "Write the 2.4 release notes from a public-API diff against 2.3, prove the
-> migration guide by upgrading the two sample projects with it alone, and list every breaking
-> change those runs hit." **First step:** the API diff, read-only and minutes long; starting it.
+> **What it changes:** the notes are a migration aid, so their quality is measured by upgrades
+> that succeed, and the titles are the weakest source for them.
