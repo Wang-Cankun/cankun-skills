@@ -2,8 +2,8 @@
 name: ambition
 metadata:
   group: thinking
-  summary: Rethink a clear task through speed, altitude, depth and range, and recommend the version worth doing.
-description: "Rethink a clear task through four kinds of ambition (speed, altitude, depth, range) and recommend the version worth doing. Use when a task may be aimed too low, when the user asks to think bigger, go deeper or aim higher (更有野心, 拔高, 做深), or before committing substantial work to an ask that names an artifact rather than the outcome behind it. Skip small or fully specified tasks, and requests that only want it faster."
+  summary: Rethink a clear task through speed, altitude, depth and range, recommend the version worth doing and rewrite the prompt for it.
+description: "Rethink a clear task through four kinds of ambition (speed, altitude, depth, range), recommend the version worth doing and rewrite the prompt for it. Use when a task may be aimed too low, when the user asks to think bigger, go deeper or aim higher (更有野心, 拔高, 做深), or before committing substantial work to an ask that names an artifact rather than the outcome behind it. Skip small or fully specified tasks, and requests that only want it faster."
 ---
 
 # Ambition
@@ -37,10 +37,12 @@ reply as a short argument applied to this task, in this order.
      to an outcome the agent can act on and check. It fits work headed for a meeting or a
      decision, and fits creative work less. A recurring task can become a standing
      responsibility once the agent can observe the problem and verify its own fixes.
-   - **Depth.** It fits when the value lies in doing this one thing exceptionally well. Name
-     the rawest material a top practitioner would start from instead of the digested version,
-     and the methods and instruments they would use; new vocabulary is not a new method. When
-     the task rests on a belief the raw data can test, try to reproduce the belief from it.
+   - **Depth.** It fits when the value lies in doing this one thing exceptionally well; it asks
+     for a deeper version, not a bigger one. Say what a top practitioner would do here that the
+     user is not asking for, name the rawest material they would start from instead of the
+     digested version, and the methods and instruments they would use; new vocabulary is not a
+     new method. When the task rests on a belief the raw data can test, try to reproduce the
+     belief from it.
    - **Range.** From the verb, find the fields that do that action well, beyond the obvious one.
      For each, name what its people would actually do here (an editor cuts what does not change
      the decision), including one field whose trade is finding what is wrong, applied to the
@@ -61,15 +63,19 @@ reply as a short argument applied to this task, in this order.
      small enough to lose;
    - the data and tool access it needs that is not at hand, as a request rather than a reason to
      aim lower.
-5. **Say how you will know, in proportion to the cost of being wrong.** The default judge is
-   the user reading a few concrete results: for reversible work, including the user's own
-   tools, notes and agent setup, one line on what they will see. Build a check beyond that
-   only when the result reaches people who cannot judge it themselves, or cannot be undone
-   (published, data changed): then name a first proof point, what would falsify the version,
-   and a judge other than the model, ideally a check the agent can run itself.
+5. **Name the judge.** Say what, other than the model or the user, would show the result is
+   right: a check the agent can run itself (a test, held-out data, a reproduction, a diff
+   against the source) or a real recipient acting on it. Size it to the cost of being wrong:
+   one line for reversible work; for work that reaches people who cannot judge it or cannot
+   be undone (published, data changed), add a first proof point and what would falsify the
+   version.
+6. **Rewrite the prompt.** Write the recommended version as the prompt the user would send to
+   ask for exactly that: the target, the raw material, the methods and the judge, ready to
+   run as one message.
 
-End by offering the cheapest first step that tests the recommendation, and wait for the user's
-yes before starting. In an unattended run, do the task as given and attach the recommendation.
+Then take the cheapest first step that tests the recommendation. Start it when it is
+reversible and inside the task already given; otherwise wait for the user's yes. In an
+unattended run, do the task as given and attach the recommendation.
 
 ## Examples
 
@@ -85,7 +91,11 @@ A light task, where one lens is enough:
 > so their processing choices do not become yours. **Altitude, range:** not used; one email
 > is the whole job.
 >
-> **Check:** the reply contains files you can load. **First step:** send it. Send?
+> **Judge:** the files load and reproduce their reported gene counts.
+>
+> **Prompt:** "Ask Dana for the raw count matrix, the sample sheet and the pipeline version
+> behind their RNA-seq data, each by name." **First step:** the email goes to a person, so:
+> send?
 
 A task others will rely on:
 
@@ -108,5 +118,9 @@ A task others will rely on:
 >
 > **Full version:** notes built from the API diff, a migration guide proven on the two samples,
 > and the codemod. **Recommendation:** all but the codemod, which pays off only if the trial
-> migrations repeat the same mechanical edit across projects. **Check:** both samples upgrade by following the
-> notes alone. **First step:** the API diff, read-only and minutes long. Start there?
+> migrations repeat the same mechanical edit across projects. **Judge:** both samples upgrade
+> by following the notes alone.
+>
+> **Prompt:** "Write the 2.4 release notes from a public-API diff against 2.3, prove the
+> migration guide by upgrading the two sample projects with it alone, and list every breaking
+> change those runs hit." **First step:** the API diff, read-only and minutes long; starting it.

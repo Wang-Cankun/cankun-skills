@@ -1,7 +1,7 @@
 interface:
   display_name: "Common Ground"
-  short_description: "Align on what a task is for, then close with a finish-line brief"
-  default_prompt: "Use $common-ground to build a shared mental model with me. Explain your interpretation in your own words, contribute independent judgment, and help surface what matters but remains unspoken. Test that understanding against the intended use before settling the next action."
+  short_description: "Rebuild a shared understanding when the thread is lost"
+  default_prompt: "Use $common-ground: I have lost the thread. Start from one concrete case in plain words, then tell me what we are doing and why, where it stands, and what you need me to decide."
 
 policy:
   allow_implicit_invocation: true

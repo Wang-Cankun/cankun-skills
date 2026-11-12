@@ -1,7 +1,7 @@
 interface:
   display_name: "Ambition"
   short_description: "Find the version of a task worth doing"
-  default_prompt: "Use $ambition to rethink this task through speed, altitude, depth and range, and recommend the version worth doing."
+  default_prompt: "Use $ambition to rethink this task through speed, altitude, depth and range, recommend the version worth doing, name a judge other than you or me, and rewrite my prompt for it."
 
 policy:
   allow_implicit_invocation: true
