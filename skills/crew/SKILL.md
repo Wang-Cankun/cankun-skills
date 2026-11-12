@@ -93,7 +93,7 @@ Shapes that have worked, to combine or change as the work goes:
   in the served repository's `.work/crew/residents.md`;
 - a table of families on one versioned document, each answering `AGREE` or `DISAGREE` with
   reasons, positions attributed in `thread.md` and the user's settled points kept apart. It
-  ends when all agree, handing the understanding back as `common-ground` does, or at the card's
+  ends when all agree, handing the user the settled understanding and its evidence, or at the card's
   round cap, bringing the user each standing disagreement;
 - two families reading the same material blind to each other, then the coordinator checking
   both readings' citations and merging them into an outline whose claims it settles, from which
@@ -148,4 +148,4 @@ see cost and progress, use the optional ledger and burn check in
 - The brief is settled and units have checks: `fleet`, a Workflow whose stages run on any of
   the roster's models.
 - One opinion from another model, with no resident agent: `confer`.
-- Which version of the work to do: `ambition`; what it is for and where it ends: `common-ground`.
+- Which version of the work to do: `ambition`.
