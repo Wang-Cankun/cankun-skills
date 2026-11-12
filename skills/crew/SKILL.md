@@ -148,4 +148,4 @@ see cost and progress, use the optional ledger and burn check in
 - The brief is settled and units have checks: `fleet`, a Workflow whose stages run on any of
   the roster's models.
 - One opinion from another model, with no resident agent: `confer`.
-- Which version of the work to do: `ambition`.
+- A wider view of the task before choosing: `ambition`.
