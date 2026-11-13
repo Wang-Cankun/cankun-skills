@@ -27,6 +27,7 @@ case "${FAKE_MODE:-ok}" in
   empty)   echo '{"conversation_id":"conv-1","status":"SUCCESS","response":""}' ;;
   prose)   echo '{"conversation_id":"conv-1","status":"SUCCESS","response":"I would run git diff","denied_actions":[{"action":"run_command"}]}' ;;
   error)   echo '{"conversation_id":"conv-1","status":"ERROR","response":""}' ;;
+  late)    echo '{"conversation_id":"conv-1","status":"ERROR","response":"long answer","error":"stream idle timeout"}' ;;
   nojson)  echo 'not json' ;;
 esac
 """
@@ -273,6 +274,12 @@ class FleetJobTest(unittest.TestCase):
         self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "schema": schema, "output": "failed.json"}, "error")
         self.assertEqual(json.loads((self.root / "failed.json").read_text()),
                          {"status": "failed", "error": "agy status ERROR"})
+
+    def test_output_of_a_failed_text_job_keeps_the_answer_it_produced(self):
+        result, _ = self.job({"engine": "agy", "model": "gemini-test-high", "prompt": "q", "output": "text.md"}, "late")
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual((self.root / "text.md").read_text(),
+                         "status: failed\nerror: agy status ERROR\n\nlong answer")
 
     def test_diff_writes_stat_full_and_each_part(self):
         repo = self.repo()

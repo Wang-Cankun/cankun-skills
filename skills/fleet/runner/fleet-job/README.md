@@ -47,8 +47,9 @@ Two spec fields make `fleet-job` write what a stage must keep, so no one copies 
   writes the outcome there (atomically, parent directories created) and `result` reports the
   path as `output`. `completed` with a schema: `structured` as indented JSON. `completed`
   without one: `text` as it is. Any other status: `{"status", "error"}` as JSON for a schema
-  job, or the lines `status: ...` and `error: ...` for a text job. `--output` sets it from the
-  command line.
+  job, or the lines `status: ...` and `error: ...` for a text job, followed by whatever text the
+  engine returned (agy can end `ERROR` after a complete answer, on a stream idle timeout).
+  `--output` sets it from the command line.
 - `diff`: `{"base": "<ref>", "dir": "<path>", "parts": {"<file>": ["<pathspec>", ...]}}`
   (`parts` optional; `dir` relative to `cwd`). Before the engine runs, `start` writes
   `<dir>/stat.txt` and `<dir>/full.diff` from `git diff <base>...HEAD`, and `<dir>/<file>` for

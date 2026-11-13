@@ -593,7 +593,10 @@ def write_outcome(path: Path, result: dict, schema: bool) -> None:
         text = json.dumps({"status": result["status"], "error": result["error"]},
                           indent=2, ensure_ascii=False) + "\n"
     else:
+        # An engine can fail after the answer is complete (agy: stream idle timeout); keep it.
         text = f"status: {result['status']}\nerror: {result['error'] or ''}\n"
+        if (result.get("text") or "").strip():
+            text += "\n" + result["text"]
     atomic_write(path, text)
 
 
